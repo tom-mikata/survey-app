@@ -720,14 +720,14 @@ function HorizontalBars({
  * Card 3 : PainFigure（人体アウトライン画像＋痛みヒートマップ）
  *
  *  画像アセット:
- *   /public/pain-body.png に人体アウトライン画像（背面観）を配置してください。
+ *   /public/pain-body.jpeg に人体アウトライン画像（背面観）を配置してください。
  *   画像はアスペクト比 ≒ 0.56（幅:高さ = 568:1024）を想定しています。
  *   比率が異なる場合は下の BODY_ASPECT と painMap の位置を調整してください。
  * ========================================================================== */
 
-// 人体アウトライン画像の幅 / 高さ。Next.js 側で /public/pain-body.png を置いた
+// 人体アウトライン画像の幅 / 高さ。Next.js 側で /public/pain-body.jpeg を置いた
 // 画像の実アスペクト比に合わせる。
-const BODY_IMG_SRC = "/pain-body.png";
+const BODY_IMG_SRC = "/pain-body.jpeg";
 const BODY_ASPECT = 568 / 1024; // ≒ 0.555
 
 /**
@@ -742,34 +742,34 @@ const BODY_ASPECT = 568 / 1024; // ≒ 0.555
  */
 const PAIN_MAP: Record<string, Array<{ x: number; y: number; r: number }>> = {
   // 頭部中心（髪の生え際付近）
-  head: [{ x: 43, y: 15, r: 50 }],
+  head: [{ x: 47, y: 15, r: 50 }],
   // 首の後ろ
-  neck: [{ x: 43, y: 23, r: 34 }],
+  neck: [{ x: 47, y: 23, r: 34 }],
   // 両肩（僧帽筋上部）
   shoulder: [
-    { x: 33, y: 27, r: 44 },
-    { x: 53, y: 27, r: 44 },
+    { x: 37, y: 27, r: 44 },
+    { x: 58, y: 27, r: 44 },
   ],
   // 肩甲骨〜背中上部
-  upper_back: [{ x: 43, y: 34, r: 66 }],
+  upper_back: [{ x: 47, y: 34, r: 66 }],
   // 腰（腰椎）
-  lower_back: [{ x: 43, y: 48, r: 72 }],
+  lower_back: [{ x: 47, y: 48, r: 72 }],
   // 臀部
-  hip: [{ x: 43, y: 57, r: 60 }],
+  hip: [{ x: 47, y: 57, r: 60 }],
   // 両肘
   elbow: [
-    { x: 17, y: 47, r: 32 },
+    { x: 22, y: 47, r: 32 },
     { x: 69, y: 47, r: 32 },
   ],
   // 両手首
   wrist: [
-    { x: 13, y: 56, r: 32 },
+    { x: 20, y: 56, r: 32 },
     { x: 73, y: 56, r: 32 },
   ],
   // 両手
   hand: [
-    { x: 11, y: 60, r: 38 },
-    { x: 75, y: 60, r: 38 },
+    { x: 18, y: 60, r: 38 },
+    { x: 77, y: 60, r: 38 },
   ],
   // 大腿（太もも）
   thigh: [
@@ -778,18 +778,18 @@ const PAIN_MAP: Record<string, Array<{ x: number; y: number; r: number }>> = {
   ],
   // 両膝
   knee: [
-    { x: 35, y: 77, r: 34 },
-    { x: 51, y: 77, r: 34 },
+    { x: 37, y: 77, r: 34 },
+    { x: 58, y: 77, r: 34 },
   ],
   // ふくらはぎ
   calf: [
     { x: 35, y: 85, r: 32 },
-    { x: 51, y: 85, r: 32 },
+    { x: 56, y: 85, r: 32 },
   ],
   // 両足首
   ankle: [
     { x: 35, y: 93, r: 28 },
-    { x: 51, y: 93, r: 28 },
+    { x: 58, y: 93, r: 28 },
   ],
 };
 
