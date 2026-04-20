@@ -726,27 +726,28 @@ function PainFigure({
 }: {
   hotspots: { id: string; intensity: number; count: number }[];
 }) {
+  // viewBox 160 × 400 に合わせた痛み部位の座標（背面観）
   const painMap: Record<string, Array<{ x: number; y: number; r: number }>> = {
-    head: [{ x: 58, y: 18, r: 11 }], // 後頭部寄り
-    neck: [{ x: 50, y: 40, r: 9 }],
-    shoulder: [{ x: 50, y: 52, r: 22 }],
-    lower_back: [{ x: 50, y: 98, r: 26 }],
+    head: [{ x: 96, y: 24, r: 14 }], // 後頭部やや右寄り
+    neck: [{ x: 80, y: 66, r: 10 }],
+    shoulder: [{ x: 80, y: 104, r: 30 }], // 僧帽筋〜肩甲骨
+    lower_back: [{ x: 80, y: 238, r: 32 }], // 腰椎まわり
+    hip: [{ x: 80, y: 268, r: 20 }],
     wrist: [
-      { x: 14, y: 108, r: 10 },
-      { x: 86, y: 108, r: 10 },
+      { x: 26, y: 268, r: 12 },
+      { x: 134, y: 268, r: 12 },
     ],
     hand: [
-      { x: 10, y: 122, r: 10 },
-      { x: 90, y: 122, r: 10 },
+      { x: 38, y: 298, r: 13 },
+      { x: 122, y: 298, r: 13 },
     ],
-    hip: [{ x: 50, y: 140, r: 16 }],
     knee: [
-      { x: 40, y: 184, r: 10 },
-      { x: 60, y: 184, r: 10 },
+      { x: 54, y: 334, r: 14 },
+      { x: 106, y: 334, r: 14 },
     ],
     ankle: [
-      { x: 40, y: 228, r: 10 },
-      { x: 60, y: 228, r: 10 },
+      { x: 52, y: 382, r: 14 },
+      { x: 108, y: 382, r: 14 },
     ],
   };
 
@@ -754,57 +755,164 @@ function PainFigure({
 
   return (
     <div className="mt-4 flex items-center justify-center">
-      <svg viewBox="0 0 100 252" className="h-[17rem] w-auto text-slate-200">
-        {/* 頭 */}
-        <ellipse cx="50" cy="20" rx="11" ry="13" fill="currentColor" />
-        {/* 首 */}
-        <rect x="45" y="33" width="10" height="6" fill="currentColor" />
-        {/* 胴体 */}
-        <path
-          d="M30 42 Q32 40 40 38 L60 38 Q68 40 70 42 L72 82 Q72 96 68 108 L62 132 Q60 140 50 140 Q40 140 38 132 L32 108 Q28 96 28 82 Z"
-          fill="currentColor"
-        />
-        {/* 腕 */}
-        <path
-          d="M30 44 Q22 48 20 60 L16 102 Q14 116 20 120 Q25 120 27 114 L30 84 Z"
-          fill="currentColor"
-        />
-        <path
-          d="M70 44 Q78 48 80 60 L84 102 Q86 116 80 120 Q75 120 73 114 L70 84 Z"
-          fill="currentColor"
-        />
-        {/* 手 */}
-        <ellipse cx="18" cy="124" rx="6" ry="7" fill="currentColor" />
-        <ellipse cx="82" cy="124" rx="6" ry="7" fill="currentColor" />
-        {/* 腰回り */}
-        <path d="M34 138 L66 138 L64 166 L36 166 Z" fill="currentColor" />
-        {/* 脚 */}
-        <path d="M36 164 L34 218 L40 232 L48 232 L50 166 Z" fill="currentColor" />
-        <path d="M50 166 L52 232 L60 232 L66 218 L64 164 Z" fill="currentColor" />
-        {/* 足 */}
-        <ellipse cx="42" cy="240" rx="7" ry="5" fill="currentColor" />
-        <ellipse cx="58" cy="240" rx="7" ry="5" fill="currentColor" />
+      <svg
+        viewBox="0 0 160 400"
+        className="h-[19rem] w-auto"
+        aria-label="身体の痛み部位を示す後面図"
+      >
+        <defs>
+          <linearGradient id="pf-body" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#e6ebf1" />
+            <stop offset="60%" stopColor="#d6dde6" />
+            <stop offset="100%" stopColor="#c2ccd8" />
+          </linearGradient>
+          <radialGradient id="pf-spot" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#ef4444" stopOpacity="0.9" />
+            <stop offset="60%" stopColor="#f43f5e" stopOpacity="0.55" />
+            <stop offset="100%" stopColor="#f43f5e" stopOpacity="0" />
+          </radialGradient>
+        </defs>
 
-        {/* ホットスポット */}
+        {/* 身体シルエット（背面観） */}
+        <g
+          fill="url(#pf-body)"
+          stroke="#93a0b2"
+          strokeWidth={0.9}
+          strokeLinejoin="round"
+        >
+          {/* 頭 */}
+          <ellipse cx={80} cy={36} rx={22} ry={27} />
+          {/* 耳 */}
+          <ellipse cx={57} cy={38} rx={3.5} ry={7} />
+          <ellipse cx={103} cy={38} rx={3.5} ry={7} />
+
+          {/* 首（僧帽筋の付け根に向けてテーパー） */}
+          <path d="M 70 60 C 71 66 72 70 72 76 L 88 76 C 88 70 89 66 90 60 Z" />
+
+          {/* 胴体：僧帽筋→三角筋→広背筋→ウエスト→大臀筋 */}
+          <path
+            d="M 72 76
+               C 60 80 44 86 34 96
+               C 22 106 18 120 20 132
+               C 22 146 28 160 36 170
+               C 44 180 50 186 52 194
+               L 54 206
+               C 54 216 52 222 48 234
+               C 44 246 40 258 42 270
+               C 44 278 48 282 54 284
+               L 106 284
+               C 112 282 116 278 118 270
+               C 120 258 116 246 112 234
+               C 108 222 106 216 106 206
+               L 108 194
+               C 110 186 116 180 124 170
+               C 132 160 138 146 140 132
+               C 142 120 138 106 126 96
+               C 116 86 100 80 88 76 Z"
+          />
+
+          {/* 左腕 */}
+          <path
+            d="M 34 120
+               C 20 134 12 158 12 184
+               C 12 210 16 236 22 258
+               C 26 270 32 276 38 278
+               L 44 278
+               C 48 276 50 270 50 262
+               C 48 242 46 220 46 198
+               C 48 174 50 154 52 136
+               C 50 126 42 120 34 120 Z"
+          />
+
+          {/* 右腕 */}
+          <path
+            d="M 126 120
+               C 140 134 148 158 148 184
+               C 148 210 144 236 138 258
+               C 134 270 128 276 122 278
+               L 116 278
+               C 112 276 110 270 110 262
+               C 112 242 114 220 114 198
+               C 112 174 110 154 108 136
+               C 110 126 118 120 126 120 Z"
+          />
+
+          {/* 手（拳） */}
+          <ellipse cx={38} cy={290} rx={11} ry={13} />
+          <ellipse cx={122} cy={290} rx={11} ry={13} />
+
+          {/* 左脚：大腿→膝→下腿→踝 */}
+          <path
+            d="M 54 282
+               C 52 308 48 332 44 358
+               C 42 370 42 380 46 382
+               L 60 382
+               C 62 380 62 370 62 360
+               C 64 336 66 308 68 282 Z"
+          />
+
+          {/* 右脚 */}
+          <path
+            d="M 106 282
+               C 108 308 112 332 116 358
+               C 118 370 118 380 114 382
+               L 100 382
+               C 98 380 98 370 98 360
+               C 96 336 94 308 92 282 Z"
+          />
+
+          {/* 足 */}
+          <ellipse cx={52} cy={390} rx={12} ry={5.5} />
+          <ellipse cx={108} cy={390} rx={12} ry={5.5} />
+        </g>
+
+        {/* 細部（脊柱・肩甲骨・腰のディンプルなどの示唆線） */}
+        <g
+          fill="none"
+          stroke="#64748b"
+          strokeLinecap="round"
+          strokeWidth={0.6}
+          opacity={0.28}
+        >
+          {/* 脊柱 */}
+          <path d="M 80 82 L 80 282" strokeDasharray="2 3" />
+          {/* 左肩甲骨 */}
+          <path d="M 52 94 Q 60 112 66 128" />
+          {/* 右肩甲骨 */}
+          <path d="M 108 94 Q 100 112 94 128" />
+          {/* 腸骨稜（腰ライン） */}
+          <path d="M 54 214 Q 80 222 106 214" />
+          {/* ヒップの境界 */}
+          <path d="M 80 258 L 80 282" />
+        </g>
+        {/* 腰のディンプル（Venus のえくぼ） */}
+        <g fill="#64748b" opacity={0.22}>
+          <circle cx={70} cy={234} r={1.1} />
+          <circle cx={90} cy={234} r={1.1} />
+        </g>
+
+        {/* 痛みのホットスポット */}
         {hotspots.map((h) => {
           const positions = painMap[h.id];
           if (!positions || h.count === 0) return null;
-          const opacity = 0.35 + h.intensity * 0.5;
+          const opacity = 0.45 + h.intensity * 0.45;
           return positions.map((pos, idx) => (
             <g key={`${h.id}-${idx}`}>
+              {/* 外側の柔らかいグロー */}
               <circle
                 cx={pos.x}
                 cy={pos.y}
-                r={pos.r * 1.3}
-                fill="rgb(244 63 94)"
-                opacity={opacity * 0.45}
-                style={{ filter: "blur(7px)" }}
+                r={pos.r * 1.55}
+                fill="url(#pf-spot)"
+                opacity={opacity * 0.75}
+                style={{ filter: "blur(6px)" }}
               />
+              {/* 中心のコア */}
               <circle
                 cx={pos.x}
                 cy={pos.y}
-                r={pos.r}
-                fill="rgb(244 63 94)"
+                r={pos.r * 0.85}
+                fill="rgb(239 68 68)"
                 opacity={opacity}
                 style={{ filter: "blur(2.5px)" }}
               />
