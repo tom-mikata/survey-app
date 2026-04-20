@@ -553,7 +553,6 @@ function HalfDonut({
   const size = 104;
   const stroke = 12;
   const r = (size - stroke) / 2;
-  const cx = size / 2;
   const cy = size / 2;
   const arcLength = Math.PI * r; // 半円
   const offset = arcLength * (1 - p / 100);
@@ -718,210 +717,138 @@ function HorizontalBars({
 }
 
 /* =============================================================================
- * Card 3 : PainFigure
+ * Card 3 : PainFigure（人体アウトライン画像＋痛みヒートマップ）
+ *
+ *  画像アセット:
+ *   /public/pain-body.jpeg に人体アウトライン画像（背面観）を配置してください。
+ *   画像はアスペクト比 ≒ 0.56（幅:高さ = 568:1024）を想定しています。
+ *   比率が異なる場合は下の BODY_ASPECT と painMap の位置を調整してください。
  * ========================================================================== */
+
+// 人体アウトライン画像の幅 / 高さ。Next.js 側で /public/pain-body.jpeg を置いた
+// 画像の実アスペクト比に合わせる。
+const BODY_IMG_SRC = "/pain-body.jpeg";
+const BODY_ASPECT = 568 / 1024; // ≒ 0.555
+
+/**
+ * 画像上でのホットスポット位置（パーセント）と表示半径（px）。
+ * 画像の中央 x = 50% に体の正中線がくる前提の値。
+ * 添付画像のように右上に「頭部ディテール」が入る構図の場合は、
+ * 画像を body のみにトリミングしてから使うのがおすすめ。
+ */
+const PAIN_MAP: Record<string, Array<{ x: number; y: number; r: number }>> = {
+  head: [{ x: 50, y: 9, r: 52 }],
+  neck: [{ x: 50, y: 18, r: 36 }],
+  shoulder: [
+    { x: 38, y: 23, r: 46 },
+    { x: 62, y: 23, r: 46 },
+  ],
+  upper_back: [{ x: 50, y: 30, r: 68 }],
+  lower_back: [{ x: 50, y: 46, r: 72 }],
+  hip: [{ x: 50, y: 56, r: 58 }],
+  elbow: [
+    { x: 22, y: 45, r: 34 },
+    { x: 78, y: 45, r: 34 },
+  ],
+  wrist: [
+    { x: 15, y: 58, r: 34 },
+    { x: 85, y: 58, r: 34 },
+  ],
+  hand: [
+    { x: 10, y: 63, r: 38 },
+    { x: 90, y: 63, r: 38 },
+  ],
+  thigh: [
+    { x: 40, y: 67, r: 40 },
+    { x: 60, y: 67, r: 40 },
+  ],
+  knee: [
+    { x: 41, y: 78, r: 36 },
+    { x: 59, y: 78, r: 36 },
+  ],
+  calf: [
+    { x: 41, y: 86, r: 34 },
+    { x: 59, y: 86, r: 34 },
+  ],
+  ankle: [
+    { x: 41, y: 95, r: 30 },
+    { x: 59, y: 95, r: 30 },
+  ],
+};
 
 function PainFigure({
   hotspots,
 }: {
   hotspots: { id: string; intensity: number; count: number }[];
 }) {
-  // viewBox 160 × 400 に合わせた痛み部位の座標（背面観）
-  const painMap: Record<string, Array<{ x: number; y: number; r: number }>> = {
-    head: [{ x: 96, y: 24, r: 14 }], // 後頭部やや右寄り
-    neck: [{ x: 80, y: 66, r: 10 }],
-    shoulder: [{ x: 80, y: 104, r: 30 }], // 僧帽筋〜肩甲骨
-    lower_back: [{ x: 80, y: 238, r: 32 }], // 腰椎まわり
-    hip: [{ x: 80, y: 268, r: 20 }],
-    wrist: [
-      { x: 26, y: 268, r: 12 },
-      { x: 134, y: 268, r: 12 },
-    ],
-    hand: [
-      { x: 38, y: 298, r: 13 },
-      { x: 122, y: 298, r: 13 },
-    ],
-    knee: [
-      { x: 54, y: 334, r: 14 },
-      { x: 106, y: 334, r: 14 },
-    ],
-    ankle: [
-      { x: 52, y: 382, r: 14 },
-      { x: 108, y: 382, r: 14 },
-    ],
-  };
-
   const hasAny = hotspots.some((h) => h.count > 0);
 
   return (
-    <div className="mt-4 flex items-center justify-center">
-      <svg
-        viewBox="0 0 160 400"
-        className="h-[19rem] w-auto"
-        aria-label="身体の痛み部位を示す後面図"
+    <div className="mt-4 flex flex-col items-center">
+      <div
+        className="relative mx-auto w-full max-w-[20rem]"
+        style={{ aspectRatio: `${BODY_ASPECT}` }}
       >
-        <defs>
-          <linearGradient id="pf-body" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#e6ebf1" />
-            <stop offset="60%" stopColor="#d6dde6" />
-            <stop offset="100%" stopColor="#c2ccd8" />
-          </linearGradient>
-          <radialGradient id="pf-spot" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#ef4444" stopOpacity="0.9" />
-            <stop offset="60%" stopColor="#f43f5e" stopOpacity="0.55" />
-            <stop offset="100%" stopColor="#f43f5e" stopOpacity="0" />
-          </radialGradient>
-        </defs>
+        {/* 背景の人体アウトライン */}
+        <img
+          src={BODY_IMG_SRC}
+          alt="身体の痛み部位を示す後面図"
+          className="pointer-events-none absolute inset-0 h-full w-full select-none object-contain"
+          draggable={false}
+        />
 
-        {/* 身体シルエット（背面観） */}
-        <g
-          fill="url(#pf-body)"
-          stroke="#93a0b2"
-          strokeWidth={0.9}
-          strokeLinejoin="round"
-        >
-          {/* 頭 */}
-          <ellipse cx={80} cy={36} rx={22} ry={27} />
-          {/* 耳 */}
-          <ellipse cx={57} cy={38} rx={3.5} ry={7} />
-          <ellipse cx={103} cy={38} rx={3.5} ry={7} />
+        {/* 痛みのヒートマップ */}
+        <div className="pointer-events-none absolute inset-0">
+          {hotspots.map((h) => {
+            const positions = PAIN_MAP[h.id];
+            if (!positions || h.count === 0) return null;
+            // データ強度（0-1）に応じて濃さとサイズを調整
+            const intensity = Math.max(0.15, h.intensity);
+            const coreAlpha = 0.35 + intensity * 0.45; // 0.35 - 0.80
+            const midAlpha = 0.22 + intensity * 0.28; // 0.22 - 0.50
+            const scale = 0.75 + intensity * 0.45; // 0.75 - 1.20
+            return positions.map((pos, idx) => {
+              const size = pos.r * 2 * scale;
+              return (
+                <span
+                  key={`${h.id}-${idx}`}
+                  className="absolute rounded-full mix-blend-multiply"
+                  style={{
+                    left: `${pos.x}%`,
+                    top: `${pos.y}%`,
+                    width: size,
+                    height: size,
+                    transform: "translate(-50%, -50%)",
+                    background: `radial-gradient(circle,
+                      rgba(220,38,38,${coreAlpha}) 0%,
+                      rgba(239,68,68,${midAlpha}) 42%,
+                      rgba(244,63,94,${midAlpha * 0.45}) 68%,
+                      rgba(244,63,94,0) 88%)`,
+                    filter: "blur(3px)",
+                  }}
+                  title={`${h.id}: ${h.count}件`}
+                />
+              );
+            });
+          })}
+        </div>
+      </div>
 
-          {/* 首（僧帽筋の付け根に向けてテーパー） */}
-          <path d="M 70 60 C 71 66 72 70 72 76 L 88 76 C 88 70 89 66 90 60 Z" />
+      {/* 強度レジェンド */}
+      <div className="mt-4 flex items-center gap-2 text-[10px] text-slate-500">
+        <span>少ない</span>
+        <span
+          className="inline-block h-2.5 w-28 rounded-full"
+          style={{
+            background:
+              "linear-gradient(to right, rgba(239,68,68,0.15), rgba(239,68,68,0.45), rgba(220,38,38,0.85))",
+          }}
+        />
+        <span>多い</span>
+      </div>
 
-          {/* 胴体：僧帽筋→三角筋→広背筋→ウエスト→大臀筋 */}
-          <path
-            d="M 72 76
-               C 60 80 44 86 34 96
-               C 22 106 18 120 20 132
-               C 22 146 28 160 36 170
-               C 44 180 50 186 52 194
-               L 54 206
-               C 54 216 52 222 48 234
-               C 44 246 40 258 42 270
-               C 44 278 48 282 54 284
-               L 106 284
-               C 112 282 116 278 118 270
-               C 120 258 116 246 112 234
-               C 108 222 106 216 106 206
-               L 108 194
-               C 110 186 116 180 124 170
-               C 132 160 138 146 140 132
-               C 142 120 138 106 126 96
-               C 116 86 100 80 88 76 Z"
-          />
-
-          {/* 左腕 */}
-          <path
-            d="M 34 120
-               C 20 134 12 158 12 184
-               C 12 210 16 236 22 258
-               C 26 270 32 276 38 278
-               L 44 278
-               C 48 276 50 270 50 262
-               C 48 242 46 220 46 198
-               C 48 174 50 154 52 136
-               C 50 126 42 120 34 120 Z"
-          />
-
-          {/* 右腕 */}
-          <path
-            d="M 126 120
-               C 140 134 148 158 148 184
-               C 148 210 144 236 138 258
-               C 134 270 128 276 122 278
-               L 116 278
-               C 112 276 110 270 110 262
-               C 112 242 114 220 114 198
-               C 112 174 110 154 108 136
-               C 110 126 118 120 126 120 Z"
-          />
-
-          {/* 手（拳） */}
-          <ellipse cx={38} cy={290} rx={11} ry={13} />
-          <ellipse cx={122} cy={290} rx={11} ry={13} />
-
-          {/* 左脚：大腿→膝→下腿→踝 */}
-          <path
-            d="M 54 282
-               C 52 308 48 332 44 358
-               C 42 370 42 380 46 382
-               L 60 382
-               C 62 380 62 370 62 360
-               C 64 336 66 308 68 282 Z"
-          />
-
-          {/* 右脚 */}
-          <path
-            d="M 106 282
-               C 108 308 112 332 116 358
-               C 118 370 118 380 114 382
-               L 100 382
-               C 98 380 98 370 98 360
-               C 96 336 94 308 92 282 Z"
-          />
-
-          {/* 足 */}
-          <ellipse cx={52} cy={390} rx={12} ry={5.5} />
-          <ellipse cx={108} cy={390} rx={12} ry={5.5} />
-        </g>
-
-        {/* 細部（脊柱・肩甲骨・腰のディンプルなどの示唆線） */}
-        <g
-          fill="none"
-          stroke="#64748b"
-          strokeLinecap="round"
-          strokeWidth={0.6}
-          opacity={0.28}
-        >
-          {/* 脊柱 */}
-          <path d="M 80 82 L 80 282" strokeDasharray="2 3" />
-          {/* 左肩甲骨 */}
-          <path d="M 52 94 Q 60 112 66 128" />
-          {/* 右肩甲骨 */}
-          <path d="M 108 94 Q 100 112 94 128" />
-          {/* 腸骨稜（腰ライン） */}
-          <path d="M 54 214 Q 80 222 106 214" />
-          {/* ヒップの境界 */}
-          <path d="M 80 258 L 80 282" />
-        </g>
-        {/* 腰のディンプル（Venus のえくぼ） */}
-        <g fill="#64748b" opacity={0.22}>
-          <circle cx={70} cy={234} r={1.1} />
-          <circle cx={90} cy={234} r={1.1} />
-        </g>
-
-        {/* 痛みのホットスポット */}
-        {hotspots.map((h) => {
-          const positions = painMap[h.id];
-          if (!positions || h.count === 0) return null;
-          const opacity = 0.45 + h.intensity * 0.45;
-          return positions.map((pos, idx) => (
-            <g key={`${h.id}-${idx}`}>
-              {/* 外側の柔らかいグロー */}
-              <circle
-                cx={pos.x}
-                cy={pos.y}
-                r={pos.r * 1.55}
-                fill="url(#pf-spot)"
-                opacity={opacity * 0.75}
-                style={{ filter: "blur(6px)" }}
-              />
-              {/* 中心のコア */}
-              <circle
-                cx={pos.x}
-                cy={pos.y}
-                r={pos.r * 0.85}
-                fill="rgb(239 68 68)"
-                opacity={opacity}
-                style={{ filter: "blur(2.5px)" }}
-              />
-            </g>
-          ));
-        })}
-      </svg>
       {!hasAny && (
-        <p className="ml-4 max-w-[10rem] text-xs text-slate-400">
+        <p className="mt-2 text-xs text-slate-400">
           該当する痛み部位のデータがありません。
         </p>
       )}
@@ -1037,23 +964,22 @@ function ScoreFace({ tone }: { tone: CompareTone }) {
       <circle cx="32" cy="32" r="28" fill={fill} />
       {tone === "good" ? (
         <>
-          {/* ^_^ 目 */}
           <path
-            d="M20 27 Q24 22 28 27"
+            d="M 20 27 Q 24 22 28 27"
             stroke="#3a2f14"
             strokeWidth="2.5"
             strokeLinecap="round"
             fill="none"
           />
           <path
-            d="M36 27 Q40 22 44 27"
+            d="M 36 27 Q 40 22 44 27"
             stroke="#3a2f14"
             strokeWidth="2.5"
             strokeLinecap="round"
             fill="none"
           />
           <path
-            d="M22 40 Q32 50 42 40"
+            d="M 22 40 Q 32 50 42 40"
             stroke="#3a2f14"
             strokeWidth="3"
             strokeLinecap="round"
@@ -1065,7 +991,7 @@ function ScoreFace({ tone }: { tone: CompareTone }) {
           <circle cx="24" cy="27" r="2.2" fill="#3a2f14" />
           <circle cx="40" cy="27" r="2.2" fill="#3a2f14" />
           <path
-            d="M22 44 Q32 36 42 44"
+            d="M 22 44 Q 32 36 42 44"
             stroke="#3a2f14"
             strokeWidth="2.8"
             strokeLinecap="round"
@@ -1077,7 +1003,7 @@ function ScoreFace({ tone }: { tone: CompareTone }) {
           <circle cx="24" cy="27" r="2.2" fill="#3a2f14" />
           <circle cx="40" cy="27" r="2.2" fill="#3a2f14" />
           <path
-            d="M22 42 L42 42"
+            d="M 22 42 L 42 42"
             stroke="#3a2f14"
             strokeWidth="2.8"
             strokeLinecap="round"
