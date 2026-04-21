@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AppChrome } from "@/components/AppChrome";
-import { QQ_CONDITIONS } from "@/lib/constants";
 import {
   axisTabs,
   filterResponses,
@@ -15,8 +14,8 @@ import {
   workEngagementByDepartment,
   workEngagementSummary,
 } from "@/lib/analytics";
-import type { SummaryAxis } from "@/lib/types";
-import { ensureSeedResponses, getDepartments, getResponses } from "@/lib/storage";
+import type { QqConditionItem, SummaryAxis } from "@/lib/types";
+import { ensureSeedResponses, getDepartments, getQqConditions, getResponses } from "@/lib/storage";
 
 /* =============================================================================
  * デザイントークン
@@ -74,6 +73,7 @@ function niceCeil(x: number): number {
 export default function ResultsDashboard() {
   const [departments, setDepartments] = useState<string[]>([]);
   const [rows, setRows] = useState<ReturnType<typeof getResponses>>([]);
+  const [qqConditions, setQqConditions] = useState<QqConditionItem[]>([]);
   const [axis, setAxis] = useState<SummaryAxis>("department");
   const [tab, setTab] = useState<string>("all");
   const [middleView, setMiddleView] = useState<"loss" | "health">("loss");
@@ -82,6 +82,7 @@ export default function ResultsDashboard() {
     ensureSeedResponses();
     setDepartments(getDepartments());
     setRows(getResponses());
+    setQqConditions(getQqConditions());
   }, []);
 
   useEffect(() => {
@@ -95,7 +96,11 @@ export default function ResultsDashboard() {
   }, [tabs, tab]);
 
   const filtered = useMemo(() => filterResponses(rows, axis, activeTab), [rows, axis, activeTab]);
-  const occ = useMemo(() => summarizeOccupational(filtered), [filtered]);
+  const conditionPainMap = useMemo(
+    () => Object.fromEntries(qqConditions.map((c) => [c.id, c.painAreas])),
+    [qqConditions],
+  );
+  const occ = useMemo(() => summarizeOccupational(filtered, conditionPainMap), [filtered, conditionPainMap]);
   const lossTotal = useMemo(() => laborLossTotalManYen(filtered), [filtered]);
   const lossSplit = useMemo(() => laborLossSplitForTotal(filtered), [filtered]);
   const deptLoss = useMemo(() => laborLossByDepartment(filtered, departments), [filtered, departments]);
@@ -105,7 +110,8 @@ export default function ResultsDashboard() {
   const prodAbs = useMemo(() => productivityAndAbsentTotalsManYen(filtered), [filtered]);
 
   const conditionBars = useMemo(() => {
-    const entries = QQ_CONDITIONS.filter((c) => c.id !== "none")
+    const entries = qqConditions
+      .filter((c) => c.id !== "none")
       .map((c) => ({
         id: c.id,
         label: c.label,
@@ -114,7 +120,7 @@ export default function ResultsDashboard() {
       .sort((a, b) => b.count - a.count);
     const max = Math.max(1, ...entries.map((e) => e.count));
     return { entries, max };
-  }, [occ.healthProblems.conditionCounts]);
+  }, [qqConditions, occ.healthProblems.conditionCounts]);
 
   const painHotspots = useMemo(() => {
     const entries = Object.entries(occ.painCounts) as [string, number][];
@@ -741,6 +747,8 @@ const BODY_ASPECT = 568 / 1024; // ≒ 0.555
  *   x=0 : 画像左端        x=100 : 画像右端
  */
 const PAIN_MAP: Record<string, Array<{ x: number; y: number; r: number }>> = {
+  // 右上の顔面詳細図
+  face: [{ x: 78, y: 14, r: 46 }],
   // 頭部中心（髪の生え際付近）
   head: [{ x: 47, y: 15, r: 50 }],
   // 首の後ろ

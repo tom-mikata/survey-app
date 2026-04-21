@@ -23,6 +23,7 @@ export type QqConditionId =
   | "other";
 
 export type PainAreaCode =
+  | "face"
   | "head"
   | "neck"
   | "shoulder"
@@ -40,7 +41,7 @@ export interface SurveyResponse {
   ageGroup: AgeGroup;
   gender: Gender;
   /** QQ1 */
-  qqCondition: QqConditionId;
+  qqCondition: string;
   /** QQ2：過去30日間の有症状日数 */
   symptomDaysPast30: number;
   /** QQ3：不調がある日の仕事の量（0〜10） */
@@ -55,6 +56,12 @@ export interface SurveyResponse {
   weVigor: number;
   weDedication: number;
   weAbsorption: number;
+}
+
+export interface QqConditionItem {
+  id: string;
+  label: string;
+  painAreas: PainAreaCode[];
 }
 
 export type SummaryAxis = "department" | "age" | "gender";

@@ -1,6 +1,8 @@
-import type { AgeGroup, Gender, QqConditionId, SurveyResponse } from "./types";
+import { CONDITION_TO_PAIN_DEFAULT, QQ_CONDITIONS } from "./constants";
+import type { AgeGroup, Gender, PainAreaCode, QqConditionId, QqConditionItem, SurveyResponse } from "./types";
 
 const DEPT_KEY = "survey-app-departments";
+const QQ_KEY = "survey-app-qq-conditions";
 const RESPONSES_KEY = "survey-app-responses-v2";
 const SEED_FLAG = "survey-app-seed-v2";
 
@@ -42,6 +44,32 @@ export function getDepartments(): string[] {
 
 export function setDepartments(departments: string[]): void {
   localStorage.setItem(DEPT_KEY, JSON.stringify(departments));
+}
+
+function buildDefaultQqConditions(): QqConditionItem[] {
+  return QQ_CONDITIONS.map((c) => ({
+    id: c.id,
+    label: c.label,
+    painAreas: CONDITION_TO_PAIN_DEFAULT[c.id as QqConditionId] ?? [],
+  }));
+}
+
+export function getQqConditions(): QqConditionItem[] {
+  if (typeof window === "undefined") return buildDefaultQqConditions();
+  const raw = safeParse<{ id: string; label: string; painAreas?: PainAreaCode[] }[] | null>(
+    localStorage.getItem(QQ_KEY),
+    null,
+  );
+  if (!raw || raw.length === 0) return buildDefaultQqConditions();
+  return raw.map((item) => ({
+    id: item.id,
+    label: item.label,
+    painAreas: item.painAreas ?? (CONDITION_TO_PAIN_DEFAULT[item.id as QqConditionId] ?? []),
+  }));
+}
+
+export function setQqConditions(conditions: QqConditionItem[]): void {
+  localStorage.setItem(QQ_KEY, JSON.stringify(conditions));
 }
 
 export function getResponses(): SurveyResponse[] {

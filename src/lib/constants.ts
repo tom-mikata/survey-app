@@ -1,4 +1,4 @@
-import type { AgeGroup, Gender, QqConditionId } from "./types";
+import type { AgeGroup, Gender, PainAreaCode, QqConditionId } from "./types";
 
 export const AGE_GROUPS: { id: AgeGroup; label: string }[] = [
   { id: "20s", label: "20代" },
@@ -14,6 +14,27 @@ export const GENDERS: { id: Gender; label: string }[] = [
   { id: "other", label: "その他" },
   { id: "prefer_not", label: "回答しない" },
 ];
+
+/** 健康問題IDから痛み部位へのデフォルトマッピング */
+export const CONDITION_TO_PAIN_DEFAULT: Record<QqConditionId, PainAreaCode[]> = {
+  none: [],
+  allergy: ["head"],
+  skin: ["hand"],
+  infection: ["head"],
+  gi: [],
+  limb_joint: ["wrist", "hand", "knee", "ankle"],
+  lower_back: ["lower_back"],
+  neck_shoulder: ["neck", "shoulder"],
+  headache: ["head"],
+  dental: ["head"],
+  mental: ["head"],
+  sleep: ["head"],
+  fatigue: ["shoulder", "lower_back"],
+  eye: ["head"],
+  mens_pain: ["lower_back"],
+  mens_other: ["head"],
+  other: ["lower_back"],
+};
 
 /** QQメソッド 質問1の選択肢（解説記事の標準例に準拠） */
 export const QQ_CONDITIONS: { id: QqConditionId; label: string }[] = [

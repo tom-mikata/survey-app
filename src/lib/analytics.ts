@@ -1,4 +1,4 @@
-import { AGE_GROUPS, GENDERS } from "./constants";
+import { AGE_GROUPS, CONDITION_TO_PAIN_DEFAULT, GENDERS } from "./constants";
 import { qqAnnualLossCostManYen, qqPerformanceDeclineRatio } from "./qq-method";
 import type { PainAreaCode, QqConditionId, SummaryAxis, SurveyResponse } from "./types";
 
@@ -30,29 +30,9 @@ const CONDITION_TO_STACK: Record<QqConditionId, LossStackKey> = {
   other: "non_pain_disease",
 };
 
-/** ヒートマップ用：主要不調から部位への参照（簡易マッピング） */
-const CONDITION_TO_PAIN: Record<QqConditionId, PainAreaCode[]> = {
-  none: [],
-  allergy: ["head"],
-  skin: ["hand"],
-  infection: ["head"],
-  gi: [],
-  limb_joint: ["wrist", "hand", "knee", "ankle"],
-  lower_back: ["lower_back"],
-  neck_shoulder: ["neck", "shoulder"],
-  headache: ["head"],
-  dental: ["head"],
-  mental: ["head"],
-  sleep: ["head"],
-  fatigue: ["shoulder", "lower_back"],
-  eye: ["head"],
-  mens_pain: ["lower_back"],
-  mens_other: ["head"],
-  other: ["lower_back"],
-};
 
-function conditionToStack(c: QqConditionId): LossStackKey {
-  return CONDITION_TO_STACK[c];
+function conditionToStack(c: string): LossStackKey {
+  return CONDITION_TO_STACK[c as QqConditionId] ?? "non_pain_disease";
 }
 
 /** QQ式による年間損失（万円）。欠勤のある回答は可視化用に一部を欠勤関連として配分 */
@@ -119,14 +99,17 @@ function hasWorkImpairment(r: SurveyResponse): boolean {
   return qqPerformanceDeclineRatio(r.workQuantity, r.workQuality) > 0;
 }
 
-export function summarizeOccupational(rows: SurveyResponse[]) {
+export function summarizeOccupational(
+  rows: SurveyResponse[],
+  conditionPainMap?: Record<string, PainAreaCode[]>,
+) {
   const total = rows.length;
   const withImpairment = rows.filter(hasWorkImpairment);
   const impairmentDen = withImpairment.length;
   const withAbsentAmongImpairment = withImpairment.filter((r) => r.hadAbsenteeismOnSymptomDays);
   const healthIssues = rows.filter(hasHealthIssue);
 
-  const conditionCounts: Partial<Record<QqConditionId, number>> = {};
+  const conditionCounts: Record<string, number> = {};
   for (const r of rows) {
     if (r.qqCondition === "none") continue;
     conditionCounts[r.qqCondition] = (conditionCounts[r.qqCondition] ?? 0) + 1;
@@ -134,7 +117,8 @@ export function summarizeOccupational(rows: SurveyResponse[]) {
 
   const painCounts: Partial<Record<PainAreaCode, number>> = {};
   for (const r of rows) {
-    const areas = CONDITION_TO_PAIN[r.qqCondition] ?? [];
+    const painMap: Record<string, PainAreaCode[]> = conditionPainMap ?? CONDITION_TO_PAIN_DEFAULT;
+    const areas = painMap[r.qqCondition] ?? [];
     for (const p of areas) {
       painCounts[p] = (painCounts[p] ?? 0) + 1;
     }

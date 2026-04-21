@@ -4,8 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AppChrome } from "@/components/AppChrome";
-import { AGE_GROUPS, GENDERS, QQ_CONDITIONS } from "@/lib/constants";
-import { addResponse, getDepartments } from "@/lib/storage";
+import { AGE_GROUPS, GENDERS } from "@/lib/constants";
+import { addResponse, getDepartments, getQqConditions } from "@/lib/storage";
 import type { AgeGroup, Gender, QqConditionId, SurveyResponse } from "@/lib/types";
 
 const STEPS = 10;
@@ -20,12 +20,13 @@ function toAsciiDigitsOnly(raw: string): string {
 export default function SurveyPage() {
   const router = useRouter();
   const [departments, setDepartments] = useState<string[]>([]);
+  const [qqConditionList, setQqConditionList] = useState<{ id: string; label: string }[]>([]);
   const [step, setStep] = useState(1);
 
   const [department, setDepartment] = useState("");
   const [ageGroup, setAgeGroup] = useState<AgeGroup | "">("");
   const [gender, setGender] = useState<Gender | "">("");
-  const [qqCondition, setQqCondition] = useState<QqConditionId | "">("");
+  const [qqCondition, setQqCondition] = useState<string>("");
   const [symptomDaysPast30, setSymptomDaysPast30] = useState(0);
   /** ステップ5の入力欄（空文字を許しキーボード入力しやすくする） */
   const [symptomDaysInput, setSymptomDaysInput] = useState("0");
@@ -47,6 +48,7 @@ export default function SurveyPage() {
 
   const load = useCallback(() => {
     setDepartments(getDepartments());
+    setQqConditionList(getQqConditions());
   }, []);
 
   useEffect(() => {
@@ -287,7 +289,7 @@ export default function SurveyPage() {
                 ）。
               </p>
               <div className="grid grid-cols-1 gap-2 max-h-[28rem] overflow-y-auto pr-1">
-                {QQ_CONDITIONS.map((c) => (
+                {qqConditionList.filter((c) => gender === "female" || !c.label.startsWith("（女性のみ）")).map((c) => (
                   <button
                     key={c.id}
                     type="button"
