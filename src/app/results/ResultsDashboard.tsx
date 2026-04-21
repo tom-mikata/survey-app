@@ -740,7 +740,7 @@ const BODY_ASPECT = 568 / 1024; // ≒ 0.555
  * 画像上でのホットスポット位置（パーセント）と表示半径（px）。
  *
  * 画像は右上に「頭部ディテール」が入る構図（568×1024）前提のため、
- * 体の正中線 x ≒ 43% に置いています。画像をトリミングして体を
+ * 体の正中線 x ≒ 47% に置いています。画像をトリミングして体を
  * センタリングした場合は、全体を +7 程度シフトしてください。
  *
  *   y=0 : 画像上端        y=100 : 画像下端
@@ -748,56 +748,56 @@ const BODY_ASPECT = 568 / 1024; // ≒ 0.555
  */
 const PAIN_MAP: Record<string, Array<{ x: number; y: number; r: number }>> = {
   // 右上の顔面詳細図
-  face: [{ x: 78, y: 14, r: 46 }],
+  face: [{ x: 78, y: 14, r: 16 }],
   // 頭部中心（髪の生え際付近）
-  head: [{ x: 47, y: 15, r: 50 }],
+  head: [{ x: 47, y: 15, r: 16 }],
   // 首の後ろ
-  neck: [{ x: 47, y: 23, r: 34 }],
+  neck: [{ x: 47, y: 25, r: 16 }],
   // 両肩（僧帽筋上部）
   shoulder: [
-    { x: 37, y: 27, r: 44 },
-    { x: 58, y: 27, r: 44 },
+    { x: 37, y: 28, r: 20 },
+    { x: 58, y: 28, r: 20 },
   ],
   // 肩甲骨〜背中上部
-  upper_back: [{ x: 47, y: 34, r: 66 }],
+  upper_back: [{ x: 47, y: 34, r: 20 }],
   // 腰（腰椎）
-  lower_back: [{ x: 47, y: 48, r: 72 }],
+  lower_back: [{ x: 47, y: 42, r: 38 }],
   // 臀部
-  hip: [{ x: 47, y: 57, r: 60 }],
+  hip: [{ x: 47, y: 52, r: 38 }],
   // 両肘
   elbow: [
-    { x: 22, y: 47, r: 32 },
-    { x: 69, y: 47, r: 32 },
+    { x: 22, y: 47, r: 18 },
+    { x: 69, y: 47, r: 18 },
+  ],
+  // 両腕
+  arm: [
+    { x: 28, y: 42, r: 18 },
+    { x: 66, y: 42, r: 18 },
   ],
   // 両手首
   wrist: [
-    { x: 20, y: 56, r: 32 },
-    { x: 73, y: 56, r: 32 },
-  ],
-  // 両手
-  hand: [
-    { x: 18, y: 60, r: 38 },
-    { x: 77, y: 60, r: 38 },
+    { x: 23, y: 52, r: 18 },
+    { x: 72, y: 52, r: 18 },
   ],
   // 大腿（太もも）
   thigh: [
-    { x: 35, y: 66, r: 38 },
-    { x: 51, y: 66, r: 38 },
+    { x: 35, y: 66, r: 22 },
+    { x: 51, y: 66, r: 22 },
   ],
   // 両膝
   knee: [
-    { x: 37, y: 77, r: 34 },
-    { x: 58, y: 77, r: 34 },
+    { x: 38, y: 70, r: 20 },
+    { x: 56, y: 70, r: 20 },
   ],
   // ふくらはぎ
   calf: [
-    { x: 35, y: 85, r: 32 },
-    { x: 56, y: 85, r: 32 },
+    { x: 35, y: 85, r: 18 },
+    { x: 56, y: 85, r: 18 },
   ],
   // 両足首
   ankle: [
-    { x: 35, y: 93, r: 28 },
-    { x: 58, y: 93, r: 28 },
+    { x: 36, y: 88, r: 18 },
+    { x: 58, y: 88, r: 18 },
   ],
 };
 
@@ -827,13 +827,11 @@ function PainFigure({
           {hotspots.map((h) => {
             const positions = PAIN_MAP[h.id];
             if (!positions || h.count === 0) return null;
-            // データ強度（0-1）に応じて濃さとサイズを調整
             const intensity = Math.max(0.15, h.intensity);
             const coreAlpha = 0.35 + intensity * 0.45; // 0.35 - 0.80
             const midAlpha = 0.22 + intensity * 0.28; // 0.22 - 0.50
-            const scale = 0.75 + intensity * 0.45; // 0.75 - 1.20
             return positions.map((pos, idx) => {
-              const size = pos.r * 2 * scale;
+              const size = pos.r * 2;
               return (
                 <span
                   key={`${h.id}-${idx}`}

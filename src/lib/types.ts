@@ -28,8 +28,8 @@ export type PainAreaCode =
   | "neck"
   | "shoulder"
   | "lower_back"
+  | "arm"
   | "wrist"
-  | "hand"
   | "hip"
   | "knee"
   | "ankle";

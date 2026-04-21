@@ -19,10 +19,10 @@ export const GENDERS: { id: Gender; label: string }[] = [
 export const CONDITION_TO_PAIN_DEFAULT: Record<QqConditionId, PainAreaCode[]> = {
   none: [],
   allergy: ["head"],
-  skin: ["hand"],
+  skin: ["wrist"],
   infection: ["head"],
   gi: [],
-  limb_joint: ["wrist", "hand", "knee", "ankle"],
+  limb_joint: ["arm", "wrist", "knee", "ankle"],
   lower_back: ["lower_back"],
   neck_shoulder: ["neck", "shoulder"],
   headache: ["head"],
