@@ -46,9 +46,10 @@ export default function SurveyPage() {
 
   const isNoCondition = qqCondition === "none";
 
-  const load = useCallback(() => {
-    setDepartments(getDepartments());
-    setQqConditionList(getQqConditions());
+  const load = useCallback(async () => {
+    const [depts, conditions] = await Promise.all([getDepartments(), getQqConditions()]);
+    setDepartments(depts);
+    setQqConditionList(conditions);
   }, []);
 
   useEffect(() => {
@@ -113,7 +114,7 @@ export default function SurveyPage() {
     setStep((s) => Math.max(1, s - 1));
   };
 
-  const submit = () => {
+  const submit = async () => {
     const salaryDigits = toAsciiDigitsOnly(monthlySalaryInput);
     const salaryParsed = parseInt(salaryDigits, 10);
     const salaryFinal = Number.isNaN(salaryParsed) || salaryParsed < 1 ? 30 : salaryParsed;
@@ -139,7 +140,7 @@ export default function SurveyPage() {
       weDedication,
       weAbsorption,
     };
-    addResponse(r);
+    await addResponse(r);
     router.push("/survey/complete");
   };
 

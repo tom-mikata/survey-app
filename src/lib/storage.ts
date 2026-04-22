@@ -1,50 +1,6 @@
 import { CONDITION_TO_PAIN_DEFAULT, QQ_CONDITIONS } from "./constants";
 import type { AgeGroup, Gender, PainAreaCode, QqConditionId, QqConditionItem, SurveyResponse } from "./types";
-
-const DEPT_KEY = "survey-app-departments";
-const QQ_KEY = "survey-app-qq-conditions";
-const RESPONSES_KEY = "survey-app-responses-v2";
-const SEED_FLAG = "survey-app-seed-v2";
-
-const defaultDepartments = [
-  "業務部",
-  "エアツール課",
-  "油圧チゼル課",
-  "営業部",
-  "鋼材課",
-  "熱処理課",
-];
-
-const SEED_CONDITIONS: QqConditionId[] = [
-  "none",
-  "neck_shoulder",
-  "lower_back",
-  "headache",
-  "fatigue",
-  "limb_joint",
-  "eye",
-  "mental",
-  "allergy",
-];
-
-function safeParse<T>(raw: string | null, fallback: T): T {
-  if (!raw) return fallback;
-  try {
-    return JSON.parse(raw) as T;
-  } catch {
-    return fallback;
-  }
-}
-
-export function getDepartments(): string[] {
-  if (typeof window === "undefined") return defaultDepartments;
-  const list = safeParse<string[]>(localStorage.getItem(DEPT_KEY), []);
-  return list.length > 0 ? list : defaultDepartments;
-}
-
-export function setDepartments(departments: string[]): void {
-  localStorage.setItem(DEPT_KEY, JSON.stringify(departments));
-}
+import { supabase } from "./supabase";
 
 function buildDefaultQqConditions(): QqConditionItem[] {
   return QQ_CONDITIONS.map((c) => ({
@@ -54,81 +10,107 @@ function buildDefaultQqConditions(): QqConditionItem[] {
   }));
 }
 
-export function getQqConditions(): QqConditionItem[] {
-  if (typeof window === "undefined") return buildDefaultQqConditions();
-  const raw = safeParse<{ id: string; label: string; painAreas?: PainAreaCode[] }[] | null>(
-    localStorage.getItem(QQ_KEY),
-    null,
+export async function getDepartments(): Promise<string[]> {
+  const { data, error } = await supabase
+    .from("departments")
+    .select("name")
+    .order("sort_order");
+  if (error || !data || data.length === 0) return [];
+  return data.map((r: { name: string }) => r.name);
+}
+
+export async function setDepartments(departments: string[]): Promise<void> {
+  await supabase.from("departments").delete().neq("id", 0);
+  if (departments.length === 0) return;
+  await supabase.from("departments").insert(
+    departments.map((name, i) => ({ name, sort_order: i })),
   );
-  if (!raw || raw.length === 0) return buildDefaultQqConditions();
-  return raw.map((item) => ({
-    id: item.id,
-    label: item.label,
-    painAreas: item.painAreas ?? (CONDITION_TO_PAIN_DEFAULT[item.id as QqConditionId] ?? []),
+}
+
+export async function getQqConditions(): Promise<QqConditionItem[]> {
+  const { data, error } = await supabase
+    .from("qq_conditions")
+    .select("id, label, pain_areas")
+    .order("sort_order");
+  if (error || !data || data.length === 0) return buildDefaultQqConditions();
+  return data.map((r: { id: string; label: string; pain_areas: string[] }) => ({
+    id: r.id,
+    label: r.label,
+    painAreas: (r.pain_areas ?? []) as PainAreaCode[],
   }));
 }
 
-export function setQqConditions(conditions: QqConditionItem[]): void {
-  localStorage.setItem(QQ_KEY, JSON.stringify(conditions));
+export async function setQqConditions(conditions: QqConditionItem[]): Promise<void> {
+  await supabase.from("qq_conditions").delete().neq("id", "");
+  if (conditions.length === 0) return;
+  await supabase.from("qq_conditions").insert(
+    conditions.map((c, i) => ({
+      id: c.id,
+      label: c.label,
+      pain_areas: c.painAreas,
+      sort_order: i,
+    })),
+  );
 }
 
-export function getResponses(): SurveyResponse[] {
-  if (typeof window === "undefined") return [];
-  return safeParse<SurveyResponse[]>(localStorage.getItem(RESPONSES_KEY), []);
+export async function getResponses(): Promise<SurveyResponse[]> {
+  const { data, error } = await supabase
+    .from("survey_responses")
+    .select("*")
+    .order("submitted_at");
+  if (error || !data) return [];
+  return data.map((r: {
+    id: string;
+    submitted_at: string;
+    department: string;
+    age_group: string;
+    gender: string;
+    qq_condition: string;
+    symptom_days_past30: number;
+    work_quantity: number;
+    work_quality: number;
+    had_absenteeism: boolean;
+    monthly_salary_man_yen: number;
+    we_vigor: number;
+    we_dedication: number;
+    we_absorption: number;
+  }) => ({
+    id: r.id,
+    submittedAt: r.submitted_at,
+    department: r.department,
+    ageGroup: r.age_group as AgeGroup,
+    gender: r.gender as Gender,
+    qqCondition: r.qq_condition,
+    symptomDaysPast30: r.symptom_days_past30,
+    workQuantity: r.work_quantity,
+    workQuality: r.work_quality,
+    hadAbsenteeismOnSymptomDays: r.had_absenteeism,
+    monthlySalaryManYen: r.monthly_salary_man_yen,
+    weVigor: r.we_vigor,
+    weDedication: r.we_dedication,
+    weAbsorption: r.we_absorption,
+  }));
 }
 
-export function addResponse(response: SurveyResponse): void {
-  const prev = getResponses();
-  localStorage.setItem(RESPONSES_KEY, JSON.stringify([...prev, response]));
+export async function addResponse(response: SurveyResponse): Promise<void> {
+  await supabase.from("survey_responses").insert({
+    id: response.id,
+    submitted_at: response.submittedAt,
+    department: response.department,
+    age_group: response.ageGroup,
+    gender: response.gender,
+    qq_condition: response.qqCondition,
+    symptom_days_past30: response.symptomDaysPast30,
+    work_quantity: response.workQuantity,
+    work_quality: response.workQuality,
+    had_absenteeism: response.hadAbsenteeismOnSymptomDays,
+    monthly_salary_man_yen: response.monthlySalaryManYen,
+    we_vigor: response.weVigor,
+    we_dedication: response.weDedication,
+    we_absorption: response.weAbsorption,
+  });
 }
 
-export function clearResponses(): void {
-  localStorage.removeItem(RESPONSES_KEY);
-}
-
-/** デモ用の初期データ（初回のみ・QQメソッド入力形式） */
-export function ensureSeedResponses(): void {
-  if (typeof window === "undefined") return;
-  if (localStorage.getItem(SEED_FLAG)) return;
-  const depts = getDepartments();
-  if (getResponses().length > 0) {
-    localStorage.setItem(SEED_FLAG, "1");
-    return;
-  }
-
-  const ages: AgeGroup[] = ["20s", "30s", "40s", "50s", "60plus"];
-  const genders: Gender[] = ["male", "female"];
-
-  const seeded: SurveyResponse[] = [];
-  let id = 0;
-  for (let i = 0; i < 29; i++) {
-    const dept = depts[i % depts.length];
-    const cond = SEED_CONDITIONS[i % SEED_CONDITIONS.length];
-    const isNone = cond === "none";
-    const days = isNone ? 0 : 5 + (i % 20);
-    const q = isNone ? 10 : 4 + (i % 5);
-    const u = isNone ? 10 : 5 + (i % 4);
-    const decline = 1 - (q / 10) * (u / 10);
-    const hasAbs = !isNone && decline > 0 && i % 4 === 0;
-
-    seeded.push({
-      id: `seed-${id++}`,
-      submittedAt: new Date().toISOString(),
-      department: dept,
-      ageGroup: ages[i % ages.length],
-      gender: genders[i % 2],
-      qqCondition: cond,
-      symptomDaysPast30: days,
-      workQuantity: q,
-      workQuality: u,
-      hadAbsenteeismOnSymptomDays: hasAbs,
-      monthlySalaryManYen: 28 + (i % 5) * 2,
-      weVigor: 2.5 + (i % 4) * 0.4,
-      weDedication: 3 + (i % 5) * 0.35,
-      weAbsorption: 3.2 + (i % 3) * 0.3,
-    });
-  }
-
-  localStorage.setItem(RESPONSES_KEY, JSON.stringify(seeded));
-  localStorage.setItem(SEED_FLAG, "1");
+export async function clearResponses(): Promise<void> {
+  await supabase.from("survey_responses").delete().neq("id", "");
 }

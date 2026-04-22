@@ -40,19 +40,20 @@ export default function SettingsPage() {
   const [qqDraft, setQqDraft] = useState("");
   const [qqSaved, setQqSaved] = useState(false);
 
-  const load = useCallback(() => {
-    setDeptRows(getDepartments());
-    setQqRows(getQqConditions());
+  const load = useCallback(async () => {
+    const [depts, conditions] = await Promise.all([getDepartments(), getQqConditions()]);
+    setDeptRows(depts);
+    setQqRows(conditions);
   }, []);
 
   useEffect(() => {
-    queueMicrotask(() => load());
+    load();
   }, [load]);
 
   // ---- 部署の操作 ----
-  const saveDepts = () => {
+  const saveDepts = async () => {
     const cleaned = deptRows.map((s) => s.trim()).filter(Boolean);
-    setDepartments(cleaned);
+    await setDepartments(cleaned);
     setDeptRows(cleaned);
     setDeptSaved(true);
     setTimeout(() => setDeptSaved(false), 2000);
@@ -69,9 +70,9 @@ export default function SettingsPage() {
   const moveDept = (i: number, dir: -1 | 1) => setDeptRows(moveItem(deptRows, i, i + dir));
 
   // ---- 設問の操作 ----
-  const saveQq = () => {
+  const saveQq = async () => {
     const cleaned = qqRows.filter((r) => r.label.trim());
-    setQqConditions(cleaned);
+    await setQqConditions(cleaned);
     setQqRows(cleaned);
     setQqSaved(true);
     setTimeout(() => setQqSaved(false), 2000);

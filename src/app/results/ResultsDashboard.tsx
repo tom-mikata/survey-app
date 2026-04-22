@@ -14,8 +14,8 @@ import {
   workEngagementByDepartment,
   workEngagementSummary,
 } from "@/lib/analytics";
-import type { QqConditionItem, SummaryAxis } from "@/lib/types";
-import { ensureSeedResponses, getDepartments, getQqConditions, getResponses } from "@/lib/storage";
+import type { QqConditionItem, SummaryAxis, SurveyResponse } from "@/lib/types";
+import { getDepartments, getQqConditions, getResponses } from "@/lib/storage";
 
 /* =============================================================================
  * デザイントークン
@@ -72,17 +72,21 @@ function niceCeil(x: number): number {
 
 export default function ResultsDashboard() {
   const [departments, setDepartments] = useState<string[]>([]);
-  const [rows, setRows] = useState<ReturnType<typeof getResponses>>([]);
+  const [rows, setRows] = useState<SurveyResponse[]>([]);
   const [qqConditions, setQqConditions] = useState<QqConditionItem[]>([]);
   const [axis, setAxis] = useState<SummaryAxis>("department");
   const [tab, setTab] = useState<string>("all");
   const [middleView, setMiddleView] = useState<"loss" | "health">("loss");
 
-  const load = useCallback(() => {
-    ensureSeedResponses();
-    setDepartments(getDepartments());
-    setRows(getResponses());
-    setQqConditions(getQqConditions());
+  const load = useCallback(async () => {
+    const [depts, responses, conditions] = await Promise.all([
+      getDepartments(),
+      getResponses(),
+      getQqConditions(),
+    ]);
+    setDepartments(depts);
+    setRows(responses);
+    setQqConditions(conditions);
   }, []);
 
   useEffect(() => {
@@ -748,7 +752,7 @@ const BODY_ASPECT = 568 / 1024; // ≒ 0.555
  */
 const PAIN_MAP: Record<string, Array<{ x: number; y: number; r: number }>> = {
   // 右上の顔面詳細図
-  face: [{ x: 78, y: 14, r: 16 }],
+  face: [{ x: 77.5, y: 15, r: 16 }],
   // 頭部中心（髪の生え際付近）
   head: [{ x: 47, y: 15, r: 16 }],
   // 首の後ろ
