@@ -14,9 +14,15 @@ export function AppChrome({
 }) {
   const router = useRouter();
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [surveyHref, setSurveyHref] = useState("/survey");
 
   useEffect(() => {
-    getAuthUser().then((u) => setUserEmail(u?.email ?? null));
+    getAuthUser().then((u) => {
+      setUserEmail(u?.email ?? null);
+      if (u?.role === "client_admin" && u.clientCode) {
+        setSurveyHref(`/survey?client=${u.clientCode}`);
+      }
+    });
   }, []);
 
   const handleSignOut = async () => {
@@ -48,7 +54,7 @@ export function AppChrome({
           <Link href="/settings" className="text-slate-500 hover:text-sky-700 font-medium px-2 py-1 rounded-md hover:bg-sky-50">
             設定
           </Link>
-          <Link href="/survey" className="text-slate-500 hover:text-sky-700 font-medium px-2 py-1 rounded-md hover:bg-sky-50">
+          <Link href={surveyHref} className="text-slate-500 hover:text-sky-700 font-medium px-2 py-1 rounded-md hover:bg-sky-50">
             アンケート
           </Link>
           <Link href="/results" className="bg-sky-600 hover:bg-sky-700 text-white font-semibold px-3 py-1.5 rounded-lg transition-colors">
