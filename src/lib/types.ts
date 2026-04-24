@@ -36,6 +36,7 @@ export type PainAreaCode =
 
 export interface SurveyResponse {
   id: string;
+  clientCode: string;
   submittedAt: string;
   department: string;
   ageGroup: AgeGroup;

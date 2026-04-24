@@ -1,4 +1,9 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { getAuthUser, signOut } from "@/lib/auth";
 
 export function AppChrome({
   children,
@@ -7,6 +12,19 @@ export function AppChrome({
   children: React.ReactNode;
   title?: string;
 }) {
+  const router = useRouter();
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    getAuthUser().then((u) => setUserEmail(u?.email ?? null));
+  }, []);
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.push("/login");
+    router.refresh();
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-800">
       <header className="bg-white border-b border-slate-200 px-6 sm:px-8 py-4 flex items-center justify-between gap-4">
@@ -27,24 +45,27 @@ export function AppChrome({
           </div>
         </Link>
         <nav className="flex items-center gap-2 text-xs sm:text-sm flex-shrink-0">
-          <Link
-            href="/settings"
-            className="text-slate-500 hover:text-sky-700 font-medium px-2 py-1 rounded-md hover:bg-sky-50"
-          >
+          <Link href="/settings" className="text-slate-500 hover:text-sky-700 font-medium px-2 py-1 rounded-md hover:bg-sky-50">
             設定
           </Link>
-          <Link
-            href="/survey"
-            className="text-slate-500 hover:text-sky-700 font-medium px-2 py-1 rounded-md hover:bg-sky-50"
-          >
+          <Link href="/survey" className="text-slate-500 hover:text-sky-700 font-medium px-2 py-1 rounded-md hover:bg-sky-50">
             アンケート
           </Link>
-          <Link
-            href="/results"
-            className="bg-sky-600 hover:bg-sky-700 text-white font-semibold px-3 py-1.5 rounded-lg transition-colors"
-          >
+          <Link href="/results" className="bg-sky-600 hover:bg-sky-700 text-white font-semibold px-3 py-1.5 rounded-lg transition-colors">
             分析結果
           </Link>
+          {userEmail && (
+            <>
+              <span className="text-slate-400 text-xs hidden sm:inline truncate max-w-[12rem]">{userEmail}</span>
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="text-slate-500 hover:text-red-600 font-medium px-2 py-1 rounded-md hover:bg-red-50 text-xs"
+              >
+                ログアウト
+              </button>
+            </>
+          )}
         </nav>
       </header>
       {children}

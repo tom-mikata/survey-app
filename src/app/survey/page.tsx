@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { use } from "react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AppChrome } from "@/components/AppChrome";
@@ -17,7 +18,12 @@ function toAsciiDigitsOnly(raw: string): string {
     .replace(/\D/g, "");
 }
 
-export default function SurveyPage() {
+export default function SurveyPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ client?: string }>;
+}) {
+  const { client: clientCode = "" } = use(searchParams);
   const router = useRouter();
   const [departments, setDepartments] = useState<string[]>([]);
   const [qqConditionList, setQqConditionList] = useState<{ id: string; label: string }[]>([]);
@@ -47,10 +53,10 @@ export default function SurveyPage() {
   const isNoCondition = qqCondition === "none";
 
   const load = useCallback(async () => {
-    const [depts, conditions] = await Promise.all([getDepartments(), getQqConditions()]);
+    const [depts, conditions] = await Promise.all([getDepartments(clientCode), getQqConditions(clientCode)]);
     setDepartments(depts);
     setQqConditionList(conditions);
-  }, []);
+  }, [clientCode]);
 
   useEffect(() => {
     queueMicrotask(() => load());
@@ -126,6 +132,7 @@ export default function SurveyPage() {
     const cond = qqCondition as QqConditionId;
     const r: SurveyResponse = {
       id,
+      clientCode,
       submittedAt: new Date().toISOString(),
       department,
       ageGroup: ageGroup as AgeGroup,

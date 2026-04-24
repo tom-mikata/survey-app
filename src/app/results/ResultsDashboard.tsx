@@ -15,7 +15,9 @@ import {
   workEngagementSummary,
 } from "@/lib/analytics";
 import type { QqConditionItem, SummaryAxis, SurveyResponse } from "@/lib/types";
-import { getDepartments, getQqConditions, getResponses } from "@/lib/storage";
+import { getDepartments, getClients, getQqConditions, getResponses } from "@/lib/storage";
+import { getAuthUser } from "@/lib/auth";
+import type { AuthUser } from "@/lib/auth";
 
 /* =============================================================================
  * デザイントークン
@@ -71,6 +73,9 @@ function niceCeil(x: number): number {
  * ========================================================================== */
 
 export default function ResultsDashboard() {
+  const [authUser, setAuthUser] = useState<AuthUser | null>(null);
+  const [clients, setClients] = useState<{ code: string; name: string }[]>([]);
+  const [selectedClientCode, setSelectedClientCode] = useState<string | null>(null);
   const [departments, setDepartments] = useState<string[]>([]);
   const [rows, setRows] = useState<SurveyResponse[]>([]);
   const [qqConditions, setQqConditions] = useState<QqConditionItem[]>([]);
@@ -78,11 +83,11 @@ export default function ResultsDashboard() {
   const [tab, setTab] = useState<string>("all");
   const [middleView, setMiddleView] = useState<"loss" | "health">("loss");
 
-  const load = useCallback(async () => {
+  const loadData = useCallback(async (clientCode: string | null) => {
     const [depts, responses, conditions] = await Promise.all([
-      getDepartments(),
-      getResponses(),
-      getQqConditions(),
+      getDepartments(clientCode),
+      getResponses(clientCode),
+      getQqConditions(clientCode),
     ]);
     setDepartments(depts);
     setRows(responses);
@@ -90,8 +95,29 @@ export default function ResultsDashboard() {
   }, []);
 
   useEffect(() => {
-    queueMicrotask(() => load());
-  }, [load]);
+    (async () => {
+      const user = await getAuthUser();
+      setAuthUser(user);
+      if (!user) return;
+
+      if (user.role === "system_admin") {
+        const list = await getClients();
+        setClients(list);
+        setSelectedClientCode(null);
+        loadData(null);
+      } else {
+        const code = user.clientCode ?? null;
+        setSelectedClientCode(code);
+        loadData(code);
+      }
+    })();
+  }, [loadData]);
+
+  const handleClientFilter = (code: string) => {
+    const val = code === "" ? null : code;
+    setSelectedClientCode(val);
+    loadData(val);
+  };
 
   const tabs = useMemo(() => axisTabs(axis, departments), [axis, departments]);
   const activeTab = useMemo(() => {
@@ -153,6 +179,22 @@ export default function ResultsDashboard() {
     <AppChrome title="ダッシュボード">
       <div className="min-h-screen bg-[#eef3f3]">
         <main className="mx-auto max-w-7xl space-y-7 px-4 py-8 sm:px-6 lg:px-10">
+          {/* クライアントフィルター（system_admin のみ） */}
+          {authUser?.role === "system_admin" && clients.length > 0 && (
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-semibold text-slate-600 shrink-0">クライアント：</span>
+              <select
+                value={selectedClientCode ?? ""}
+                onChange={(e) => handleClientFilter(e.target.value)}
+                className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400"
+              >
+                <option value="">全クライアント</option>
+                {clients.map((c) => (
+                  <option key={c.code} value={c.code}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
           {/* ---------------- フィルター行 ---------------- */}
           <section className="flex flex-col gap-4 xl:flex-row xl:items-center">
             <div className="flex shrink-0 items-center gap-3">
