@@ -1,0 +1,22 @@
+[auth]
+site_url = "https://tom-survey-app.vercel.app"
+additional_redirect_urls = [
+  "https://tom-survey-app.vercel.app/**",
+  "https://*.vercel.app/**",
+  "http://localhost:3000/**"
+]
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+enable_confirmations = false
+
+[auth.email.smtp]
+enabled = true
+host = "smtp.resend.com"
+port = 587
+user = "resend"
+# パスワード（Resend APIキー）は環境変数 SUPABASE_AUTH_SMTP_PASS で管理
+pass = "env(SUPABASE_AUTH_SMTP_PASS)"
+admin_email = "noreply@c-mikata.co.jp"
+sender_name = "健康管理システム"
