@@ -2,6 +2,10 @@
 -- soxx クライアントのデモデータ
 -- =====================================================
 
+-- クライアント登録
+INSERT INTO clients (code, name) VALUES ('soxx', 'soxx')
+  ON CONFLICT (code) DO NOTHING;
+
 -- 部署
 INSERT INTO departments (name, sort_order, client_code) VALUES
   ('総務部',       0, 'soxx'),
