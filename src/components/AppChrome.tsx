@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 import { getAuthUser, signOut } from "@/lib/auth";
 
 export function AppChrome({
@@ -17,8 +18,10 @@ export function AppChrome({
   const [surveyHref, setSurveyHref] = useState("/survey");
 
   useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUserEmail(user?.email ?? null);
+    });
     getAuthUser().then((u) => {
-      setUserEmail(u?.email ?? null);
       if (u?.role === "client_admin" && u.clientCode) {
         setSurveyHref(`/survey?client=${u.clientCode}`);
       }

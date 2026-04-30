@@ -96,7 +96,10 @@ npx supabase db push
 
 **Authentication → Email → Templates → Recovery**
 
-`supabase/templates/recovery.html` の内容を貼り付けて保存。
+| 項目 | 値 |
+|---|---|
+| Subject | `パスワードリセットを受け付けました` |
+| Body | `supabase/templates/recovery.html` の内容を貼り付けて保存 |
 
 ### 3-5. ユーザー作成
 
