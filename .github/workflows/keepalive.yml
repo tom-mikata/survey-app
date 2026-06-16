@@ -1,0 +1,21 @@
+name: Supabase Keepalive
+
+on:
+  schedule:
+    - cron: "0 0 * * *"  # 毎日 0:00 UTC (日本時間 9:00)
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        url:
+          - https://tom-survey-app.vercel.app/api/keepalive
+          - https://survey-app-git-develop-tom-5990s-projects.vercel.app/api/keepalive
+    steps:
+      - name: Ping ${{ matrix.url }}
+        run: |
+          curl -sf -X GET "${{ matrix.url }}" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            || exit 1
