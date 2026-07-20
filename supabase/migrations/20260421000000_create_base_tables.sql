@@ -36,6 +36,29 @@ CREATE TABLE IF NOT EXISTS qq_conditions (
   sort_order integer NOT NULL DEFAULT 0
 );
 
+-- qq_conditions の初期データ（client_code 追加前の状態）
+-- 本番環境では migration 000001 実行前に手動でINSERT済みだったため、
+-- 000001 の UPDATE client_code = 'default' によって default クライアントに紐付けられた。
+-- migration 000002 は 'default' からコピーするため、このデータが必要。
+INSERT INTO qq_conditions (id, label, pain_areas, sort_order) VALUES
+  ('none',          '健康上の問題や不調はない',                                    '{}',                     0),
+  ('allergy',       'アレルギーによる疾患（花粉症・アレルギー性結膜炎など）',          '{head}',                 1),
+  ('skin',          '皮膚の病気・かゆみ（湿疹やアトピー性湿疹など）',                 '{wrist}',                2),
+  ('infection',     '感染症による不調（風邪、インフルエンザ、胃腸炎）',               '{head}',                 3),
+  ('gi',            '胃腸に関する不調（繰り返す下痢、便秘、胃不快感）',              '{}',                     4),
+  ('limb_joint',    '手足の関節の痛みや不自由さ（関節炎など）',                     '{arm,wrist,knee,ankle}', 5),
+  ('lower_back',    '腰痛',                                                      '{lower_back}',           6),
+  ('neck_shoulder', '首の不調や肩のこりなど',                                      '{neck,shoulder}',        7),
+  ('headache',      '頭痛（偏頭痛や慢性的な頭痛など）',                            '{head}',                 8),
+  ('dental',        '歯の不調（歯痛など）',                                       '{head}',                 9),
+  ('mental',        '精神に関する不調',                                           '{head}',                10),
+  ('sleep',         '睡眠に関する不調（寝ようとしても眠れないなど）',                '{head}',                11),
+  ('fatigue',       '全身の倦怠感、疲労感',                                       '{shoulder,lower_back}', 12),
+  ('eye',           '眼の不調（視力低下・眼精疲労・ドライアイ・緑内障など）',         '{head}',                13),
+  ('mens_pain',     '（女性のみ）月経痛（生理痛）',                                '{lower_back}',          14),
+  ('mens_other',    '（女性のみ）月経前症状（イライラ・憂うつ・頭痛）',              '{head}',                15),
+  ('other',         'その他',                                                    '{lower_back}',          16);
+
 -- survey_responses（client_code 追加前の初期状態）
 CREATE TABLE IF NOT EXISTS survey_responses (
   id text NOT NULL PRIMARY KEY,
