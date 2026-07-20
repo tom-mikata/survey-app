@@ -23,9 +23,15 @@ export default function LoginPage({
     setLoading(true);
     setError("");
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      setError("メールアドレスまたはパスワードが正しくありません");
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        setError("メールアドレスまたはパスワードが正しくありません");
+        setLoading(false);
+        return;
+      }
+    } catch {
+      setError("ログインに失敗しました。画面を再読み込みして再試行してください。");
       setLoading(false);
       return;
     }
