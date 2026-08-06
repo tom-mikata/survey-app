@@ -4,7 +4,8 @@
       "Bash(npx create-next-app@latest *)",
       "Bash(npm run *)",
       "Bash(npx tsc *)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(git -C /Users/tomfujita/projects/survey-app log --oneline --all -- .env.local .env.local.dev scripts/seed.ts)"
     ]
   }
 }

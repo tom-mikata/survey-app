@@ -53,11 +53,7 @@ npm run dev
 開発用DBにテスト用の部署・症状選択肢・回答データを投入します。
 
 ```bash
-# デフォルトで .env.local を読み込みます
 npx ts-node --esm scripts/seed.ts
-
-# 別の .env ファイルを使う場合
-ENV_FILE=.env.local.dev npx ts-node --esm scripts/seed.ts
 ```
 
 ---
