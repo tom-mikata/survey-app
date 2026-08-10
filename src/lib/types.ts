@@ -65,6 +65,15 @@ export interface QqConditionItem {
   painAreas: PainAreaCode[];
 }
 
+export interface SurveyRound {
+  id: number;
+  clientCode: string;
+  title: string;
+  startedAt: string | null;
+  endedAt: string | null;
+  createdAt: string;
+}
+
 export type SummaryAxis = "department" | "age" | "gender";
 
 export type SegmentTabValue = "all" | string;
