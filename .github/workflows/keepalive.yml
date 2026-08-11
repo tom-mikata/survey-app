@@ -16,7 +16,7 @@ jobs:
     steps:
       - name: Ping ${{ matrix.url }}
         run: |
-          RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X GET "${{ matrix.url }}" \
+          RESPONSE=$(curl -s -L -w "\nHTTP_STATUS:%{http_code}" -X GET "${{ matrix.url }}" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}")
           echo "Response: $RESPONSE"
           HTTP_STATUS=$(echo "$RESPONSE" | grep -o "HTTP_STATUS:[0-9]*" | cut -d: -f2)
