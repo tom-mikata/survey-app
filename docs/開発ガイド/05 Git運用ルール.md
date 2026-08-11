@@ -16,20 +16,85 @@ issue番号をブランチ名に含めると、何の作業か一目でわかり
 
 ## 基本的な作業の流れ
 
-1. `develop` から最新を取得してブランチを作成
-   ```
-   git checkout develop
-   git pull
-   git checkout -b feature/issue-xx-xxx
-   ```
-2. 実装・コミット（こまめにコミットしてOK）
-3. GitHubにpushしてPull Requestを作成（マージ先は **`develop`**）
-4. PRを作成すると**Vercel Preview URL**が自動発行される → 自分でそのURLを開いて動作確認
-5. 藤田さんまたは中間さんにレビュー依頼
-6. 指摘があれば同じブランチに追加コミット
-7. 承認後、`develop` にマージ
+### STEP 1｜最新の develop を取得する
+
+VS Code のターミナルを開く（`` Ctrl + ` ``）
+
+```bash
+git checkout develop
+git pull
+```
+
+### STEP 2｜自分の作業ブランチを作る
+
+```bash
+git checkout -b feature/issue-xx-xxx
+```
+
+issue番号をブランチ名に含めると、何の作業か一目でわかります。
+
+### STEP 3｜ファイルを編集する
+
+VS Code でファイルを開いて実装する。
+
+### STEP 4｜localhost で動作確認する
+
+```bash
+npm run dev
+```
+
+ブラウザで `http://localhost:3000` を開いて画面を確認する。
+
+> Vercel の Preview URL は PR を作成して初めて発行される。PR 作成前のテストは localhost で行う。
+
+### STEP 5｜変更をステージ（コミット対象に選ぶ）
+
+左サイドバーの「**ソース管理**」アイコン（分岐マーク）をクリック。
+
+「変更」欄に編集したファイルが表示される。コミットしたいファイルの横の **`+` ボタン**を押す。
+
+### STEP 6｜コミットする
+
+メッセージ入力欄にコメントを書いて「**✓ コミット**」ボタンを押す。
+
+```
+例: feat: 基本情報・症状画面を実装
+```
+
+→ ローカルに履歴が保存される（まだ GitHub には届かない）。
+
+### STEP 7｜GitHub へ push する
+
+ソース管理パネルの上部に表示される「**ブランチの発行**」または「**↑ 1**」ボタンを押す。
+
+→ GitHub にブランチとコミットがアップロードされる。
+
+### STEP 8｜GitHub で Pull Request を作る
+
+1. [github.com](https://github.com) でリポジトリを開く
+2. 黄色いバナー「**Compare & pull request**」をクリック
+3. **`base: develop`** になっていることを確認（`main` になっていたら変更する）
+4. タイトルと説明を入力して「**Create pull request**」を押す
+5. 藤田さんまたは中間さんにレビュー依頼を連絡する
+
+PRを作成すると **Vercel Preview URL** が自動発行される → そのURLでも最終確認する。
 
 `develop` → `main` へのマージは藤田さんが判断して行います。自分でマージしないでください。
+
+---
+
+### まとめ
+
+| ステップ | 操作 | GitHub に届く？ |
+|------|------|:---:|
+| 1. pull | ターミナル: `git pull` | — |
+| 2. ブランチ作成 | ターミナル: `git checkout -b` | ❌ |
+| 3. 編集 | VS Code でファイルを編集 | ❌ |
+| 4. localhost 確認 | `npm run dev` → ブラウザで確認 | ❌ |
+| 5. ステージ | ソース管理の `+` ボタン | ❌ |
+| 6. コミット | ✓ コミットボタン | ❌ |
+| 7. push | 「ブランチの発行」ボタン | ✅ |
+| 8. PR 作成 | GitHub の Web UI | ✅ |
 
 ## 特に気をつけること
 
