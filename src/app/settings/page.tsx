@@ -6,17 +6,21 @@ import { useCallback, useEffect, useState } from "react";
 import { AppChrome } from "@/components/AppChrome";
 import {
   createClientRecord,
+  createSurveyRound,
+  deleteSurveyRound,
   getDepartments,
   getClients,
   getQqConditions,
+  getSurveyRounds,
   setDepartments,
   setQqConditions,
+  updateSurveyRound,
 } from "@/lib/storage";
 import { getAuthUser } from "@/lib/auth";
 import type { AuthUser } from "@/lib/auth";
-import type { PainAreaCode, QqConditionItem } from "@/lib/types";
+import type { PainAreaCode, QqConditionItem, SurveyRound } from "@/lib/types";
 
-type Tab = "clients" | "departments" | "questions";
+type Tab = "clients" | "departments" | "questions" | "rounds";
 
 const PAIN_AREA_LABELS: { code: PainAreaCode; label: string }[] = [
   { code: "face", label: "顔" },
@@ -60,6 +64,19 @@ export default function SettingsPage() {
   const [qqDraft, setQqDraft] = useState("");
   const [qqSaved, setQqSaved] = useState(false);
 
+  // --- 実施回 ---
+  const [rounds, setRounds] = useState<SurveyRound[]>([]);
+  const [roundTitle, setRoundTitle] = useState("");
+  const [roundStartedAt, setRoundStartedAt] = useState("");
+  const [roundEndedAt, setRoundEndedAt] = useState("");
+  const [roundSaved, setRoundSaved] = useState(false);
+  const [roundError, setRoundError] = useState("");
+  const [editingRoundId, setEditingRoundId] = useState<number | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editStartedAt, setEditStartedAt] = useState("");
+  const [editEndedAt, setEditEndedAt] = useState("");
+  const [editError, setEditError] = useState("");
+
   const loadClients = useCallback(async () => {
     const list = await getClients();
     setClients(list);
@@ -67,12 +84,14 @@ export default function SettingsPage() {
   }, []);
 
   const load = useCallback(async (user: AuthUser, clientCode: string) => {
-    const [depts, conditions] = await Promise.all([
+    const [depts, conditions, roundList] = await Promise.all([
       getDepartments(clientCode || null),
       getQqConditions(clientCode || null),
+      getSurveyRounds(clientCode),
     ]);
     setDeptRows(depts);
     setQqRows(conditions);
+    setRounds(roundList);
   }, []);
 
   useEffect(() => {
@@ -169,9 +188,71 @@ export default function SettingsPage() {
     }));
   };
 
+  // ---- 実施回の操作 ----
+  const validateDates = (start: string, end: string): string => {
+    if (start && end && end <= start) return "終了日は開始日より後の日付を指定してください";
+    return "";
+  };
+
+  const addRound = async () => {
+    setRoundError("");
+    const title = roundTitle.trim();
+    if (!title) { setRoundError("タイトルを入力してください"); return; }
+    const dateErr = validateDates(roundStartedAt, roundEndedAt);
+    if (dateErr) { setRoundError(dateErr); return; }
+    const { error } = await createSurveyRound(
+      selectedClientCode,
+      title,
+      roundStartedAt || undefined,
+      roundEndedAt || undefined,
+    );
+    if (error) { setRoundError(error); return; }
+    setRoundTitle("");
+    setRoundStartedAt("");
+    setRoundEndedAt("");
+    setRoundSaved(true);
+    setTimeout(() => setRoundSaved(false), 2000);
+    setRounds(await getSurveyRounds(selectedClientCode));
+  };
+
+  const removeRound = async (id: number) => {
+    await deleteSurveyRound(id);
+    setRounds(await getSurveyRounds(selectedClientCode));
+  };
+
+  const startEditing = (r: SurveyRound) => {
+    setEditingRoundId(r.id);
+    setEditTitle(r.title);
+    setEditStartedAt(r.startedAt?.slice(0, 10) ?? "");
+    setEditEndedAt(r.endedAt?.slice(0, 10) ?? "");
+    setEditError("");
+  };
+
+  const cancelEditing = () => {
+    setEditingRoundId(null);
+    setEditError("");
+  };
+
+  const saveRound = async (id: number) => {
+    setEditError("");
+    const title = editTitle.trim();
+    if (!title) { setEditError("タイトルを入力してください"); return; }
+    const dateErr = validateDates(editStartedAt, editEndedAt);
+    if (dateErr) { setEditError(dateErr); return; }
+    const { error } = await updateSurveyRound(id, title, editStartedAt || undefined, editEndedAt || undefined);
+    if (error) { setEditError(error); return; }
+    setEditingRoundId(null);
+    setRounds(await getSurveyRounds(selectedClientCode));
+  };
+
+  const surveyUrl = (roundId: number) => {
+    const base = process.env.NEXT_PUBLIC_APP_URL ?? (typeof window !== "undefined" ? window.location.origin : "");
+    return `${base}/survey?client=${selectedClientCode}&round=${roundId}`;
+  };
+
   const isAdmin = authUser?.role === "system_admin";
-  const tabs: Tab[] = isAdmin ? ["clients", "departments", "questions"] : ["departments", "questions"];
-  const tabLabel: Record<Tab, string> = { clients: "クライアント", departments: "部署", questions: "健康問題の選択肢" };
+  const tabs: Tab[] = isAdmin ? ["clients", "departments", "questions", "rounds"] : ["departments", "questions"];
+  const tabLabel: Record<Tab, string> = { clients: "クライアント", departments: "部署", questions: "健康問題の選択肢", rounds: "実施回" };
 
   return (
     <AppChrome title="設定">
@@ -360,6 +441,120 @@ export default function SettingsPage() {
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <button type="button" onClick={saveQq} className="bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold px-6 py-3 rounded-xl">保存する</button>
               {qqSaved && <span className="text-sm text-emerald-600 font-semibold">保存しました</span>}
+            </div>
+          </div>
+        )}
+        {/* 実施回タブ（system_admin のみ） */}
+        {tab === "rounds" && isAdmin && (
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8">
+            <p className="text-slate-500 text-sm leading-relaxed mb-6">
+              アンケートの実施回を登録します。各実施回のURLを回答者に共有してください。
+            </p>
+            <ul className="space-y-3 mb-8">
+              {rounds.map((r) => (
+                <li key={r.id} className="rounded-xl border border-slate-100 bg-slate-50/80 px-4 py-3 space-y-2">
+                  {editingRoundId === r.id ? (
+                    <div className="space-y-2">
+                      <input
+                        value={editTitle}
+                        onChange={(e) => setEditTitle(e.target.value)}
+                        className="w-full rounded-xl border border-sky-300 px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500/30"
+                      />
+                      <div className="flex gap-2">
+                        <div className="flex-1">
+                          <label className="text-xs text-slate-500 mb-1 block">開始日</label>
+                          <input
+                            type="date"
+                            value={editStartedAt}
+                            onChange={(e) => setEditStartedAt(e.target.value)}
+                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500/30"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <label className="text-xs text-slate-500 mb-1 block">終了日</label>
+                          <input
+                            type="date"
+                            value={editEndedAt}
+                            onChange={(e) => setEditEndedAt(e.target.value)}
+                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500/30"
+                          />
+                        </div>
+                      </div>
+                      {editError && <p className="text-xs text-red-600">{editError}</p>}
+                      <div className="flex gap-2">
+                        <button type="button" onClick={() => saveRound(r.id)} className="text-xs bg-sky-600 hover:bg-sky-700 text-white font-semibold px-4 py-1.5 rounded-lg">保存</button>
+                        <button type="button" onClick={cancelEditing} className="text-xs text-slate-500 hover:text-slate-700 font-semibold px-4 py-1.5 rounded-lg hover:bg-slate-100">キャンセル</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-semibold text-slate-800">{r.title}</p>
+                          <p className="text-xs text-slate-400 mt-0.5">
+                            {r.startedAt ? r.startedAt.slice(0, 10) : "開始日未設定"} 〜 {r.endedAt ? r.endedAt.slice(0, 10) : "終了日未設定"}
+                          </p>
+                        </div>
+                        <div className="flex gap-1 shrink-0">
+                          <button type="button" onClick={() => startEditing(r)} className="text-xs text-sky-600 hover:text-sky-700 font-semibold px-2 py-1 rounded-md hover:bg-sky-50">編集</button>
+                          <button type="button" onClick={() => removeRound(r.id)} className="text-xs text-red-600 hover:text-red-700 font-semibold px-2 py-1 rounded-md hover:bg-red-50">削除</button>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          readOnly
+                          value={surveyUrl(r.id)}
+                          className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-mono text-slate-600 outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => navigator.clipboard.writeText(surveyUrl(r.id))}
+                          className="shrink-0 text-xs text-sky-600 hover:text-sky-700 font-semibold px-2 py-1.5 rounded-md hover:bg-sky-50"
+                        >
+                          コピー
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </li>
+              ))}
+              {rounds.length === 0 && (
+                <li className="text-sm text-slate-400 py-2">実施回がまだありません。下の欄から追加してください。</li>
+              )}
+            </ul>
+
+            <div className="space-y-2">
+              <input
+                value={roundTitle}
+                onChange={(e) => setRoundTitle(e.target.value)}
+                placeholder="実施回名（例：第1回 2026年9月）"
+                className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400"
+              />
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <label className="text-xs text-slate-500 mb-1 block">開始日（任意）</label>
+                  <input
+                    type="date"
+                    value={roundStartedAt}
+                    onChange={(e) => setRoundStartedAt(e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="text-xs text-slate-500 mb-1 block">終了日（任意）</label>
+                  <input
+                    type="date"
+                    value={roundEndedAt}
+                    onChange={(e) => setRoundEndedAt(e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400"
+                  />
+                </div>
+              </div>
+              <div className="pt-2 flex flex-wrap items-center gap-3">
+                <button type="button" onClick={addRound} className="bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold px-6 py-3 rounded-xl">追加する</button>
+                {roundSaved && <span className="text-sm text-emerald-600 font-semibold">追加しました</span>}
+                {roundError && <span className="text-sm text-red-600">{roundError}</span>}
+              </div>
             </div>
           </div>
         )}
