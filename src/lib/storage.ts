@@ -1,5 +1,5 @@
 import { CONDITION_TO_PAIN_DEFAULT, QQ_CONDITIONS } from "./constants";
-import type { AgeGroup, Gender, PainAreaCode, QqConditionId, QqConditionItem, SurveyResponse, SurveyRound } from "./types";
+import type { AgeGroup, Gender, PainAreaCode, QqConditionId, QqConditionItem, SurveyResponse } from "./types";
 import { supabase } from "./supabase";
 
 function buildDefaultQqConditions(): QqConditionItem[] {
@@ -128,69 +128,4 @@ export async function addResponse(response: SurveyResponse): Promise<void> {
 
 export async function clearResponses(clientCode: string): Promise<void> {
   await supabase.from("survey_responses").delete().eq("client_code", clientCode);
-}
-
-export async function getSurveyRounds(clientCode: string): Promise<SurveyRound[]> {
-  const { data, error } = await supabase
-    .from("survey_rounds")
-    .select("id, client_code, title, started_at, ended_at, created_at")
-    .eq("client_code", clientCode)
-    .order("created_at", { ascending: false });
-  if (error || !data) return [];
-  return data.map((r: {
-    id: number;
-    client_code: string;
-    title: string;
-    started_at: string | null;
-    ended_at: string | null;
-    created_at: string;
-  }) => ({
-    id: r.id,
-    clientCode: r.client_code,
-    title: r.title,
-    startedAt: r.started_at,
-    endedAt: r.ended_at,
-    createdAt: r.created_at,
-  }));
-}
-
-export async function createSurveyRound(
-  clientCode: string,
-  title: string,
-  startedAt?: string,
-  endedAt?: string,
-): Promise<{ id: number | null; error: string | null }> {
-  const { data, error } = await supabase
-    .from("survey_rounds")
-    .insert({
-      client_code: clientCode,
-      title,
-      started_at: startedAt || null,
-      ended_at: endedAt || null,
-    })
-    .select("id")
-    .single();
-  if (error) return { id: null, error: error.message };
-  return { id: (data as { id: number }).id, error: null };
-}
-
-export async function deleteSurveyRound(id: number): Promise<void> {
-  await supabase.from("survey_rounds").delete().eq("id", id);
-}
-
-export async function updateSurveyRound(
-  id: number,
-  title: string,
-  startedAt?: string,
-  endedAt?: string,
-): Promise<{ error: string | null }> {
-  const { error } = await supabase
-    .from("survey_rounds")
-    .update({
-      title,
-      started_at: startedAt || null,
-      ended_at: endedAt || null,
-    })
-    .eq("id", id);
-  return { error: error?.message ?? null };
 }

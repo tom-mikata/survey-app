@@ -1,5 +1,0 @@
-# CODEOWNERS
-# 詳細: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
-
-# supabase/migrations/ 配下の変更は必ず @tom-mikata のレビュー承認を要求する
-/supabase/migrations/ @tom-mikata
