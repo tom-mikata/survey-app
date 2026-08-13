@@ -29,7 +29,7 @@ export async function getDepartments(clientCode: string | null): Promise<string[
   if (clientCode) query = query.eq("client_code", clientCode);
   const { data, error } = await query;
   if (error || !data || data.length === 0) return [];
-  return data.map((r: { name: string }) => r.name);
+  return [...new Set(data.map((r: { name: string }) => r.name))];
 }
 
 export async function setDepartments(clientCode: string, departments: string[]): Promise<void> {
