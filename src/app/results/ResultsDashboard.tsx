@@ -51,7 +51,7 @@ export default function ResultsDashboard() {
     const seq = ++loadSeq.current;
 
     const [depts, responses, conditions, rounds] = await Promise.all([
-      getDepartments(clientCode),
+      clientCode ? getDepartments(clientCode) : Promise.resolve([]),
       getResponses(clientCode, roundId),
       getQqConditions(clientCode),
       clientCode ? getSurveyRounds(clientCode) : Promise.resolve([]),
@@ -74,6 +74,7 @@ export default function ResultsDashboard() {
       if (user.role === "system_admin") {
         const list = await getClients();
         setClients(list);
+        setAxis("age"); // クライアント未選択では「部署ごと」は無意味
         loadData(null, null);
       } else {
         const code = user.clientCode ?? null;
@@ -87,6 +88,7 @@ export default function ResultsDashboard() {
     const val = code === "" ? null : code;
     setSelectedClientCode(val);
     setSelectedRoundId(null);
+    if (val === null && axis === "department") setAxis("age");
     setTab("all");
     loadData(val, null);
   };
@@ -205,7 +207,9 @@ export default function ResultsDashboard() {
                   setTab("all");
                 }}
                 options={[
-                  { value: "department", label: "部署ごと" },
+                  ...(selectedClientCode !== null
+                    ? [{ value: "department", label: "部署ごと" }]
+                    : []),
                   { value: "age", label: "年代ごと" },
                   { value: "gender", label: "性別ごと" },
                 ]}
