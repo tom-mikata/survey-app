@@ -66,9 +66,13 @@ export async function setQqConditions(clientCode: string, conditions: QqConditio
   );
 }
 
-export async function getResponses(clientCode: string | null): Promise<SurveyResponse[]> {
+export async function getResponses(
+  clientCode: string | null,
+  surveyRoundId?: number | null,
+): Promise<SurveyResponse[]> {
   let query = supabase.from("survey_responses").select("*").order("submitted_at");
   if (clientCode) query = query.eq("client_code", clientCode);
+  if (surveyRoundId) query = query.eq("survey_round_id", surveyRoundId);
   const { data, error } = await query;
   if (error || !data) return [];
   return data.map((r: {

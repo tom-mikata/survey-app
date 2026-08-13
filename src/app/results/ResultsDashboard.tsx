@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AppChrome } from "@/components/AppChrome";
 import {
   axisTabs,
@@ -12,8 +12,8 @@ import {
   segmentLabel,
   summarizeOccupational,
 } from "@/lib/analytics";
-import type { QqConditionItem, SummaryAxis, SurveyResponse } from "@/lib/types";
-import { getDepartments, getClients, getQqConditions, getResponses } from "@/lib/storage";
+import type { QqConditionItem, SummaryAxis, SurveyResponse, SurveyRound } from "@/lib/types";
+import { getDepartments, getClients, getQqConditions, getResponses, getSurveyRounds } from "@/lib/storage";
 import { getAuthUser } from "@/lib/auth";
 import type { AuthUser } from "@/lib/auth";
 import {
@@ -35,6 +35,8 @@ export default function ResultsDashboard() {
   const [authUser, setAuthUser] = useState<AuthUser | null>(null);
   const [clients, setClients] = useState<{ code: string; name: string }[]>([]);
   const [selectedClientCode, setSelectedClientCode] = useState<string | null>(null);
+  const [surveyRounds, setSurveyRounds] = useState<SurveyRound[]>([]);
+  const [selectedRoundId, setSelectedRoundId] = useState<number | null>(null);
   const [departments, setDepartments] = useState<string[]>([]);
   const [rows, setRows] = useState<SurveyResponse[]>([]);
   const [qqConditions, setQqConditions] = useState<QqConditionItem[]>([]);
@@ -42,15 +44,25 @@ export default function ResultsDashboard() {
   const [tab, setTab] = useState<string>("all");
   const [middleView, setMiddleView] = useState<"loss" | "health">("loss");
 
-  const loadData = useCallback(async (clientCode: string | null) => {
-    const [depts, responses, conditions] = await Promise.all([
+  // レースコンディション防止: 最新のloadData呼び出しだけが state を更新する
+  const loadSeq = useRef(0);
+
+  const loadData = useCallback(async (clientCode: string | null, roundId: number | null) => {
+    const seq = ++loadSeq.current;
+
+    const [depts, responses, conditions, rounds] = await Promise.all([
       getDepartments(clientCode),
-      getResponses(clientCode),
+      getResponses(clientCode, roundId),
       getQqConditions(clientCode),
+      clientCode ? getSurveyRounds(clientCode) : Promise.resolve([]),
     ]);
+
+    if (seq !== loadSeq.current) return; // 古い呼び出し結果は破棄
+
     setDepartments(depts);
     setRows(responses);
     setQqConditions(conditions);
+    setSurveyRounds(rounds);
   }, []);
 
   useEffect(() => {
@@ -62,12 +74,11 @@ export default function ResultsDashboard() {
       if (user.role === "system_admin") {
         const list = await getClients();
         setClients(list);
-        setSelectedClientCode(null);
-        loadData(null);
+        loadData(null, null);
       } else {
         const code = user.clientCode ?? null;
         setSelectedClientCode(code);
-        loadData(code);
+        loadData(code, null);
       }
     })();
   }, [loadData]);
@@ -75,7 +86,17 @@ export default function ResultsDashboard() {
   const handleClientFilter = (code: string) => {
     const val = code === "" ? null : code;
     setSelectedClientCode(val);
-    loadData(val);
+    setSelectedRoundId(null);
+    setAxis("department");
+    setTab("all");
+    loadData(val, null);
+  };
+
+  const handleRoundFilter = (roundIdStr: string) => {
+    const val = roundIdStr === "" ? null : Number(roundIdStr);
+    setSelectedRoundId(val);
+    setTab("all");
+    loadData(selectedClientCode, val);
   };
 
   const tabs = useMemo(() => axisTabs(axis, departments), [axis, departments]);
@@ -114,7 +135,6 @@ export default function ResultsDashboard() {
     return entries.map(([k, v]) => ({ id: k, intensity: v / max, count: v }));
   }, [occ.painCounts]);
 
-  // 症状カテゴリ別の損失額バー
   const lossByCategory = useMemo(() => {
     const entries = LOSS_LEGEND.map((L) => ({
       key: L.key,
@@ -135,23 +155,47 @@ export default function ResultsDashboard() {
     <AppChrome title="ダッシュボード">
       <div className="min-h-screen bg-[#eef3f3]">
         <main className="mx-auto max-w-7xl space-y-7 px-4 py-8 sm:px-6 lg:px-10">
-          {/* クライアントフィルター（system_admin のみ） */}
-          {authUser?.role === "system_admin" && clients.length > 0 && (
-            <div className="flex items-center gap-3">
-              <span className="text-sm font-semibold text-slate-600 shrink-0">クライアント：</span>
-              <select
-                value={selectedClientCode ?? ""}
-                onChange={(e) => handleClientFilter(e.target.value)}
-                className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400"
-              >
-                <option value="">全クライアント</option>
-                {clients.map((c) => (
-                  <option key={c.code} value={c.code}>{c.name}</option>
-                ))}
-              </select>
+
+          {/* ---------------- フィルター行（クライアント・実施回） ---------------- */}
+          {(authUser?.role === "system_admin" && clients.length > 0) || surveyRounds.length > 0 ? (
+            <div className="flex flex-wrap items-center gap-4">
+              {/* クライアントフィルター（system_admin のみ） */}
+              {authUser?.role === "system_admin" && clients.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-slate-600 shrink-0">クライアント：</span>
+                  <select
+                    value={selectedClientCode ?? ""}
+                    onChange={(e) => handleClientFilter(e.target.value)}
+                    className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400"
+                  >
+                    <option value="">全クライアント</option>
+                    {clients.map((c) => (
+                      <option key={c.code} value={c.code}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* 実施回フィルター */}
+              {surveyRounds.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-slate-600 shrink-0">実施回：</span>
+                  <select
+                    value={selectedRoundId ?? ""}
+                    onChange={(e) => handleRoundFilter(e.target.value)}
+                    className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400"
+                  >
+                    <option value="">全期間</option>
+                    {surveyRounds.map((r) => (
+                      <option key={r.id} value={r.id}>{r.title}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
-          )}
-          {/* ---------------- フィルター行 ---------------- */}
+          ) : null}
+
+          {/* ---------------- 軸・セグメントフィルター行 ---------------- */}
           <section className="flex flex-col gap-4 xl:flex-row xl:items-center">
             <div className="flex shrink-0 items-center gap-3">
               <AccentTitle>職業病サマリー</AccentTitle>
@@ -348,7 +392,7 @@ export default function ResultsDashboard() {
             >
               解説
             </a>
-            ）。数値はローカル保存の回答によるデモ集計です。
+            ）。
           </p>
         </main>
       </div>
