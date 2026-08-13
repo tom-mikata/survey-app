@@ -87,7 +87,6 @@ export default function ResultsDashboard() {
     const val = code === "" ? null : code;
     setSelectedClientCode(val);
     setSelectedRoundId(null);
-    setAxis("department");
     setTab("all");
     loadData(val, null);
   };
