@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AppChrome } from "@/components/AppChrome";
 import {
   axisTabs,
@@ -11,17 +11,13 @@ import {
   productivityAndAbsentTotalsManYen,
   segmentLabel,
   summarizeOccupational,
-  workEngagementByDepartment,
-  workEngagementSummary,
 } from "@/lib/analytics";
-import type { QqConditionItem, SummaryAxis, SurveyResponse } from "@/lib/types";
-import { getDepartments, getClients, getQqConditions, getResponses } from "@/lib/storage";
+import type { QqConditionItem, SummaryAxis, SurveyResponse, SurveyRound } from "@/lib/types";
+import { getDepartments, getClients, getQqConditions, getResponses, getSurveyRounds } from "@/lib/storage";
 import { getAuthUser } from "@/lib/auth";
 import type { AuthUser } from "@/lib/auth";
 import {
   LOSS_LEGEND,
-  INDUSTRY,
-  INDUSTRY_LABEL,
   PRODUCTIVITY_COLOR,
   ABSENT_COLOR,
 } from "./components/designTokens";
@@ -30,7 +26,6 @@ import { MetricRow } from "./components/MetricCard";
 import { LegendAmountRow, HorizontalBars } from "./components/DepartmentBarsCard";
 import { PainFigure } from "./components/PainFigureCard";
 import { StackedDepartmentChart } from "./components/DepartmentLossChart";
-import { WeScoreCard, WeCompareColumn, ScoreLegendChip } from "./components/WorkEngagementCard";
 
 /* =============================================================================
  * ページ本体
@@ -40,6 +35,8 @@ export default function ResultsDashboard() {
   const [authUser, setAuthUser] = useState<AuthUser | null>(null);
   const [clients, setClients] = useState<{ code: string; name: string }[]>([]);
   const [selectedClientCode, setSelectedClientCode] = useState<string | null>(null);
+  const [surveyRounds, setSurveyRounds] = useState<SurveyRound[]>([]);
+  const [selectedRoundId, setSelectedRoundId] = useState<number | null>(null);
   const [departments, setDepartments] = useState<string[]>([]);
   const [rows, setRows] = useState<SurveyResponse[]>([]);
   const [qqConditions, setQqConditions] = useState<QqConditionItem[]>([]);
@@ -47,15 +44,25 @@ export default function ResultsDashboard() {
   const [tab, setTab] = useState<string>("all");
   const [middleView, setMiddleView] = useState<"loss" | "health">("loss");
 
-  const loadData = useCallback(async (clientCode: string | null) => {
-    const [depts, responses, conditions] = await Promise.all([
-      getDepartments(clientCode),
-      getResponses(clientCode),
+  // レースコンディション防止: 最新のloadData呼び出しだけが state を更新する
+  const loadSeq = useRef(0);
+
+  const loadData = useCallback(async (clientCode: string | null, roundId: number | null) => {
+    const seq = ++loadSeq.current;
+
+    const [depts, responses, conditions, rounds] = await Promise.all([
+      clientCode ? getDepartments(clientCode) : Promise.resolve([]),
+      getResponses(clientCode, roundId),
       getQqConditions(clientCode),
+      clientCode ? getSurveyRounds(clientCode) : Promise.resolve([]),
     ]);
+
+    if (seq !== loadSeq.current) return; // 古い呼び出し結果は破棄
+
     setDepartments(depts);
     setRows(responses);
     setQqConditions(conditions);
+    setSurveyRounds(rounds);
   }, []);
 
   useEffect(() => {
@@ -67,12 +74,12 @@ export default function ResultsDashboard() {
       if (user.role === "system_admin") {
         const list = await getClients();
         setClients(list);
-        setSelectedClientCode(null);
-        loadData(null);
+        setAxis("age"); // クライアント未選択では「部署ごと」は無意味
+        loadData(null, null);
       } else {
         const code = user.clientCode ?? null;
         setSelectedClientCode(code);
-        loadData(code);
+        loadData(code, null);
       }
     })();
   }, [loadData]);
@@ -80,7 +87,17 @@ export default function ResultsDashboard() {
   const handleClientFilter = (code: string) => {
     const val = code === "" ? null : code;
     setSelectedClientCode(val);
-    loadData(val);
+    setSelectedRoundId(null);
+    if (val === null && axis === "department") setAxis("age");
+    setTab("all");
+    loadData(val, null);
+  };
+
+  const handleRoundFilter = (roundIdStr: string) => {
+    const val = roundIdStr === "" ? null : Number(roundIdStr);
+    setSelectedRoundId(val);
+    setTab("all");
+    loadData(selectedClientCode, val);
   };
 
   const tabs = useMemo(() => axisTabs(axis, departments), [axis, departments]);
@@ -98,9 +115,6 @@ export default function ResultsDashboard() {
   const lossTotal = useMemo(() => laborLossTotalManYen(filtered), [filtered]);
   const lossSplit = useMemo(() => laborLossSplitForTotal(filtered), [filtered]);
   const deptLoss = useMemo(() => laborLossByDepartment(filtered, departments), [filtered, departments]);
-  const we = useMemo(() => workEngagementSummary(filtered), [filtered]);
-  const weByDept = useMemo(() => workEngagementByDepartment(filtered, departments), [filtered, departments]);
-  const companyAvg = useMemo(() => workEngagementSummary(rows), [rows]);
   const prodAbs = useMemo(() => productivityAndAbsentTotalsManYen(filtered), [filtered]);
 
   const conditionBars = useMemo(() => {
@@ -122,7 +136,6 @@ export default function ResultsDashboard() {
     return entries.map(([k, v]) => ({ id: k, intensity: v / max, count: v }));
   }, [occ.painCounts]);
 
-  // 症状カテゴリ別の損失額バー
   const lossByCategory = useMemo(() => {
     const entries = LOSS_LEGEND.map((L) => ({
       key: L.key,
@@ -143,23 +156,47 @@ export default function ResultsDashboard() {
     <AppChrome title="ダッシュボード">
       <div className="min-h-screen bg-[#eef3f3]">
         <main className="mx-auto max-w-7xl space-y-7 px-4 py-8 sm:px-6 lg:px-10">
-          {/* クライアントフィルター（system_admin のみ） */}
-          {authUser?.role === "system_admin" && clients.length > 0 && (
-            <div className="flex items-center gap-3">
-              <span className="text-sm font-semibold text-slate-600 shrink-0">クライアント：</span>
-              <select
-                value={selectedClientCode ?? ""}
-                onChange={(e) => handleClientFilter(e.target.value)}
-                className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400"
-              >
-                <option value="">全クライアント</option>
-                {clients.map((c) => (
-                  <option key={c.code} value={c.code}>{c.name}</option>
-                ))}
-              </select>
+
+          {/* ---------------- フィルター行（クライアント・実施回） ---------------- */}
+          {(authUser?.role === "system_admin" && clients.length > 0) || surveyRounds.length > 0 ? (
+            <div className="flex flex-wrap items-center gap-4">
+              {/* クライアントフィルター（system_admin のみ） */}
+              {authUser?.role === "system_admin" && clients.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-slate-600 shrink-0">クライアント：</span>
+                  <select
+                    value={selectedClientCode ?? ""}
+                    onChange={(e) => handleClientFilter(e.target.value)}
+                    className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400"
+                  >
+                    <option value="">全クライアント</option>
+                    {clients.map((c) => (
+                      <option key={c.code} value={c.code}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* 実施回フィルター */}
+              {surveyRounds.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-slate-600 shrink-0">実施回：</span>
+                  <select
+                    value={selectedRoundId ?? ""}
+                    onChange={(e) => handleRoundFilter(e.target.value)}
+                    className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400"
+                  >
+                    <option value="">全期間</option>
+                    {surveyRounds.map((r) => (
+                      <option key={r.id} value={r.id}>{r.title}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
-          )}
-          {/* ---------------- フィルター行 ---------------- */}
+          ) : null}
+
+          {/* ---------------- 軸・セグメントフィルター行 ---------------- */}
           <section className="flex flex-col gap-4 xl:flex-row xl:items-center">
             <div className="flex shrink-0 items-center gap-3">
               <AccentTitle>職業病サマリー</AccentTitle>
@@ -170,7 +207,9 @@ export default function ResultsDashboard() {
                   setTab("all");
                 }}
                 options={[
-                  { value: "department", label: "部署ごと" },
+                  ...(selectedClientCode !== null
+                    ? [{ value: "department", label: "部署ごと" }]
+                    : []),
                   { value: "age", label: "年代ごと" },
                   { value: "gender", label: "性別ごと" },
                 ]}
@@ -346,76 +385,8 @@ export default function ResultsDashboard() {
             </div>
           </Card>
 
-          {/* ---------------- ワークエンゲージメント スコア ---------------- */}
-          <Card>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <CardHeader title="ワークエンゲージメントスコア" />
-              <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-slate-500">
-                <span>
-                  現在の表示：
-                  <span className="mx-1 rounded-md bg-slate-100 px-2 py-0.5 font-semibold text-slate-700">
-                    {segment}
-                  </span>
-                </span>
-                <span>
-                  比較対象業界：
-                  <span className="mx-1 rounded-md bg-slate-100 px-2 py-0.5 font-semibold text-slate-700">
-                    {INDUSTRY_LABEL}
-                  </span>
-                </span>
-              </div>
-            </div>
-            <div className="mt-6 grid grid-cols-2 gap-4 xl:grid-cols-4">
-              <WeScoreCard title="総合スコア" score={we.overall} industry={INDUSTRY.overall} />
-              <WeScoreCard title="活力" score={we.vigor} industry={INDUSTRY.vigor} />
-              <WeScoreCard title="熱意" score={we.dedication} industry={INDUSTRY.dedication} />
-              <WeScoreCard title="没頭" score={we.absorption} industry={INDUSTRY.absorption} />
-            </div>
-          </Card>
-
-          {/* ---------------- ワークエンゲージメント 属性別比較 ---------------- */}
-          <Card>
-            <CardHeader title="ワークエンゲージメント属性別比較" />
-            <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <WeCompareColumn
-                label="エンゲージメントスコア"
-                rows={weByDept}
-                field="overall"
-                companyAvg={companyAvg.overall}
-              />
-              <WeCompareColumn
-                label="活力"
-                rows={weByDept}
-                field="vigor"
-                companyAvg={companyAvg.vigor}
-              />
-              <WeCompareColumn
-                label="熱意"
-                rows={weByDept}
-                field="dedication"
-                companyAvg={companyAvg.dedication}
-              />
-              <WeCompareColumn
-                label="没頭"
-                rows={weByDept}
-                field="absorption"
-                companyAvg={companyAvg.absorption}
-              />
-            </div>
-
-            <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] text-slate-500">
-              <span className="mr-1 inline-flex items-center gap-1.5 font-semibold text-slate-600">
-                評価基準
-              </span>
-              <ScoreLegendChip color="#10b981" label="4.5-6.0：非常に高い" />
-              <ScoreLegendChip color="#14b8a6" label="3.0-4.4：やや高い" />
-              <ScoreLegendChip color="#f5a524" label="1.5-2.9：やや低い" />
-              <ScoreLegendChip color="#e4572e" label="0.1-1.4：非常に低い" />
-            </div>
-          </Card>
-
           <p className="mx-auto max-w-2xl pb-6 text-center text-[11px] leading-relaxed text-slate-400">
-            労働損失額は QQメソッドの定義に基づき、パフォーマンス低下度（1 − 量/10 × 質/10）と年間損失（有症状日数 / 30 × 低下度 × 月給 × 12）により算出しています（
+            労働損失額は QQメソッドの定義に基づき、プレゼンティーイズム損失（有症状日数 × 12 × パフォーマンス低下度（1 − 量/10 × 質/10）× ¥10,000/日）と欠勤損失（欠勤日数 × ¥10,000/日）の合計により算出しています（
             <a
               href="https://wellaboswp.com/column/qq-method-presenteeism-guide/"
               className="text-teal-600 hover:underline"
@@ -424,7 +395,7 @@ export default function ResultsDashboard() {
             >
               解説
             </a>
-            ）。数値はローカル保存の回答によるデモ集計です。
+            ）。
           </p>
         </main>
       </div>

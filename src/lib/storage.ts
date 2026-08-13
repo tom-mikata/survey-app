@@ -1,5 +1,5 @@
 import { CONDITION_TO_PAIN_DEFAULT, QQ_CONDITIONS } from "./constants";
-import type { AgeGroup, Gender, PainAreaCode, QqConditionId, QqConditionItem, SurveyResponse, SurveyRound } from "./types";
+import type { Gender, PainAreaCode, QqConditionId, QqConditionItem, SurveyResponse, SurveyRound } from "./types";
 import { supabase } from "./supabase";
 
 function buildDefaultQqConditions(): QqConditionItem[] {
@@ -29,7 +29,7 @@ export async function getDepartments(clientCode: string | null): Promise<string[
   if (clientCode) query = query.eq("client_code", clientCode);
   const { data, error } = await query;
   if (error || !data || data.length === 0) return [];
-  return data.map((r: { name: string }) => r.name);
+  return [...new Set(data.map((r: { name: string }) => r.name))];
 }
 
 export async function setDepartments(clientCode: string, departments: string[]): Promise<void> {
@@ -66,43 +66,69 @@ export async function setQqConditions(clientCode: string, conditions: QqConditio
   );
 }
 
-export async function getResponses(clientCode: string | null): Promise<SurveyResponse[]> {
+export async function getResponses(
+  clientCode: string | null,
+  surveyRoundId?: number | null,
+): Promise<SurveyResponse[]> {
   let query = supabase.from("survey_responses").select("*").order("submitted_at");
   if (clientCode) query = query.eq("client_code", clientCode);
+  if (surveyRoundId) query = query.eq("survey_round_id", surveyRoundId);
   const { data, error } = await query;
   if (error || !data) return [];
   return data.map((r: {
     id: string;
     client_code: string;
+    survey_round_id: number | null;
     submitted_at: string;
-    department: string;
-    age_group: string;
+    full_name: string;
+    date_of_birth: string;
     gender: string;
-    qq_condition: string;
+    department: string;
+    employment_type: string;
+    symptom_conditions: string[];
+    symptom_conditions_other: string | null;
+    primary_condition: string | null;
     symptom_days_past30: number;
+    absentee_days_past_year: number;
     work_quantity: number;
     work_quality: number;
-    had_absenteeism: boolean;
-    monthly_salary_man_yen: number;
-    we_vigor: number;
-    we_dedication: number;
-    we_absorption: number;
+    treatment_places: string[];
+    treatment_places_other: string | null;
+    treatment_frequency: number | null;
+    daily_items: string[];
+    daily_items_other: string | null;
+    consultation_health: string;
+    consultation_work: string;
+    consultation_family: string;
+    consultation_mental: string;
+    expert_support_intent: string;
   }) => ({
     id: r.id,
     clientCode: r.client_code,
+    surveyRoundId: r.survey_round_id,
     submittedAt: r.submitted_at,
-    department: r.department,
-    ageGroup: r.age_group as AgeGroup,
+    fullName: r.full_name,
+    dateOfBirth: r.date_of_birth,
     gender: r.gender as Gender,
-    qqCondition: r.qq_condition,
+    department: r.department,
+    employmentType: r.employment_type,
+    symptomConditions: r.symptom_conditions ?? [],
+    symptomConditionsOther: r.symptom_conditions_other,
+    primaryCondition: r.primary_condition,
     symptomDaysPast30: r.symptom_days_past30,
+    absenteeDaysPastYear: r.absentee_days_past_year ?? 0,
     workQuantity: r.work_quantity,
     workQuality: r.work_quality,
-    hadAbsenteeismOnSymptomDays: r.had_absenteeism,
-    monthlySalaryManYen: r.monthly_salary_man_yen,
-    weVigor: r.we_vigor,
-    weDedication: r.we_dedication,
-    weAbsorption: r.we_absorption,
+    treatmentPlaces: r.treatment_places ?? [],
+    treatmentPlacesOther: r.treatment_places_other,
+    treatmentFrequency: r.treatment_frequency,
+    dailyItems: r.daily_items ?? [],
+    dailyItemsOther: r.daily_items_other,
+    consultationHealth: r.consultation_health,
+    consultationWork: r.consultation_work,
+    consultationFamily: r.consultation_family,
+    consultationMental: r.consultation_mental,
+    expertSupportIntent: r.expert_support_intent,
   }));
 }
 
@@ -110,19 +136,30 @@ export async function addResponse(response: SurveyResponse): Promise<void> {
   await supabase.from("survey_responses").insert({
     id: response.id,
     client_code: response.clientCode,
+    survey_round_id: response.surveyRoundId,
     submitted_at: response.submittedAt,
-    department: response.department,
-    age_group: response.ageGroup,
+    full_name: response.fullName,
+    date_of_birth: response.dateOfBirth,
     gender: response.gender,
-    qq_condition: response.qqCondition,
+    department: response.department,
+    employment_type: response.employmentType,
+    symptom_conditions: response.symptomConditions,
+    symptom_conditions_other: response.symptomConditionsOther,
+    primary_condition: response.primaryCondition,
     symptom_days_past30: response.symptomDaysPast30,
+    absentee_days_past_year: response.absenteeDaysPastYear,
     work_quantity: response.workQuantity,
     work_quality: response.workQuality,
-    had_absenteeism: response.hadAbsenteeismOnSymptomDays,
-    monthly_salary_man_yen: response.monthlySalaryManYen,
-    we_vigor: response.weVigor,
-    we_dedication: response.weDedication,
-    we_absorption: response.weAbsorption,
+    treatment_places: response.treatmentPlaces,
+    treatment_places_other: response.treatmentPlacesOther,
+    treatment_frequency: response.treatmentFrequency,
+    daily_items: response.dailyItems,
+    daily_items_other: response.dailyItemsOther,
+    consultation_health: response.consultationHealth,
+    consultation_work: response.consultationWork,
+    consultation_family: response.consultationFamily,
+    consultation_mental: response.consultationMental,
+    expert_support_intent: response.expertSupportIntent,
   });
 }
 

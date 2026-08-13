@@ -57,7 +57,7 @@ export function StepBasicInfo({
         <div>
           <span className="text-sm font-medium text-slate-600">問2. 性別</span>
           <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2">
-            {GENDERS.filter((g) => g.id !== "prefer_not").map((g) => (
+            {GENDERS.map((g) => (
               <button
                 key={g.id}
                 type="button"

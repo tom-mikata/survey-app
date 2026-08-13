@@ -3,9 +3,11 @@
  * 参照: https://wellaboswp.com/column/qq-method-presenteeism-guide/
  *
  * パフォーマンス低下度 = 1 - (仕事の量 ÷ 10) × (仕事の質 ÷ 10)
- * 年間損失コスト（円ではなく本アプリでは「万円」単位で保持）=
- *   (有症状日数 ÷ 30) × パフォーマンス低下度 × 月給（万円）× 12
+ * プレゼンティーイズム年間損失（万円）=
+ *   有症状日数 × 12か月 × パフォーマンス低下度 × DAILY_LABOR_COST_MAN_YEN
  */
+
+import { DAILY_LABOR_COST_MAN_YEN } from "./constants";
 
 export function clamp(n: number, lo: number, hi: number): number {
   return Math.min(hi, Math.max(lo, n));
@@ -18,17 +20,15 @@ export function qqPerformanceDeclineRatio(workQuantity: number, workQuality: num
   return 1 - q * u;
 }
 
-/** 年間損失コスト（万円） */
+/** プレゼンティーイズム年間損失（万円） */
 export function qqAnnualLossCostManYen(params: {
   symptomDaysPast30: number;
   workQuantity: number;
   workQuality: number;
-  monthlySalaryManYen: number;
   isNoCondition: boolean;
 }): number {
   if (params.isNoCondition) return 0;
   const p = qqPerformanceDeclineRatio(params.workQuantity, params.workQuality);
   const days = clamp(params.symptomDaysPast30, 0, 30);
-  const salary = params.monthlySalaryManYen > 0 ? params.monthlySalaryManYen : 30;
-  return (days / 30) * p * salary * 12;
+  return days * 12 * p * DAILY_LABOR_COST_MAN_YEN;
 }

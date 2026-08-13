@@ -1,8 +1,8 @@
 export type AgeGroup = "20s" | "30s" | "40s" | "50s" | "60plus";
 
-export type Gender = "male" | "female" | "other" | "prefer_not";
+export type Gender = "male" | "female" | "other";
 
-/** QQメソッド 質問1：仕事に最も影響している健康問題（例示はWellaboSWPの解説に準拠） */
+/** QQメソッド 質問1：仕事に最も影響している健康問題（v1.1: womens_health に統合） */
 export type QqConditionId =
   | "none"
   | "allergy"
@@ -18,8 +18,7 @@ export type QqConditionId =
   | "sleep"
   | "fatigue"
   | "eye"
-  | "mens_pain"
-  | "mens_other"
+  | "womens_health"
   | "other";
 
 export type PainAreaCode =
@@ -37,26 +36,35 @@ export type PainAreaCode =
 export interface SurveyResponse {
   id: string;
   clientCode: string;
+  surveyRoundId: number | null;
   submittedAt: string;
-  department: string;
-  ageGroup: AgeGroup;
+  // 基本情報
+  fullName: string;
+  dateOfBirth: string;
   gender: Gender;
-  /** QQ1 */
-  qqCondition: string;
-  /** QQ2：過去30日間の有症状日数 */
+  department: string;
+  employmentType: string;
+  // 症状（複数選択）
+  symptomConditions: string[];
+  symptomConditionsOther: string | null;
+  primaryCondition: string | null;
+  // QQメソッド
   symptomDaysPast30: number;
-  /** QQ3：不調がある日の仕事の量（0〜10） */
+  absenteeDaysPastYear: number;
   workQuantity: number;
-  /** QQ4：不調がある日の仕事の質（0〜10） */
   workQuality: number;
-  /** QQ5：有症状日に欠勤したことがある */
-  hadAbsenteeismOnSymptomDays: boolean;
-  /** 損失コスト計算用の月給（万円） */
-  monthlySalaryManYen: number;
-  /** ワークエンゲージメント（1〜6） */
-  weVigor: number;
-  weDedication: number;
-  weAbsorption: number;
+  // 治療・対処
+  treatmentPlaces: string[];
+  treatmentPlacesOther: string | null;
+  treatmentFrequency: number | null;
+  dailyItems: string[];
+  dailyItemsOther: string | null;
+  // 相談先・支援意向
+  consultationHealth: string;
+  consultationWork: string;
+  consultationFamily: string;
+  consultationMental: string;
+  expertSupportIntent: string;
 }
 
 export interface QqConditionItem {
