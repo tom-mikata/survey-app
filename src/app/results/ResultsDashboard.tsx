@@ -11,8 +11,6 @@ import {
   productivityAndAbsentTotalsManYen,
   segmentLabel,
   summarizeOccupational,
-  workEngagementByDepartment,
-  workEngagementSummary,
 } from "@/lib/analytics";
 import type { QqConditionItem, SummaryAxis, SurveyResponse } from "@/lib/types";
 import { getDepartments, getClients, getQqConditions, getResponses } from "@/lib/storage";
@@ -20,8 +18,6 @@ import { getAuthUser } from "@/lib/auth";
 import type { AuthUser } from "@/lib/auth";
 import {
   LOSS_LEGEND,
-  INDUSTRY,
-  INDUSTRY_LABEL,
   PRODUCTIVITY_COLOR,
   ABSENT_COLOR,
 } from "./components/designTokens";
@@ -30,7 +26,6 @@ import { MetricRow } from "./components/MetricCard";
 import { LegendAmountRow, HorizontalBars } from "./components/DepartmentBarsCard";
 import { PainFigure } from "./components/PainFigureCard";
 import { StackedDepartmentChart } from "./components/DepartmentLossChart";
-import { WeScoreCard, WeCompareColumn, ScoreLegendChip } from "./components/WorkEngagementCard";
 
 /* =============================================================================
  * ページ本体
@@ -98,9 +93,6 @@ export default function ResultsDashboard() {
   const lossTotal = useMemo(() => laborLossTotalManYen(filtered), [filtered]);
   const lossSplit = useMemo(() => laborLossSplitForTotal(filtered), [filtered]);
   const deptLoss = useMemo(() => laborLossByDepartment(filtered, departments), [filtered, departments]);
-  const we = useMemo(() => workEngagementSummary(filtered), [filtered]);
-  const weByDept = useMemo(() => workEngagementByDepartment(filtered, departments), [filtered, departments]);
-  const companyAvg = useMemo(() => workEngagementSummary(rows), [rows]);
   const prodAbs = useMemo(() => productivityAndAbsentTotalsManYen(filtered), [filtered]);
 
   const conditionBars = useMemo(() => {
@@ -346,76 +338,8 @@ export default function ResultsDashboard() {
             </div>
           </Card>
 
-          {/* ---------------- ワークエンゲージメント スコア ---------------- */}
-          <Card>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <CardHeader title="ワークエンゲージメントスコア" />
-              <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-slate-500">
-                <span>
-                  現在の表示：
-                  <span className="mx-1 rounded-md bg-slate-100 px-2 py-0.5 font-semibold text-slate-700">
-                    {segment}
-                  </span>
-                </span>
-                <span>
-                  比較対象業界：
-                  <span className="mx-1 rounded-md bg-slate-100 px-2 py-0.5 font-semibold text-slate-700">
-                    {INDUSTRY_LABEL}
-                  </span>
-                </span>
-              </div>
-            </div>
-            <div className="mt-6 grid grid-cols-2 gap-4 xl:grid-cols-4">
-              <WeScoreCard title="総合スコア" score={we.overall} industry={INDUSTRY.overall} />
-              <WeScoreCard title="活力" score={we.vigor} industry={INDUSTRY.vigor} />
-              <WeScoreCard title="熱意" score={we.dedication} industry={INDUSTRY.dedication} />
-              <WeScoreCard title="没頭" score={we.absorption} industry={INDUSTRY.absorption} />
-            </div>
-          </Card>
-
-          {/* ---------------- ワークエンゲージメント 属性別比較 ---------------- */}
-          <Card>
-            <CardHeader title="ワークエンゲージメント属性別比較" />
-            <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <WeCompareColumn
-                label="エンゲージメントスコア"
-                rows={weByDept}
-                field="overall"
-                companyAvg={companyAvg.overall}
-              />
-              <WeCompareColumn
-                label="活力"
-                rows={weByDept}
-                field="vigor"
-                companyAvg={companyAvg.vigor}
-              />
-              <WeCompareColumn
-                label="熱意"
-                rows={weByDept}
-                field="dedication"
-                companyAvg={companyAvg.dedication}
-              />
-              <WeCompareColumn
-                label="没頭"
-                rows={weByDept}
-                field="absorption"
-                companyAvg={companyAvg.absorption}
-              />
-            </div>
-
-            <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] text-slate-500">
-              <span className="mr-1 inline-flex items-center gap-1.5 font-semibold text-slate-600">
-                評価基準
-              </span>
-              <ScoreLegendChip color="#10b981" label="4.5-6.0：非常に高い" />
-              <ScoreLegendChip color="#14b8a6" label="3.0-4.4：やや高い" />
-              <ScoreLegendChip color="#f5a524" label="1.5-2.9：やや低い" />
-              <ScoreLegendChip color="#e4572e" label="0.1-1.4：非常に低い" />
-            </div>
-          </Card>
-
           <p className="mx-auto max-w-2xl pb-6 text-center text-[11px] leading-relaxed text-slate-400">
-            労働損失額は QQメソッドの定義に基づき、パフォーマンス低下度（1 − 量/10 × 質/10）と年間損失（有症状日数 / 30 × 低下度 × 月給 × 12）により算出しています（
+            労働損失額は QQメソッドの定義に基づき、プレゼンティーイズム損失（有症状日数 × 12 × パフォーマンス低下度（1 − 量/10 × 質/10）× ¥10,000/日）と欠勤損失（欠勤日数 × ¥10,000/日）の合計により算出しています（
             <a
               href="https://wellaboswp.com/column/qq-method-presenteeism-guide/"
               className="text-teal-600 hover:underline"

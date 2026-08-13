@@ -1,6 +1,6 @@
-import { AGE_GROUPS, CONDITION_TO_PAIN_DEFAULT, GENDERS } from "./constants";
+import { AGE_GROUPS, CONDITION_TO_PAIN_DEFAULT, DAILY_LABOR_COST_MAN_YEN, GENDERS } from "./constants";
 import { qqAnnualLossCostManYen, qqPerformanceDeclineRatio } from "./qq-method";
-import type { PainAreaCode, QqConditionId, SummaryAxis, SurveyResponse } from "./types";
+import type { AgeGroup, PainAreaCode, QqConditionId, SummaryAxis, SurveyResponse } from "./types";
 
 /** 画面の積み上げ凡例（5カテゴリ） */
 export type LossStackKey =
@@ -25,39 +25,50 @@ const CONDITION_TO_STACK: Record<QqConditionId, LossStackKey> = {
   sleep: "non_pain_disease",
   fatigue: "non_pain_disease",
   eye: "non_pain_disease",
-  mens_pain: "non_pain_disease",
-  mens_other: "non_pain_disease",
+  womens_health: "non_pain_disease",
   other: "non_pain_disease",
 };
-
 
 function conditionToStack(c: string): LossStackKey {
   return CONDITION_TO_STACK[c as QqConditionId] ?? "non_pain_disease";
 }
 
-/** QQ式による年間損失（万円）。欠勤のある回答は可視化用に一部を欠勤関連として配分 */
+function isNoCondition(r: SurveyResponse): boolean {
+  return r.symptomConditions.includes("none");
+}
+
+/** 生年月日文字列から年代グループを計算 */
+function ageGroupFromBirthDate(dateOfBirth: string): AgeGroup {
+  const age = new Date().getFullYear() - new Date(dateOfBirth).getFullYear();
+  if (age < 30) return "20s";
+  if (age < 40) return "30s";
+  if (age < 50) return "40s";
+  if (age < 60) return "50s";
+  return "60plus";
+}
+
+/** プレゼンティーイズム年間損失（万円） */
 export function responseAnnualLaborLossManYen(r: SurveyResponse): number {
   return qqAnnualLossCostManYen({
     symptomDaysPast30: r.symptomDaysPast30,
     workQuantity: r.workQuantity,
     workQuality: r.workQuality,
-    monthlySalaryManYen: r.monthlySalaryManYen,
-    isNoCondition: r.qqCondition === "none",
+    isNoCondition: isNoCondition(r),
   });
 }
 
-/** プレゼンティーイズム由来とみなす損失 / 欠勤関連の目安分割（ダッシュボード帯の内訳用） */
+/**
+ * プレゼンティーイズム損失 / 欠勤損失の内訳。
+ * 欠勤損失 = absenteeDaysPastYear × DAILY_LABOR_COST_MAN_YEN（実績日数 × 日当単価）
+ */
 export function splitProductivityAndAbsentManYen(r: SurveyResponse): {
   productivityManYen: number;
   absentManYen: number;
 } {
-  const total = responseAnnualLaborLossManYen(r);
-  if (total <= 0) return { productivityManYen: 0, absentManYen: 0 };
-  if (!r.hadAbsenteeismOnSymptomDays) return { productivityManYen: total, absentManYen: 0 };
-  const absentPortion = 0.07;
+  if (isNoCondition(r)) return { productivityManYen: 0, absentManYen: 0 };
   return {
-    productivityManYen: total * (1 - absentPortion),
-    absentManYen: total * absentPortion,
+    productivityManYen: responseAnnualLaborLossManYen(r),
+    absentManYen: r.absenteeDaysPastYear * DAILY_LABOR_COST_MAN_YEN,
   };
 }
 
@@ -71,8 +82,8 @@ function stackAllocationForResponse(r: SurveyResponse): Record<LossStackKey, num
   ];
   const empty = Object.fromEntries(keys.map((k) => [k, 0])) as Record<LossStackKey, number>;
   const total = responseAnnualLaborLossManYen(r);
-  if (total <= 0 || r.qqCondition === "none") return empty;
-  const k = conditionToStack(r.qqCondition);
+  if (total <= 0 || isNoCondition(r)) return empty;
+  const k = conditionToStack(r.primaryCondition ?? "other");
   empty[k] = total;
   return empty;
 }
@@ -84,18 +95,18 @@ export function filterResponses(
 ): SurveyResponse[] {
   if (tab === "all") return rows;
   if (axis === "department") return rows.filter((r) => r.department === tab);
-  if (axis === "age") return rows.filter((r) => r.ageGroup === tab);
+  if (axis === "age") return rows.filter((r) => ageGroupFromBirthDate(r.dateOfBirth) === tab);
   if (axis === "gender") return rows.filter((r) => r.gender === tab);
   return rows;
 }
 
 function hasHealthIssue(r: SurveyResponse): boolean {
-  return r.qqCondition !== "none";
+  return !isNoCondition(r);
 }
 
 /** 業務に支障（プレゼンティーイズム的影響）があるとみなす条件 */
 function hasWorkImpairment(r: SurveyResponse): boolean {
-  if (r.qqCondition === "none") return false;
+  if (isNoCondition(r)) return false;
   return qqPerformanceDeclineRatio(r.workQuantity, r.workQuality) > 0;
 }
 
@@ -106,21 +117,25 @@ export function summarizeOccupational(
   const total = rows.length;
   const withImpairment = rows.filter(hasWorkImpairment);
   const impairmentDen = withImpairment.length;
-  const withAbsentAmongImpairment = withImpairment.filter((r) => r.hadAbsenteeismOnSymptomDays);
+  const withAbsentAmongImpairment = withImpairment.filter((r) => r.absenteeDaysPastYear > 0);
   const healthIssues = rows.filter(hasHealthIssue);
 
   const conditionCounts: Record<string, number> = {};
   for (const r of rows) {
-    if (r.qqCondition === "none") continue;
-    conditionCounts[r.qqCondition] = (conditionCounts[r.qqCondition] ?? 0) + 1;
+    for (const c of r.symptomConditions) {
+      if (c === "none") continue;
+      conditionCounts[c] = (conditionCounts[c] ?? 0) + 1;
+    }
   }
 
   const painCounts: Partial<Record<PainAreaCode, number>> = {};
   for (const r of rows) {
     const painMap: Record<string, PainAreaCode[]> = conditionPainMap ?? CONDITION_TO_PAIN_DEFAULT;
-    const areas = painMap[r.qqCondition] ?? [];
-    for (const p of areas) {
-      painCounts[p] = (painCounts[p] ?? 0) + 1;
+    for (const c of r.symptomConditions) {
+      const areas = painMap[c] ?? [];
+      for (const p of areas) {
+        painCounts[p] = (painCounts[p] ?? 0) + 1;
+      }
     }
   }
 
@@ -178,7 +193,10 @@ export function laborLossByDepartment(rows: SurveyResponse[], departments: strin
 }
 
 export function laborLossTotalManYen(rows: SurveyResponse[]): number {
-  return rows.reduce((a, r) => a + responseAnnualLaborLossManYen(r), 0);
+  return rows.reduce((a, r) => {
+    const { productivityManYen, absentManYen } = splitProductivityAndAbsentManYen(r);
+    return a + productivityManYen + absentManYen;
+  }, 0);
 }
 
 export function laborLossSplitForTotal(rows: SurveyResponse[]) {
@@ -216,38 +234,6 @@ export function productivityAndAbsentTotalsManYen(rows: SurveyResponse[]) {
   );
 }
 
-export function workEngagementSummary(rows: SurveyResponse[]) {
-  if (rows.length === 0) {
-    return {
-      overall: 0,
-      vigor: 0,
-      dedication: 0,
-      absorption: 0,
-    };
-  }
-  const n = rows.length;
-  const sum = rows.reduce(
-    (a, r) => ({
-      vigor: a.vigor + r.weVigor,
-      dedication: a.dedication + r.weDedication,
-      absorption: a.absorption + r.weAbsorption,
-    }),
-    { vigor: 0, dedication: 0, absorption: 0 },
-  );
-  const vigor = sum.vigor / n;
-  const dedication = sum.dedication / n;
-  const absorption = sum.absorption / n;
-  const overall = (vigor + dedication + absorption) / 3;
-  return { overall, vigor, dedication, absorption };
-}
-
-export function workEngagementByDepartment(rows: SurveyResponse[], departments: string[]) {
-  return departments.map((d) => {
-    const sub = rows.filter((r) => r.department === d);
-    return { department: d, ...workEngagementSummary(sub) };
-  });
-}
-
 export function axisTabs(axis: SummaryAxis, departments: string[]): { id: string; label: string }[] {
   const all = { id: "all", label: "社内全体" };
   if (axis === "department") {
@@ -256,7 +242,7 @@ export function axisTabs(axis: SummaryAxis, departments: string[]): { id: string
   if (axis === "age") {
     return [all, ...AGE_GROUPS.map((a) => ({ id: a.id, label: a.label }))];
   }
-  return [all, ...GENDERS.filter((g) => g.id !== "prefer_not").map((g) => ({ id: g.id, label: g.label }))];
+  return [all, ...GENDERS.map((g) => ({ id: g.id, label: g.label }))];
 }
 
 export function segmentLabel(axis: SummaryAxis, tab: string): string {
