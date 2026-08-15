@@ -7,25 +7,25 @@ import type { StepProps } from "../_types";
  *  表示条件: 企業設定で module_work_life = true の場合のみ
  *
  * 問27: 仕事以外の役割（育児・介護・家事など）による仕事への影響（5段階）
- *       選択肢: ほとんどない / あまりない / ときどきある / よくある / 非常によくある
+ *       選択肢: まったくない / あまりない / ときどきある / よくある / いつもある
  *       → form.roleImpact
  * 問28: 仕事以外の負担についての支援の希望（3択）
  *       表示条件: 問27で「ときどきある」以上（"sometimes" / "often" / "very_often"）を選んだ人のみ
- *       選択肢: 支援があれば利用したい / 内容によっては利用したい / 必要ない
+ *       選択肢: 利用したい / どちらともいえない / 必要ない
  *       → form.supportDesire
  */
 
 const ROLE_IMPACT_OPTIONS = [
-  { id: "rarely", label: "ほとんどない" },
+  { id: "rarely", label: "まったくない" },
   { id: "little", label: "あまりない" },
   { id: "sometimes", label: "ときどきある" },
   { id: "often", label: "よくある" },
-  { id: "very_often", label: "非常によくある" },
+  { id: "very_often", label: "いつもある" },
 ];
 
 const SUPPORT_DESIRE_OPTIONS = [
-  { id: "want", label: "支援があれば利用したい" },
-  { id: "conditional", label: "内容によっては利用したい" },
+  { id: "want", label: "利用したい" },
+  { id: "conditional", label: "どちらともいえない" },
   { id: "not_needed", label: "必要ない" },
 ];
 
@@ -48,10 +48,14 @@ export function StepWorkLife({ form, onChange, onNext, onPrev, isFirst, isLast, 
       </h1>
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-8">
 
+        <p className="text-sm text-slate-500">
+          ここでは、具体的なご事情ではなく、負担の程度と、支援の希望だけをうかがいます。
+        </p>
+
         {/* 問27: 役割による影響（5段階） */}
         <div>
           <p className="text-sm font-semibold text-slate-700 mb-3">
-            問27. 育児・介護・家事など仕事以外の役割が、仕事にどの程度影響していますか？
+            問27. 仕事以外の役割や責任（家族の介護・育児・看病など）が、あなたの体調や仕事に影響していると感じることがありますか。
           </p>
           <div className="grid grid-cols-1 gap-2">
             {ROLE_IMPACT_OPTIONS.map((opt) => (
@@ -81,7 +85,7 @@ export function StepWorkLife({ form, onChange, onNext, onPrev, isFirst, isLast, 
         {showSupportDesire && (
           <div>
             <p className="text-sm font-semibold text-slate-700 mb-3">
-              問28. 仕事以外の負担への支援（相談窓口・情報提供など）があれば利用したいですか？
+              問28. その負担を軽くするために、情報提供や相談の機会があれば利用したいと思いますか。
             </p>
             <div className="grid grid-cols-1 gap-2">
               {SUPPORT_DESIRE_OPTIONS.map((opt) => (

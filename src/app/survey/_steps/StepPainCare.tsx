@@ -7,7 +7,7 @@ import type { StepProps } from "../_types";
  *  全員表示（問6の結果に関わらず）
  *
  * 問12: この1か月で利用した場所（複数選択）          → form.treatmentPlaces[]
- *       選択肢: 病院・クリニック / 整体・マッサージ・接骨院 / 薬局 / その他 / 利用していない
+ *       選択肢: 病院・クリニック / 整骨院・整体・鍼灸・マッサージなどの施術 / その他 / 利用していない
  *       「利用していない」は排他制御
  *       「その他」選択時に自由記述欄表示              → form.treatmentPlacesOther
  * 問13: 月あたり合計利用回数（記入）                 → form.treatmentFrequency
@@ -20,15 +20,14 @@ import type { StepProps } from "../_types";
 
 const TREATMENT_PLACES = [
   { id: "hospital", label: "病院・クリニック" },
-  { id: "massage", label: "整体・マッサージ・接骨院" },
-  { id: "pharmacy", label: "薬局" },
+  { id: "massage", label: "整骨院・整体・鍼灸・マッサージなどの施術" },
   { id: "other", label: "その他" },
   { id: "none", label: "利用していない" },
 ];
 
 const DAILY_ITEMS = [
   { id: "patch", label: "湿布" },
-  { id: "medicine", label: "飲み薬" },
+  { id: "medicine", label: "飲み薬（痛み止めなど）" },
   { id: "ointment", label: "塗り薬" },
   { id: "support", label: "コルセット・サポーター" },
   { id: "supplement", label: "サプリメント" },
@@ -75,7 +74,7 @@ export function StepPainCare({ form, onChange, onNext, onPrev, isFirst, isLast, 
         {/* TODO(#20-学生B): 問12 この1か月で利用した場所 */}
         <div>
           <p className="text-sm font-semibold text-slate-700 mb-3">
-            問12. この1か月で、体の不調に対して利用した場所はどこですか？（複数選択可）
+            問12. この1か月間で、体の不調（肩こり・腰痛・頭痛・関節痛など）のために利用したところはありますか（いくつでも選べます）。
           </p>
           <div className="grid grid-cols-1 gap-2">
             {TREATMENT_PLACES.map((opt) => (
@@ -83,8 +82,7 @@ export function StepPainCare({ form, onChange, onNext, onPrev, isFirst, isLast, 
                 key={opt.id}
                 type="button"
                 onClick={() => toggleTreatmentPlace(opt.id)}
-                disabled={form.treatmentPlaces.includes("none") && opt.id !== "none"}
-                className={`rounded-xl border px-4 py-3 text-sm text-left font-medium transition-colors disabled:opacity-40 ${
+                className={`rounded-xl border px-4 py-3 text-sm text-left font-medium transition-colors ${
                   form.treatmentPlaces.includes(opt.id)
                     ? "border-sky-500 bg-sky-50 text-sky-900"
                     : "border-slate-200 hover:bg-slate-50"
@@ -109,7 +107,7 @@ export function StepPainCare({ form, onChange, onNext, onPrev, isFirst, isLast, 
         {hasUsedTreatment && (
           <div>
             <p className="text-sm font-semibold text-slate-700 mb-2">
-              問13. 月あたりの合計利用回数はどのくらいですか？
+              問13. それらは1か月あたり、合計でおよそ何回ですか。
             </p>
             <input
               type="number"
@@ -127,7 +125,7 @@ export function StepPainCare({ form, onChange, onNext, onPrev, isFirst, isLast, 
         {/* TODO(#20-学生B): 問14 日常的に使っているもの */}
         <div>
           <p className="text-sm font-semibold text-slate-700 mb-3">
-            問14. 不調に対して日常的に使っているものはありますか？（複数選択可）
+            問14. 体の不調のために、日常的に使っているものはありますか（いくつでも選べます）。
           </p>
           <div className="grid grid-cols-1 gap-2">
             {DAILY_ITEMS.map((opt) => (
@@ -135,8 +133,7 @@ export function StepPainCare({ form, onChange, onNext, onPrev, isFirst, isLast, 
                 key={opt.id}
                 type="button"
                 onClick={() => toggleDailyItem(opt.id)}
-                disabled={form.dailyItems.includes("none") && opt.id !== "none"}
-                className={`rounded-xl border px-4 py-3 text-sm text-left font-medium transition-colors disabled:opacity-40 ${
+                className={`rounded-xl border px-4 py-3 text-sm text-left font-medium transition-colors ${
                   form.dailyItems.includes(opt.id)
                     ? "border-sky-500 bg-sky-50 text-sky-900"
                     : "border-slate-200 hover:bg-slate-50"
