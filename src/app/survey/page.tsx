@@ -3,7 +3,7 @@
 import { use, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AppChrome } from "@/components/AppChrome";
-import { getDepartments, getQqConditions } from "@/lib/storage";
+import { clientExists, getDepartments, getQqConditions } from "@/lib/storage";
 import {
   buildScreenList,
   INITIAL_FORM,
@@ -46,8 +46,19 @@ export default function SurveyPage({
   const [modules] = useState<ClientModules>(DEFAULT_MODULES);
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
   const [currentScreen, setCurrentScreen] = useState<ScreenId>("basic_info");
+  const [clientStatus, setClientStatus] = useState<"checking" | "valid" | "invalid">("checking");
 
   const load = useCallback(async () => {
+    if (!clientCode) {
+      setClientStatus("invalid");
+      return;
+    }
+    const valid = await clientExists(clientCode);
+    if (!valid) {
+      setClientStatus("invalid");
+      return;
+    }
+    setClientStatus("valid");
     const [depts, conditions] = await Promise.all([
       getDepartments(clientCode),
       getQqConditions(clientCode),
@@ -102,6 +113,30 @@ export default function SurveyPage({
     isLast: currentIndex === screens.length - 1,
     onSubmit: submit,
   };
+
+  if (clientStatus === "checking") {
+    return (
+      <AppChrome title="従業員健康診断アンケート">
+        <main className="max-w-2xl mx-auto px-6 py-10" />
+      </AppChrome>
+    );
+  }
+
+  if (clientStatus === "invalid") {
+    return (
+      <AppChrome title="従業員健康診断アンケート">
+        <main className="max-w-2xl mx-auto px-6 py-10">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 text-center">
+            <p className="text-sm font-semibold text-slate-700">
+              URLが正しくありません。
+              <br />
+              担当者よりご案内のあったURLをご確認ください。
+            </p>
+          </div>
+        </main>
+      </AppChrome>
+    );
+  }
 
   return (
     <AppChrome title="従業員健康診断アンケート">
