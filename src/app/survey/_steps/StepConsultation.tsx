@@ -16,16 +16,16 @@ import type { StepProps } from "../_types";
  */
 
 const CONSULTATION_OPTIONS = [
-  { id: "both", label: "社内・社外の両方にある" },
   { id: "internal", label: "社内にある" },
   { id: "external", label: "社外にある" },
+  { id: "both", label: "社内・社外の両方にある" },
   { id: "none", label: "ない" },
 ];
 
 const CONSULTATION_FIELDS: { key: keyof Pick<import("../_types").FormState, "consultationHealth" | "consultationWork" | "consultationFamily" | "consultationMental">; label: string }[] = [
-  { key: "consultationHealth", label: "体調・健康" },
-  { key: "consultationWork", label: "仕事や働き方" },
-  { key: "consultationFamily", label: "家庭・生活の負担" },
+  { key: "consultationHealth", label: "体調・健康のこと" },
+  { key: "consultationWork", label: "仕事や働き方のこと" },
+  { key: "consultationFamily", label: "家庭・生活の負担のこと" },
   { key: "consultationMental", label: "気持ちや心の落ち込み" },
 ];
 
@@ -56,7 +56,7 @@ export function StepConsultation({ form, onChange, onNext, onPrev, isFirst, isLa
         {/* TODO(#20-学生B): 問15 相談先マトリクス（4分野 × 4択） */}
         <div>
           <p className="text-sm font-semibold text-slate-700 mb-4">
-            問15. 困ったとき、相談できる場所・人がありますか？（分野ごとに1つ選択）
+            問15. 次のことについて、困ったときに相談できる相手や場所がありますか。それぞれお答えください。
           </p>
           <div className="space-y-6">
             {CONSULTATION_FIELDS.map(({ key, label }) => (
@@ -86,7 +86,7 @@ export function StepConsultation({ form, onChange, onNext, onPrev, isFirst, isLa
         {/* TODO(#20-学生B): 問16 専門家の支援を利用したいか（3択） */}
         <div>
           <p className="text-sm font-semibold text-slate-700 mb-3">
-            問16. 専門家（医師・カウンセラーなど）の支援を利用したいと思いますか？
+            問16. 仕事の合間に、体の不調を無理なくケアできる方法や、専門家（理学療法士・作業療法士等）に気軽に相談できる機会があれば、利用してみたいと思いますか。
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             {EXPERT_SUPPORT_OPTIONS.map((opt) => (
