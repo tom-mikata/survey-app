@@ -6,6 +6,10 @@ import type { StepProps } from "../_types";
 /** 学生A 担当: 問8〜11（QQメソッド）
  *  表示条件: 問6で「不調はない」以外を選んだ人のみ（page.tsx のスクリーンリストで制御済み）
  *
+ * 「問7で選んだ〜についてお答えください」の文言は、問6で症状を複数選択し
+ * 実際に問7で選択が発生した場合のみ表示する（1つだけ選んだ場合は問7が
+ * 自動選択されスキップされるため、藤田さん確認済み仕様、2026-08-19）
+ *
  * 問8: 問7の症状があった日数（直近30日間、0〜30）    → form.symptomDaysPast30
  * 問9: 問7の症状で仕事を休んだ日数（直近1年間）      → form.absenteeDaysPastYear
  * 問10: 症状がある日の仕事量（0〜10）               → form.workQuantity
@@ -38,9 +42,13 @@ export function StepQQ({ form, onChange, onNext, onPrev, isFirst, isLast, onSubm
         症状の状況を教えてください
       </h1>
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-8">
-        <p className="text-sm text-slate-500">
-          問7で選んだ「いちばん仕事に影響している不調」についてお答えください。
-        </p>
+        {/* 問6で複数選択した場合のみ「問7で選んだ」という文脈を表示する。
+            1つだけ選んだ場合は問7自体が表示されず自動選択されているため文言を出さない */}
+        {form.symptomConditions.length > 1 && (
+          <p className="text-sm text-slate-500">
+            問7で選んだ「いちばん仕事に影響している不調」についてお答えください。
+          </p>
+        )}
 
         {/* 問8 直近30日間の有症状日数（0〜30） */}
         <div>

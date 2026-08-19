@@ -10,6 +10,8 @@ import { INITIAL_FORM, type StepProps } from "../_types";
  *       「その他の不調」を選んだ場合は自由記述欄を表示  → form.symptomConditionsOther
  * 問7: 最も仕事に影響している不調（問6の回答から1つ）→ form.primaryCondition
  *       表示条件: 問6で「不調はない」以外を選んだ場合のみ
+ *       問6で症状を1つだけ選んだ場合はその症状を自動的に primaryCondition に設定し、
+ *       問7自体は表示しない（藤田さん確認済み仕様、2026-08-19）
  *
  * 問6の16選択肢（設問設計書 v1.1）は qqConditions として渡される。
  * DB上の選択肢ID は qq_conditions テーブルで管理（"none" が「不調はない」に相当）。
@@ -28,8 +30,9 @@ export function StepSymptoms({
   qqConditions,
 }: StepProps & { qqConditions: { id: string; label: string }[] }) {
   const hasNoCondition = form.symptomConditions.includes("none");
+  // 症状が1つだけの場合はそれを問7の回答として自動選択し、問7自体は表示しない
   const showPrimaryCondition =
-    form.symptomConditions.length > 0 && !hasNoCondition;
+    form.symptomConditions.length > 1 && !hasNoCondition;
 
   const canNext = useMemo(() => {
     if (form.symptomConditions.length === 0) return false;
@@ -55,10 +58,11 @@ export function StepSymptoms({
     }
     const without = form.symptomConditions.filter((s) => s !== "none" && s !== id);
     const next = form.symptomConditions.includes(id) ? without : [...without, id];
-    // 症状の組み合わせが変わると問7の選択肢も変わるため、問7はリセットする
+    // 症状の組み合わせが変わると問7の選択肢も変わるため、問7はリセットする。
+    // ただし症状が1つだけに絞られた場合は、それを自動的に問7の回答にする
     onChange({
       symptomConditions: next,
-      primaryCondition: "",
+      primaryCondition: next.length === 1 ? next[0] : "",
       // 「その他の不調」を外したら自由記述も破棄する
       symptomConditionsOther: next.includes("other") ? form.symptomConditionsOther : "",
     });
