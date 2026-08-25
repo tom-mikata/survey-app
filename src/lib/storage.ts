@@ -19,6 +19,13 @@ export async function getClients(): Promise<{ code: string; name: string }[]> {
   return data as { code: string; name: string }[];
 }
 
+/** #18: 匿名ユーザーからのクライアントコード存在確認。RLSを経由しないRPC（client_exists）を使用する。 */
+export async function clientExists(code: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc("client_exists", { p_code: code });
+  if (error) return false;
+  return data === true;
+}
+
 export async function createClientRecord(code: string, name: string): Promise<{ error: string | null }> {
   const { error } = await supabase.from("clients").insert({ code, name });
   return { error: error?.message ?? null };
