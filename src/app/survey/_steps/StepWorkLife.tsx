@@ -3,14 +3,14 @@
 import { useMemo } from "react";
 import type { StepProps } from "../_types";
 
-/** 学生B 担当: 問27〜28（仕事以外の負担モジュール）
+/** 学生B 担当: 問19〜20（仕事以外の負担モジュール）
  *  表示条件: 企業設定で module_work_life = true の場合のみ
  *
- * 問27: 仕事以外の役割（育児・介護・家事など）による仕事への影響（5段階）
+ * 問19: 仕事以外の役割（育児・介護・家事など）による仕事への影響（5段階）
  *       選択肢: まったくない / あまりない / ときどきある / よくある / いつもある
  *       → form.roleImpact
- * 問28: 仕事以外の負担についての支援の希望（3択）
- *       表示条件: 問27で「ときどきある」以上（"sometimes" / "often" / "very_often"）を選んだ人のみ
+ * 問20: 仕事以外の負担についての支援の希望（3択）
+ *       表示条件: 問19で「ときどきある」以上（"sometimes" / "often" / "very_often"）を選んだ人のみ
  *       選択肢: 利用したい / どちらともいえない / 必要ない
  *       → form.supportDesire
  */
@@ -52,10 +52,10 @@ export function StepWorkLife({ form, onChange, onNext, onPrev, isFirst, isLast, 
           ここでは、具体的なご事情ではなく、負担の程度と、支援の希望だけをうかがいます。
         </p>
 
-        {/* 問27: 役割による影響（5段階） */}
+        {/* 問19: 役割による影響（5段階） */}
         <div>
           <p className="text-sm font-semibold text-slate-700 mb-3">
-            問27. 仕事以外の役割や責任（家族の介護・育児・看病など）が、あなたの体調や仕事に影響していると感じることがありますか。
+            問19. 仕事以外の役割や責任（家族の介護・育児・看病など）が、あなたの体調や仕事に影響していると感じることがありますか。
           </p>
           <div className="grid grid-cols-1 gap-2">
             {ROLE_IMPACT_OPTIONS.map((opt) => (
@@ -81,11 +81,11 @@ export function StepWorkLife({ form, onChange, onNext, onPrev, isFirst, isLast, 
           </div>
         </div>
 
-        {/* 問28: 支援の希望（問27でときどきある以上の場合のみ表示） */}
+        {/* 問20: 支援の希望（問19でときどきある以上の場合のみ表示） */}
         {showSupportDesire && (
           <div>
             <p className="text-sm font-semibold text-slate-700 mb-3">
-              問28. その負担を軽くするために、情報提供や相談の機会があれば利用したいと思いますか。
+              問20. その負担を軽くするために、情報提供や相談の機会があれば利用したいと思いますか。
             </p>
             <div className="grid grid-cols-1 gap-2">
               {SUPPORT_DESIRE_OPTIONS.map((opt) => (

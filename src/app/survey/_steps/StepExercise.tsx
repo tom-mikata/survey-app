@@ -3,13 +3,13 @@
 import { useMemo } from "react";
 import type { StepProps } from "../_types";
 
-/** 学生B 担当: 問29〜30（運動習慣モジュール）
+/** 学生B 担当: 問21〜22（運動習慣モジュール）
  *  表示条件: 企業設定で module_exercise = true の場合のみ
  *
- * 問29: 運動の習慣があるか（2択）    → form.hasExerciseHabit
+ * 問21: 運動の習慣があるか（2択）    → form.hasExerciseHabit
  *       選択肢: している / していない
- * 問30: 週あたり運動日数（1〜7）     → form.exerciseDays
- *       表示条件: 問29で「している」を選んだ場合のみ
+ * 問22: 週あたり運動日数（1〜7）     → form.exerciseDays
+ *       表示条件: 問21で「している」を選んだ場合のみ
  */
 
 export function StepExercise({ form, onChange, onNext, onPrev, isFirst, isLast, onSubmit }: StepProps) {
@@ -29,10 +29,10 @@ export function StepExercise({ form, onChange, onNext, onPrev, isFirst, isLast, 
       </h1>
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-8">
 
-        {/* 問29: 運動の習慣があるか */}
+        {/* 問21: 運動の習慣があるか */}
         <div>
           <p className="text-sm font-semibold text-slate-700 mb-3">
-            問29. 健康のために、体を動かすこと（運動・スポーツ・ウォーキングなど）を習慣的に行っていますか。
+            問21. 健康のために、体を動かすこと（運動・スポーツ・ウォーキングなど）を習慣的に行っていますか。
           </p>
           <div className="flex gap-2">
             {[
@@ -60,11 +60,11 @@ export function StepExercise({ form, onChange, onNext, onPrev, isFirst, isLast, 
           </div>
         </div>
 
-        {/* 問30: 週あたり運動日数（問29で「している」の場合のみ） */}
+        {/* 問22: 週あたり運動日数（問21で「している」の場合のみ） */}
         {showExerciseDays && (
           <div>
             <p className="text-sm font-semibold text-slate-700 mb-3">
-              問30. 平均すると、週に何日くらい行っていますか。あてはまりそうな日数に迷う場合は、少ない方をお選びください。
+              問22. 平均すると、週に何日くらい行っていますか。あてはまりそうな日数に迷う場合は、少ない方をお選びください。
             </p>
             <div className="flex flex-wrap gap-2">
               {[1, 2, 3, 4, 5, 6, 7].map((n) => (

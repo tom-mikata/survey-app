@@ -3,12 +3,12 @@
 import { useMemo } from "react";
 import type { StepProps } from "../_types";
 
-/** 学生B 担当: 問23〜26（会社のサポートモジュール）
+/** 学生B 担当: 問18（会社のサポートモジュール、18-1〜18-4の4項目）
  *  表示条件: 企業設定で module_company_support = true の場合のみ
  *
- * 問23〜26: 会社の支援の感じ方（4問・7段階）
+ * 問18: 会社の支援の感じ方について（4項目・7段階）
  *   スコア: 1〜7（まったくそう思わない〜非常にそう思う）
- *   → form.q23Score 〜 form.q26Score
+ *   → form.q18_1Score 〜 form.q18_4Score
  *
  * ⚠️  問題文は牧氏から入手後に確定。現在はプレースホルダー表示のみ。
  *    問題文が確定したら QUESTIONS 配列を更新すること。
@@ -17,11 +17,11 @@ import type { StepProps } from "../_types";
 const SUPPORT_SCALE = [1, 2, 3, 4, 5, 6, 7];
 
 // TODO(#20-学生B): 牧氏から問題文を入手したらここを更新する
-const QUESTIONS: { key: keyof Pick<import("../_types").FormState, "q23Score"|"q24Score"|"q25Score"|"q26Score">; placeholder: string }[] = [
-  { key: "q23Score", placeholder: "問23の問題文（牧氏から入手後に更新）" },
-  { key: "q24Score", placeholder: "問24の問題文（牧氏から入手後に更新）" },
-  { key: "q25Score", placeholder: "問25の問題文（牧氏から入手後に更新）" },
-  { key: "q26Score", placeholder: "問26の問題文（牧氏から入手後に更新）" },
+const QUESTIONS: { key: keyof Pick<import("../_types").FormState, "q18_1Score"|"q18_2Score"|"q18_3Score"|"q18_4Score">; placeholder: string }[] = [
+  { key: "q18_1Score", placeholder: "18-1の問題文（牧氏から入手後に更新）" },
+  { key: "q18_2Score", placeholder: "18-2の問題文（牧氏から入手後に更新）" },
+  { key: "q18_3Score", placeholder: "18-3の問題文（牧氏から入手後に更新）" },
+  { key: "q18_4Score", placeholder: "18-4の問題文（牧氏から入手後に更新）" },
 ];
 
 export function StepCompanySupport({ form, onChange, onNext, onPrev, isFirst, isLast, onSubmit }: StepProps) {
@@ -44,7 +44,7 @@ export function StepCompanySupport({ form, onChange, onNext, onPrev, isFirst, is
           <div key={key}>
             {/* TODO(#20-学生B): placeholder を実際の問題文に差し替える */}
             <p className="text-sm font-semibold text-slate-700 mb-3">
-              問{23 + i}. <span className="text-slate-400 italic">{placeholder}</span>
+              18-{i + 1}. <span className="text-slate-400 italic">{placeholder}</span>
             </p>
             <div className="flex flex-wrap gap-2">
               {SUPPORT_SCALE.map((n) => (

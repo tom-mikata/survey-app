@@ -3,18 +3,18 @@
 import { useMemo } from "react";
 import type { StepProps } from "../_types";
 
-/** 学生B 担当: 問17〜22（心の健康モジュール）
+/** 学生B 担当: 問17（心の健康モジュール、17-1〜17-6の6項目）
  *  表示条件: 企業設定で module_mental_health = true の場合のみ
  *
- * 問17〜22: 心の状態について（6問・5段階）
+ * 問17: こころの健康について（6項目・5段階）
  *   スコア: 0〜4（まったくない / 少しだけ / ときどき / たいてい / いつも）
- *   → form.q17Score 〜 form.q22Score
+ *   → form.q17_1Score 〜 form.q17_6Score
  *
- * ⚠️  問題文は牧氏から入手後に確定。現在は「問17〜22」のプレースホルダー表示のみ。
- *    問題文が確定したら QUESTION_TEXT 配列を更新すること。
+ * ⚠️  問題文は牧氏から入手後に確定。現在は「17-1」〜「17-6」のプレースホルダー表示のみ。
+ *    問題文が確定したら QUESTIONS 配列の placeholder を更新すること。
  *
  * 集計ロジック（analytics.ts にて実装）:
- *   合計スコア = q17〜q22 の合計（0〜24点）
+ *   合計スコア = q17_1〜q17_6 の合計（0〜24点）
  *   5点以上の割合・13点以上の割合を集計（個人フィードバックなし）
  */
 
@@ -27,13 +27,13 @@ const MENTAL_SCALE = [
 ];
 
 // TODO(#20-学生B): 牧氏から問題文を入手したらここを更新する
-const QUESTIONS: { key: keyof Pick<import("../_types").FormState, "q17Score"|"q18Score"|"q19Score"|"q20Score"|"q21Score"|"q22Score">; placeholder: string }[] = [
-  { key: "q17Score", placeholder: "問17の問題文（牧氏から入手後に更新）" },
-  { key: "q18Score", placeholder: "問18の問題文（牧氏から入手後に更新）" },
-  { key: "q19Score", placeholder: "問19の問題文（牧氏から入手後に更新）" },
-  { key: "q20Score", placeholder: "問20の問題文（牧氏から入手後に更新）" },
-  { key: "q21Score", placeholder: "問21の問題文（牧氏から入手後に更新）" },
-  { key: "q22Score", placeholder: "問22の問題文（牧氏から入手後に更新）" },
+const QUESTIONS: { key: keyof Pick<import("../_types").FormState, "q17_1Score"|"q17_2Score"|"q17_3Score"|"q17_4Score"|"q17_5Score"|"q17_6Score">; placeholder: string }[] = [
+  { key: "q17_1Score", placeholder: "17-1の問題文（牧氏から入手後に更新）" },
+  { key: "q17_2Score", placeholder: "17-2の問題文（牧氏から入手後に更新）" },
+  { key: "q17_3Score", placeholder: "17-3の問題文（牧氏から入手後に更新）" },
+  { key: "q17_4Score", placeholder: "17-4の問題文（牧氏から入手後に更新）" },
+  { key: "q17_5Score", placeholder: "17-5の問題文（牧氏から入手後に更新）" },
+  { key: "q17_6Score", placeholder: "17-6の問題文（牧氏から入手後に更新）" },
 ];
 
 export function StepMentalHealth({ form, onChange, onNext, onPrev, isFirst, isLast, onSubmit }: StepProps) {
@@ -45,18 +45,18 @@ export function StepMentalHealth({ form, onChange, onNext, onPrev, isFirst, isLa
   return (
     <div>
       <h1 className="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight mb-6">
-        心の健康について教えてください
+        こころの健康について教えてください
       </h1>
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-8">
         <p className="text-sm text-slate-500">
-          最近2週間のあなたの状態についてお答えください。
+          過去30日の間にどれくらいの頻度で次のことがありましたか？
         </p>
 
         {QUESTIONS.map(({ key, placeholder }, i) => (
           <div key={key}>
             {/* TODO(#20-学生B): placeholder を実際の問題文に差し替える */}
             <p className="text-sm font-semibold text-slate-700 mb-3">
-              問{17 + i}. <span className="text-slate-400 italic">{placeholder}</span>
+              17-{i + 1}. <span className="text-slate-400 italic">{placeholder}</span>
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
               {MENTAL_SCALE.map((opt) => (
