@@ -4,6 +4,7 @@ import type { Gender } from "@/lib/types";
 export type FormState = {
   // 問1〜5 基本属性
   fullName: string;
+  fullNameKana: string;
   gender: Gender | "";
   dateOfBirth: string;       // "YYYY-MM-DD"
   department: string;
@@ -63,6 +64,7 @@ export type FormState = {
 
 export const INITIAL_FORM: FormState = {
   fullName: "",
+  fullNameKana: "",
   gender: "",
   dateOfBirth: "",
   department: "",

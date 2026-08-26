@@ -67,6 +67,7 @@ export function StepBasicInfo({
   const canNext = useMemo(
     () =>
       form.fullName.trim().length > 0 &&
+      form.fullNameKana.trim().length > 0 &&
       form.gender !== "" &&
       form.dateOfBirth !== "" &&
       dateOfBirthError === null &&
@@ -74,6 +75,7 @@ export function StepBasicInfo({
       form.employmentType !== "",
     [
       form.fullName,
+      form.fullNameKana,
       form.gender,
       form.dateOfBirth,
       dateOfBirthError,
@@ -99,6 +101,22 @@ export function StepBasicInfo({
             value={form.fullName}
             onChange={(e) => onChange({ fullName: e.target.value })}
             placeholder="例：山田 太郎"
+            maxLength={100}
+            autoComplete="name"
+            className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400"
+          />
+        </label>
+
+        {/* 問1 フリガナ（字種の制限なし） */}
+        <label className="block">
+          <span className="text-sm font-medium text-slate-600">
+            フリガナ <RequiredBadge />
+          </span>
+          <input
+            type="text"
+            value={form.fullNameKana}
+            onChange={(e) => onChange({ fullNameKana: e.target.value })}
+            placeholder="例：ヤマダ タロウ"
             maxLength={100}
             autoComplete="name"
             className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400"
