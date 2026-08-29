@@ -37,29 +37,29 @@ export type FormState = {
   consultationMental: string;     // 問15: 気持ちや心の落ち込みの相談先
   expertSupportIntent: string;    // 問16: 専門家の支援を利用したいか
 
-  // 問17〜22 心の健康モジュール（企業設定ONの場合のみ）
+  // 問17 心の健康モジュール（6項目・17-1〜17-6、企業設定ONの場合のみ）
   // ※ 問題文は牧氏から入手後に確定。スコアは 0〜4
-  q17Score: number | null;
-  q18Score: number | null;
-  q19Score: number | null;
-  q20Score: number | null;
-  q21Score: number | null;
-  q22Score: number | null;
+  q17_1Score: number | null;
+  q17_2Score: number | null;
+  q17_3Score: number | null;
+  q17_4Score: number | null;
+  q17_5Score: number | null;
+  q17_6Score: number | null;
 
-  // 問23〜26 会社のサポートモジュール（企業設定ONの場合のみ）
+  // 問18 会社のサポートモジュール（4項目・18-1〜18-4、企業設定ONの場合のみ）
   // ※ 問題文は牧氏から入手後に確定。スコアは 1〜7
-  q23Score: number | null;
-  q24Score: number | null;
-  q25Score: number | null;
-  q26Score: number | null;
+  q18_1Score: number | null;
+  q18_2Score: number | null;
+  q18_3Score: number | null;
+  q18_4Score: number | null;
 
-  // 問27〜28 仕事以外の負担モジュール（企業設定ONの場合のみ）
-  roleImpact: string;     // 問27: 仕事以外の役割による影響（5段階）
-  supportDesire: string;  // 問28: 支援の希望（問27でときどきある以上の人のみ）
+  // 問19〜20 仕事以外の負担モジュール（企業設定ONの場合のみ）
+  roleImpact: string;     // 問19: 仕事以外の役割による影響（5段階）
+  supportDesire: string;  // 問20: 支援の希望（問19でときどきある以上の人のみ）
 
-  // 問29〜30 運動習慣モジュール（企業設定ONの場合のみ）
-  hasExerciseHabit: boolean | null;  // 問29: 運動習慣があるか
-  exerciseDays: number | null;       // 問30: 週あたり運動日数（問29でありの人のみ、1〜7）
+  // 問21〜22 運動習慣モジュール（企業設定ONの場合のみ）
+  hasExerciseHabit: boolean | null;  // 問21: 運動習慣があるか
+  exerciseDays: number | null;       // 問22: 週あたり運動日数（問21でありの人のみ、1〜7）
 };
 
 export const INITIAL_FORM: FormState = {
@@ -91,17 +91,17 @@ export const INITIAL_FORM: FormState = {
   consultationMental: "",
   expertSupportIntent: "",
 
-  q17Score: null,
-  q18Score: null,
-  q19Score: null,
-  q20Score: null,
-  q21Score: null,
-  q22Score: null,
+  q17_1Score: null,
+  q17_2Score: null,
+  q17_3Score: null,
+  q17_4Score: null,
+  q17_5Score: null,
+  q17_6Score: null,
 
-  q23Score: null,
-  q24Score: null,
-  q25Score: null,
-  q26Score: null,
+  q18_1Score: null,
+  q18_2Score: null,
+  q18_3Score: null,
+  q18_4Score: null,
 
   roleImpact: "",
   supportDesire: "",
@@ -125,10 +125,10 @@ export type ScreenId =
   | "qq"               // 問8〜11（問6で症状ありの人のみ）
   | "pain_care"        // 問12〜14
   | "consultation"     // 問15〜16
-  | "mental_health"    // 問17〜22（モジュールONのみ）
-  | "company_support"  // 問23〜26（モジュールONのみ）
-  | "work_life"        // 問27〜28（モジュールONのみ）
-  | "exercise";        // 問29〜30（モジュールONのみ）
+  | "mental_health"    // 問17（6項目、モジュールONのみ）
+  | "company_support"  // 問18（4項目、モジュールONのみ）
+  | "work_life"        // 問19〜20（モジュールONのみ）
+  | "exercise";        // 問21〜22（モジュールONのみ）
 
 /** 現在のフォーム状態とモジュール設定から表示すべき画面リストを生成する */
 export function buildScreenList(form: FormState, modules: ClientModules): ScreenId[] {
