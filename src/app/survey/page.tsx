@@ -3,7 +3,8 @@
 import { use, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AppChrome } from "@/components/AppChrome";
-import { clientExists, getDepartments, getQqConditions } from "@/lib/storage";
+import { clientExists, getDepartments } from "@/lib/storage";
+import { QQ_CONDITIONS } from "@/lib/constants";
 import {
   buildScreenList,
   INITIAL_FORM,
@@ -42,7 +43,6 @@ export default function SurveyPage({
   const router = useRouter();
 
   const [departments, setDepartments] = useState<string[]>([]);
-  const [qqConditions, setQqConditions] = useState<{ id: string; label: string }[]>([]);
   const [modules] = useState<ClientModules>(DEFAULT_MODULES);
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
   const [currentScreen, setCurrentScreen] = useState<ScreenId>("basic_info");
@@ -59,12 +59,8 @@ export default function SurveyPage({
       return;
     }
     setClientStatus("valid");
-    const [depts, conditions] = await Promise.all([
-      getDepartments(clientCode),
-      getQqConditions(clientCode),
-    ]);
+    const depts = await getDepartments(clientCode);
     setDepartments(depts);
-    setQqConditions(conditions);
   }, [clientCode]);
 
   useEffect(() => { queueMicrotask(() => load()); }, [load]);
@@ -160,7 +156,7 @@ export default function SurveyPage({
           <StepBasicInfo {...stepProps} departments={departments} />
         )}
         {currentScreen === "symptoms" && (
-          <StepSymptoms {...stepProps} qqConditions={qqConditions} />
+          <StepSymptoms {...stepProps} qqConditions={QQ_CONDITIONS} />
         )}
         {currentScreen === "qq" && <StepQQ {...stepProps} />}
         {currentScreen === "pain_care" && <StepPainCare {...stepProps} />}

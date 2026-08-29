@@ -12,8 +12,9 @@ import {
   segmentLabel,
   summarizeOccupational,
 } from "@/lib/analytics";
-import type { QqConditionItem, SummaryAxis, SurveyResponse, SurveyRound } from "@/lib/types";
-import { getDepartments, getClients, getQqConditions, getResponses, getSurveyRounds } from "@/lib/storage";
+import { QQ_CONDITIONS } from "@/lib/constants";
+import type { SummaryAxis, SurveyResponse, SurveyRound } from "@/lib/types";
+import { getDepartments, getClients, getResponses, getSurveyRounds } from "@/lib/storage";
 import { getAuthUser } from "@/lib/auth";
 import type { AuthUser } from "@/lib/auth";
 import {
@@ -39,7 +40,6 @@ export default function ResultsDashboard() {
   const [selectedRoundId, setSelectedRoundId] = useState<number | null>(null);
   const [departments, setDepartments] = useState<string[]>([]);
   const [rows, setRows] = useState<SurveyResponse[]>([]);
-  const [qqConditions, setQqConditions] = useState<QqConditionItem[]>([]);
   const [axis, setAxis] = useState<SummaryAxis>("department");
   const [tab, setTab] = useState<string>("all");
   const [middleView, setMiddleView] = useState<"loss" | "health">("loss");
@@ -50,10 +50,9 @@ export default function ResultsDashboard() {
   const loadData = useCallback(async (clientCode: string | null, roundId: number | null) => {
     const seq = ++loadSeq.current;
 
-    const [depts, responses, conditions, rounds] = await Promise.all([
+    const [depts, responses, rounds] = await Promise.all([
       clientCode ? getDepartments(clientCode) : Promise.resolve([]),
       getResponses(clientCode, roundId),
-      getQqConditions(clientCode),
       clientCode ? getSurveyRounds(clientCode) : Promise.resolve([]),
     ]);
 
@@ -61,7 +60,6 @@ export default function ResultsDashboard() {
 
     setDepartments(depts);
     setRows(responses);
-    setQqConditions(conditions);
     setSurveyRounds(rounds);
   }, []);
 
@@ -107,18 +105,14 @@ export default function ResultsDashboard() {
   }, [tabs, tab]);
 
   const filtered = useMemo(() => filterResponses(rows, axis, activeTab), [rows, axis, activeTab]);
-  const conditionPainMap = useMemo(
-    () => Object.fromEntries(qqConditions.map((c) => [c.id, c.painAreas])),
-    [qqConditions],
-  );
-  const occ = useMemo(() => summarizeOccupational(filtered, conditionPainMap), [filtered, conditionPainMap]);
+  const occ = useMemo(() => summarizeOccupational(filtered), [filtered]);
   const lossTotal = useMemo(() => laborLossTotalManYen(filtered), [filtered]);
   const lossSplit = useMemo(() => laborLossSplitForTotal(filtered), [filtered]);
   const deptLoss = useMemo(() => laborLossByDepartment(filtered, departments), [filtered, departments]);
   const prodAbs = useMemo(() => productivityAndAbsentTotalsManYen(filtered), [filtered]);
 
   const conditionBars = useMemo(() => {
-    const entries = qqConditions
+    const entries = QQ_CONDITIONS
       .filter((c) => c.id !== "none")
       .map((c) => ({
         id: c.id,
@@ -128,7 +122,7 @@ export default function ResultsDashboard() {
       .sort((a, b) => b.count - a.count);
     const max = Math.max(1, ...entries.map((e) => e.count));
     return { entries, max };
-  }, [qqConditions, occ.healthProblems.conditionCounts]);
+  }, [occ.healthProblems.conditionCounts]);
 
   const painHotspots = useMemo(() => {
     const entries = Object.entries(occ.painCounts) as [string, number][];

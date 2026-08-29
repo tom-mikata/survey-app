@@ -68,12 +68,6 @@ export interface SurveyResponse {
   expertSupportIntent: string;
 }
 
-export interface QqConditionItem {
-  id: string;
-  label: string;
-  painAreas: PainAreaCode[];
-}
-
 export interface SurveyRound {
   id: number;
   clientCode: string;
