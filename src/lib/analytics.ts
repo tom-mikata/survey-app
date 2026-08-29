@@ -110,10 +110,7 @@ function hasWorkImpairment(r: SurveyResponse): boolean {
   return qqPerformanceDeclineRatio(r.workQuantity, r.workQuality) > 0;
 }
 
-export function summarizeOccupational(
-  rows: SurveyResponse[],
-  conditionPainMap?: Record<string, PainAreaCode[]>,
-) {
+export function summarizeOccupational(rows: SurveyResponse[]) {
   const total = rows.length;
   const withImpairment = rows.filter(hasWorkImpairment);
   const impairmentDen = withImpairment.length;
@@ -130,9 +127,8 @@ export function summarizeOccupational(
 
   const painCounts: Partial<Record<PainAreaCode, number>> = {};
   for (const r of rows) {
-    const painMap: Record<string, PainAreaCode[]> = conditionPainMap ?? CONDITION_TO_PAIN_DEFAULT;
     for (const c of r.symptomConditions) {
-      const areas = painMap[c] ?? [];
+      const areas = CONDITION_TO_PAIN_DEFAULT[c as keyof typeof CONDITION_TO_PAIN_DEFAULT] ?? [];
       for (const p of areas) {
         painCounts[p] = (painCounts[p] ?? 0) + 1;
       }
