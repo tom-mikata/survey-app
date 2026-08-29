@@ -40,6 +40,7 @@ export interface SurveyResponse {
   submittedAt: string;
   // 基本情報
   fullName: string;
+  fullNameKana: string;
   dateOfBirth: string;
   gender: Gender;
   department: string;

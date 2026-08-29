@@ -88,6 +88,7 @@ export async function getResponses(
     survey_round_id: number | null;
     submitted_at: string;
     full_name: string;
+    full_name_kana: string;
     date_of_birth: string;
     gender: string;
     department: string;
@@ -115,6 +116,7 @@ export async function getResponses(
     surveyRoundId: r.survey_round_id,
     submittedAt: r.submitted_at,
     fullName: r.full_name,
+    fullNameKana: r.full_name_kana,
     dateOfBirth: r.date_of_birth,
     gender: r.gender as Gender,
     department: r.department,
@@ -146,6 +148,7 @@ export async function addResponse(response: SurveyResponse): Promise<void> {
     survey_round_id: response.surveyRoundId,
     submitted_at: response.submittedAt,
     full_name: response.fullName,
+    full_name_kana: response.fullNameKana,
     date_of_birth: response.dateOfBirth,
     gender: response.gender,
     department: response.department,

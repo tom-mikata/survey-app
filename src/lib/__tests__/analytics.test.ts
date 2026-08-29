@@ -21,6 +21,7 @@ function makeResponse(overrides: Partial<SurveyResponse> = {}): SurveyResponse {
     surveyRoundId: 1,
     submittedAt: "2026-08-01T00:00:00Z",
     fullName: "テスト 太郎",
+    fullNameKana: "テスト タロウ",
     dateOfBirth: "1985-01-01",
     gender: "male",
     department: "営業部",
