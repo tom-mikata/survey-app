@@ -7,6 +7,7 @@ import { AppChrome } from "@/components/AppChrome";
 import {
   createClientRecord,
   createSurveyRound,
+  deleteClientRecord,
   deleteSurveyRound,
   getDepartments,
   getClients,
@@ -14,13 +15,15 @@ import {
   getSurveyRounds,
   setDepartments,
   setQqConditions,
+  updateClientRecord,
   updateSurveyRound,
 } from "@/lib/storage";
 import { getAuthUser } from "@/lib/auth";
-import type { AuthUser } from "@/lib/auth";
+import type { AuthUser, UserRole } from "@/lib/auth";
 import type { PainAreaCode, QqConditionItem, SurveyRound } from "@/lib/types";
+import type { AdminAccount } from "@/app/api/admin/accounts/route";
 
-type Tab = "clients" | "departments" | "questions" | "rounds";
+type Tab = "clients" | "departments" | "questions" | "rounds" | "accounts";
 
 const PAIN_AREA_LABELS: { code: PainAreaCode; label: string }[] = [
   { code: "face", label: "顔" },
@@ -53,6 +56,28 @@ export default function SettingsPage() {
   const [newClientName, setNewClientName] = useState("");
   const [clientSaved, setClientSaved] = useState(false);
   const [clientError, setClientError] = useState("");
+  const [editingClientCode, setEditingClientCode] = useState<string | null>(null);
+  const [editClientName, setEditClientName] = useState("");
+  const [editClientError, setEditClientError] = useState("");
+  const [deletingClientCode, setDeletingClientCode] = useState<string | null>(null);
+  const [deleteConfirmInput, setDeleteConfirmInput] = useState("");
+  const [deleteClientError, setDeleteClientError] = useState("");
+  const [deletingInProgress, setDeletingInProgress] = useState(false);
+
+  // --- 管理者アカウント ---
+  const [accounts, setAccounts] = useState<AdminAccount[]>([]);
+  const [accountsLoading, setAccountsLoading] = useState(false);
+  const [accountsError, setAccountsError] = useState("");
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<UserRole>("client_admin");
+  const [inviteClientCode, setInviteClientCode] = useState("");
+  const [inviteError, setInviteError] = useState("");
+  const [inviteSaved, setInviteSaved] = useState(false);
+  const [inviteSending, setInviteSending] = useState(false);
+  const [editingAccountId, setEditingAccountId] = useState<string | null>(null);
+  const [editAccountRole, setEditAccountRole] = useState<UserRole>("client_admin");
+  const [editAccountClientCode, setEditAccountClientCode] = useState("");
+  const [editAccountError, setEditAccountError] = useState("");
 
   // --- 部署 ---
   const [deptRows, setDeptRows] = useState<string[]>([]);
@@ -134,6 +159,51 @@ export default function SettingsPage() {
     setNewClientName("");
     setClientSaved(true);
     setTimeout(() => setClientSaved(false), 2000);
+    loadClients();
+  };
+
+  const startEditingClient = (c: { code: string; name: string }) => {
+    setEditingClientCode(c.code);
+    setEditClientName(c.name);
+    setEditClientError("");
+  };
+
+  const cancelEditingClient = () => {
+    setEditingClientCode(null);
+    setEditClientError("");
+  };
+
+  const saveClientEdit = async (code: string) => {
+    setEditClientError("");
+    const name = editClientName.trim();
+    if (!name) { setEditClientError("企業名を入力してください"); return; }
+    const { error } = await updateClientRecord(code, name);
+    if (error) { setEditClientError(error); return; }
+    setEditingClientCode(null);
+    loadClients();
+  };
+
+  const startDeletingClient = (code: string) => {
+    setDeletingClientCode(code);
+    setDeleteConfirmInput("");
+    setDeleteClientError("");
+  };
+
+  const cancelDeletingClient = () => {
+    setDeletingClientCode(null);
+    setDeleteConfirmInput("");
+    setDeleteClientError("");
+  };
+
+  const confirmDeleteClient = async () => {
+    if (!deletingClientCode || deleteConfirmInput !== deletingClientCode) return;
+    setDeletingInProgress(true);
+    setDeleteClientError("");
+    const { error } = await deleteClientRecord(deletingClientCode);
+    setDeletingInProgress(false);
+    if (error) { setDeleteClientError(error); return; }
+    setDeletingClientCode(null);
+    setDeleteConfirmInput("");
     loadClients();
   };
 
@@ -250,9 +320,100 @@ export default function SettingsPage() {
     return `${base}/survey?client=${selectedClientCode}&round=${roundId}`;
   };
 
+  // ---- 管理者アカウントの操作 ----
+  const loadAccounts = useCallback(async () => {
+    setAccountsLoading(true);
+    setAccountsError("");
+    try {
+      const res = await fetch("/api/admin/accounts");
+      const body = await res.json();
+      if (!res.ok) { setAccountsError(body.error ?? "取得に失敗しました"); return; }
+      setAccounts(body.accounts);
+    } catch {
+      setAccountsError("取得に失敗しました");
+    } finally {
+      setAccountsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (tab === "accounts") loadAccounts();
+  }, [tab, loadAccounts]);
+
+  const sendInvite = async () => {
+    setInviteError("");
+    const email = inviteEmail.trim();
+    if (!email) { setInviteError("メールアドレスを入力してください"); return; }
+    if (inviteRole === "client_admin" && !inviteClientCode) {
+      setInviteError("所属クライアントを選択してください");
+      return;
+    }
+    setInviteSending(true);
+    try {
+      const res = await fetch("/api/admin/accounts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, role: inviteRole, clientCode: inviteRole === "client_admin" ? inviteClientCode : null }),
+      });
+      const body = await res.json();
+      if (!res.ok) { setInviteError(body.error ?? "招待の送信に失敗しました"); return; }
+      setInviteEmail("");
+      setInviteSaved(true);
+      setTimeout(() => setInviteSaved(false), 2000);
+      loadAccounts();
+    } catch {
+      setInviteError("招待の送信に失敗しました");
+    } finally {
+      setInviteSending(false);
+    }
+  };
+
+  const startEditingAccount = (a: AdminAccount) => {
+    setEditingAccountId(a.id);
+    setEditAccountRole(a.role ?? "client_admin");
+    setEditAccountClientCode(a.clientCode ?? "");
+    setEditAccountError("");
+  };
+
+  const cancelEditingAccount = () => {
+    setEditingAccountId(null);
+    setEditAccountError("");
+  };
+
+  const saveAccountEdit = async (id: string) => {
+    setEditAccountError("");
+    if (editAccountRole === "client_admin" && !editAccountClientCode) {
+      setEditAccountError("所属クライアントを選択してください");
+      return;
+    }
+    try {
+      const res = await fetch(`/api/admin/accounts/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          role: editAccountRole,
+          clientCode: editAccountRole === "client_admin" ? editAccountClientCode : null,
+        }),
+      });
+      const body = await res.json();
+      if (!res.ok) { setEditAccountError(body.error ?? "更新に失敗しました"); return; }
+      setEditingAccountId(null);
+      loadAccounts();
+    } catch {
+      setEditAccountError("更新に失敗しました");
+    }
+  };
+
+  const removeAccount = async (id: string) => {
+    const res = await fetch(`/api/admin/accounts/${id}`, { method: "DELETE" });
+    if (res.ok) loadAccounts();
+  };
+
   const isAdmin = authUser?.role === "system_admin";
-  const tabs: Tab[] = isAdmin ? ["clients", "departments", "questions", "rounds"] : ["departments", "questions"];
-  const tabLabel: Record<Tab, string> = { clients: "クライアント", departments: "部署", questions: "健康問題の選択肢", rounds: "実施回" };
+  const tabs: Tab[] = isAdmin
+    ? ["clients", "departments", "questions", "rounds", "accounts"]
+    : ["departments", "questions"];
+  const tabLabel: Record<Tab, string> = { clients: "クライアント", departments: "部署", questions: "健康問題の選択肢", rounds: "実施回", accounts: "管理者アカウント" };
 
   return (
     <AppChrome title="設定">
@@ -262,8 +423,8 @@ export default function SettingsPage() {
           アンケートで使用する部署名や設問の選択肢を管理します。
         </p>
 
-        {/* クライアント選択（system_admin のみ・departments/questions タブ表示中） */}
-        {isAdmin && tab !== "clients" && (
+        {/* クライアント選択（system_admin のみ・departments/questions/rounds タブ表示中） */}
+        {isAdmin && tab !== "clients" && tab !== "accounts" && (
           <div className="mb-4 flex items-center gap-3">
             <label className="text-sm font-semibold text-slate-600 shrink-0">クライアント：</label>
             <select
@@ -304,9 +465,56 @@ export default function SettingsPage() {
             </p>
             <ul className="space-y-2 mb-6">
               {clients.map((c) => (
-                <li key={c.code} className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/80 px-4 py-2.5">
-                  <span className="text-xs font-mono text-slate-400 w-32 shrink-0">{c.code}</span>
-                  <span className="text-sm text-slate-700 font-medium">{c.name}</span>
+                <li key={c.code} className="rounded-xl border border-slate-100 bg-slate-50/80 px-4 py-2.5 space-y-2">
+                  {editingClientCode === c.code ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs font-mono text-slate-400 w-32 shrink-0">{c.code}</span>
+                        <input
+                          value={editClientName}
+                          onChange={(e) => setEditClientName(e.target.value)}
+                          className="flex-1 rounded-xl border border-sky-300 bg-white px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-sky-500/30"
+                        />
+                      </div>
+                      {editClientError && <p className="text-xs text-red-600">{editClientError}</p>}
+                      <div className="flex gap-2">
+                        <button type="button" onClick={() => saveClientEdit(c.code)} className="text-xs bg-sky-600 hover:bg-sky-700 text-white font-semibold px-4 py-1.5 rounded-lg">保存</button>
+                        <button type="button" onClick={cancelEditingClient} className="text-xs text-slate-500 hover:text-slate-700 font-semibold px-4 py-1.5 rounded-lg hover:bg-slate-100">キャンセル</button>
+                      </div>
+                    </div>
+                  ) : deletingClientCode === c.code ? (
+                    <div className="space-y-2">
+                      <p className="text-xs text-red-700 font-semibold">
+                        「{c.code}」を削除すると、紐づく回答データ・部署・実施回もすべて削除されます。元に戻せません。
+                      </p>
+                      <p className="text-xs text-slate-600">確認のため、クライアントコード「{c.code}」を入力してください。</p>
+                      <input
+                        value={deleteConfirmInput}
+                        onChange={(e) => setDeleteConfirmInput(e.target.value)}
+                        placeholder={c.code}
+                        className="w-full rounded-xl border border-red-300 bg-white px-3 py-1.5 text-sm font-mono outline-none focus:ring-2 focus:ring-red-500/30"
+                      />
+                      {deleteClientError && <p className="text-xs text-red-600">{deleteClientError}</p>}
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          disabled={deleteConfirmInput !== c.code || deletingInProgress}
+                          onClick={confirmDeleteClient}
+                          className="text-xs bg-red-600 hover:bg-red-700 disabled:bg-slate-300 text-white font-semibold px-4 py-1.5 rounded-lg"
+                        >
+                          {deletingInProgress ? "削除中…" : "完全に削除する"}
+                        </button>
+                        <button type="button" onClick={cancelDeletingClient} className="text-xs text-slate-500 hover:text-slate-700 font-semibold px-4 py-1.5 rounded-lg hover:bg-slate-100">キャンセル</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-mono text-slate-400 w-32 shrink-0">{c.code}</span>
+                      <span className="text-sm text-slate-700 font-medium flex-1">{c.name}</span>
+                      <button type="button" onClick={() => startEditingClient(c)} className="text-xs text-sky-600 hover:text-sky-700 font-semibold px-2 py-1 rounded-md hover:bg-sky-50">編集</button>
+                      <button type="button" onClick={() => startDeletingClient(c.code)} className="text-xs text-red-600 hover:text-red-700 font-semibold px-2 py-1 rounded-md hover:bg-red-50">削除</button>
+                    </div>
+                  )}
                 </li>
               ))}
               {clients.length === 0 && (
@@ -554,6 +762,116 @@ export default function SettingsPage() {
                 <button type="button" onClick={addRound} className="bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold px-6 py-3 rounded-xl">追加する</button>
                 {roundSaved && <span className="text-sm text-emerald-600 font-semibold">追加しました</span>}
                 {roundError && <span className="text-sm text-red-600">{roundError}</span>}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 管理者アカウントタブ（system_admin のみ） */}
+        {tab === "accounts" && isAdmin && (
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8">
+            <p className="text-slate-500 text-sm leading-relaxed mb-6">
+              管理者アカウント（system_admin・client_admin）を招待・管理します。
+            </p>
+
+            {accountsLoading && <p className="text-sm text-slate-400 py-2">読み込み中…</p>}
+            {accountsError && <p className="text-sm text-red-600 py-2">{accountsError}</p>}
+
+            <ul className="space-y-2 mb-8">
+              {accounts.map((a) => (
+                <li key={a.id} className="rounded-xl border border-slate-100 bg-slate-50/80 px-4 py-2.5 space-y-2">
+                  {editingAccountId === a.id ? (
+                    <div className="space-y-2">
+                      <p className="text-sm text-slate-700 font-medium">{a.email}</p>
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <select
+                          value={editAccountRole}
+                          onChange={(e) => setEditAccountRole(e.target.value as UserRole)}
+                          className="rounded-xl border border-slate-200 px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-sky-500/30 bg-white"
+                        >
+                          <option value="client_admin">client_admin</option>
+                          <option value="system_admin">system_admin</option>
+                        </select>
+                        {editAccountRole === "client_admin" && (
+                          <select
+                            value={editAccountClientCode}
+                            onChange={(e) => setEditAccountClientCode(e.target.value)}
+                            className="rounded-xl border border-slate-200 px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-sky-500/30 bg-white"
+                          >
+                            <option value="">クライアントを選択</option>
+                            {clients.map((c) => (
+                              <option key={c.code} value={c.code}>{c.name}</option>
+                            ))}
+                          </select>
+                        )}
+                      </div>
+                      {editAccountError && <p className="text-xs text-red-600">{editAccountError}</p>}
+                      <div className="flex gap-2">
+                        <button type="button" onClick={() => saveAccountEdit(a.id)} className="text-xs bg-sky-600 hover:bg-sky-700 text-white font-semibold px-4 py-1.5 rounded-lg">保存</button>
+                        <button type="button" onClick={cancelEditingAccount} className="text-xs text-slate-500 hover:text-slate-700 font-semibold px-4 py-1.5 rounded-lg hover:bg-slate-100">キャンセル</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-slate-700 font-medium truncate">{a.email}</p>
+                        <p className="text-xs text-slate-400 mt-0.5">
+                          {a.role ?? "未設定"}{a.role === "client_admin" && a.clientCode ? `（${a.clientCode}）` : ""}
+                        </p>
+                      </div>
+                      <button type="button" onClick={() => startEditingAccount(a)} className="shrink-0 text-xs text-sky-600 hover:text-sky-700 font-semibold px-2 py-1 rounded-md hover:bg-sky-50">編集</button>
+                      <button type="button" onClick={() => removeAccount(a.id)} className="shrink-0 text-xs text-red-600 hover:text-red-700 font-semibold px-2 py-1 rounded-md hover:bg-red-50">削除</button>
+                    </div>
+                  )}
+                </li>
+              ))}
+              {!accountsLoading && accounts.length === 0 && (
+                <li className="text-sm text-slate-400 py-2">アカウントがまだありません。</li>
+              )}
+            </ul>
+
+            <p className="text-sm font-semibold text-slate-700 mb-3">招待メールを送信</p>
+            <div className="space-y-2">
+              <input
+                type="email"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                placeholder="メールアドレス"
+                className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400"
+              />
+              <div className="flex flex-col sm:flex-row gap-2">
+                <select
+                  value={inviteRole}
+                  onChange={(e) => setInviteRole(e.target.value as UserRole)}
+                  className="rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-sky-500/30 bg-white"
+                >
+                  <option value="client_admin">client_admin</option>
+                  <option value="system_admin">system_admin</option>
+                </select>
+                {inviteRole === "client_admin" && (
+                  <select
+                    value={inviteClientCode}
+                    onChange={(e) => setInviteClientCode(e.target.value)}
+                    className="flex-1 rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-sky-500/30 bg-white"
+                  >
+                    <option value="">クライアントを選択</option>
+                    {clients.map((c) => (
+                      <option key={c.code} value={c.code}>{c.name}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+              <div className="pt-2 flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  disabled={inviteSending}
+                  onClick={sendInvite}
+                  className="bg-sky-600 hover:bg-sky-700 disabled:bg-slate-300 text-white text-sm font-semibold px-6 py-3 rounded-xl"
+                >
+                  {inviteSending ? "送信中…" : "招待を送信"}
+                </button>
+                {inviteSaved && <span className="text-sm text-emerald-600 font-semibold">送信しました</span>}
+                {inviteError && <span className="text-sm text-red-600">{inviteError}</span>}
               </div>
             </div>
           </div>
