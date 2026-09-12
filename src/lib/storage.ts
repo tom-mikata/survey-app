@@ -31,6 +31,17 @@ export async function createClientRecord(code: string, name: string): Promise<{ 
   return { error: error?.message ?? null };
 }
 
+export async function updateClientRecord(code: string, name: string): Promise<{ error: string | null }> {
+  const { error } = await supabase.from("clients").update({ name }).eq("code", code);
+  return { error: error?.message ?? null };
+}
+
+/** #40: 企業を削除する。紐づく回答データ・部署・実施回も含めてカスケード削除する（delete_client_cascade RPC）。 */
+export async function deleteClientRecord(code: string): Promise<{ error: string | null }> {
+  const { error } = await supabase.rpc("delete_client_cascade", { p_client_code: code });
+  return { error: error?.message ?? null };
+}
+
 export async function getDepartments(clientCode: string | null): Promise<string[]> {
   let query = supabase.from("departments").select("name").order("sort_order");
   if (clientCode) query = query.eq("client_code", clientCode);
