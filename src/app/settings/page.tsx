@@ -405,6 +405,7 @@ export default function SettingsPage() {
   };
 
   const removeAccount = async (id: string) => {
+    if (!window.confirm("このアカウントを削除しますか？削除すると元に戻せません。")) return;
     const res = await fetch(`/api/admin/accounts/${id}`, { method: "DELETE" });
     if (res.ok) loadAccounts();
   };

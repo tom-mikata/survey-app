@@ -11,6 +11,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 
   const { id } = await params;
+  if (id === caller.id) {
+    return NextResponse.json({ error: "自分自身のロールを変更することはできません" }, { status: 400 });
+  }
+
   const body = await request.json();
   const role = body.role === "system_admin" || body.role === "client_admin" ? body.role : null;
   const clientCode = typeof body.clientCode === "string" && body.clientCode.trim() ? body.clientCode.trim() : null;
