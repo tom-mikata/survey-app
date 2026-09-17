@@ -3,7 +3,18 @@
 import { use, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AppChrome } from "@/components/AppChrome";
-import { clientExists, getDepartments, getQqConditions } from "@/lib/storage";
+import type { Gender } from "@/lib/types";
+import {
+  addCompanySupportResponse,
+  addExerciseResponse,
+  addMentalHealthResponse,
+  addResponse,
+  addWorkLifeResponse,
+  clientExists,
+  getClientModules,
+  getDepartments,
+  getQqConditions,
+} from "@/lib/storage";
 import {
   buildScreenList,
   INITIAL_FORM,
@@ -21,9 +32,7 @@ import { StepCompanySupport } from "./_steps/StepCompanySupport";
 import { StepWorkLife } from "./_steps/StepWorkLife";
 import { StepExercise } from "./_steps/StepExercise";
 
-// TODO(#20): storage.ts に getClientModules(clientCode) を追加して差し替える
-//            clients テーブルの module_mental_health / module_company_support /
-//            module_work_life / module_exercise カラムを参照する
+// getClientModules() の応答が届くまでの初期値（全モジュールOFF）
 const DEFAULT_MODULES: ClientModules = {
   mentalHealth: false,
   companySupport: false,
@@ -43,7 +52,7 @@ export default function SurveyPage({
 
   const [departments, setDepartments] = useState<string[]>([]);
   const [qqConditions, setQqConditions] = useState<{ id: string; label: string }[]>([]);
-  const [modules] = useState<ClientModules>(DEFAULT_MODULES);
+  const [modules, setModules] = useState<ClientModules>(DEFAULT_MODULES);
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
   const [currentScreen, setCurrentScreen] = useState<ScreenId>("basic_info");
   const [clientStatus, setClientStatus] = useState<"checking" | "valid" | "invalid">("checking");
@@ -59,12 +68,14 @@ export default function SurveyPage({
       return;
     }
     setClientStatus("valid");
-    const [depts, conditions] = await Promise.all([
+    const [depts, conditions, clientModules] = await Promise.all([
       getDepartments(clientCode),
       getQqConditions(clientCode),
+      getClientModules(clientCode),
     ]);
     setDepartments(depts);
     setQqConditions(conditions);
+    setModules(clientModules);
   }, [clientCode]);
 
   useEffect(() => { queueMicrotask(() => load()); }, [load]);
@@ -92,15 +103,73 @@ export default function SurveyPage({
   };
 
   const submit = async () => {
-    // TODO(#20): 以下を実装する
-    // 1. addResponse を新スキーマ（FormState）に合わせて更新
-    //    - survey_round_id: surveyRoundId（NOT NULL なので必須）
-    //    - full_name, date_of_birth, employment_type など新カラムを含める
-    // 2. modules.mentalHealth が true の場合は mental_health_responses にも INSERT
-    // 3. modules.companySupport が true の場合は company_support_responses にも INSERT
-    // 4. modules.workLife が true の場合は work_life_responses にも INSERT
-    // 5. modules.exercise が true の場合は exercise_responses にも INSERT
-    console.log("TODO: submit", { form, surveyRoundId });
+    const id = crypto.randomUUID();
+    const submittedAt = new Date().toISOString();
+
+    await addResponse({
+      id,
+      clientCode,
+      surveyRoundId,
+      submittedAt,
+      fullName: form.fullName,
+      fullNameKana: form.fullNameKana,
+      dateOfBirth: form.dateOfBirth,
+      gender: form.gender as Gender,
+      department: form.department,
+      employmentType: form.employmentType,
+      symptomConditions: form.symptomConditions,
+      symptomConditionsOther: form.symptomConditionsOther || null,
+      primaryCondition: form.primaryCondition || null,
+      symptomDaysPast30: form.symptomDaysPast30,
+      absenteeDaysPastYear: form.absenteeDaysPastYear,
+      workQuantity: form.workQuantity,
+      workQuality: form.workQuality,
+      treatmentPlaces: form.treatmentPlaces,
+      treatmentPlacesOther: form.treatmentPlacesOther || null,
+      treatmentFrequency: form.treatmentFrequency,
+      dailyItems: form.dailyItems,
+      dailyItemsOther: form.dailyItemsOther || null,
+      consultationHealth: form.consultationHealth,
+      consultationWork: form.consultationWork,
+      consultationFamily: form.consultationFamily,
+      consultationMental: form.consultationMental,
+      expertSupportIntent: form.expertSupportIntent,
+    });
+
+    if (modules.mentalHealth) {
+      await addMentalHealthResponse(id, {
+        q17_1: form.q17_1Score!,
+        q17_2: form.q17_2Score!,
+        q17_3: form.q17_3Score!,
+        q17_4: form.q17_4Score!,
+        q17_5: form.q17_5Score!,
+        q17_6: form.q17_6Score!,
+      });
+    }
+
+    if (modules.companySupport) {
+      await addCompanySupportResponse(id, {
+        q18_1: form.q18_1Score!,
+        q18_2: form.q18_2Score!,
+        q18_3: form.q18_3Score!,
+        q18_4: form.q18_4Score!,
+      });
+    }
+
+    if (modules.workLife) {
+      await addWorkLifeResponse(id, {
+        roleImpact: form.roleImpact,
+        supportDesire: form.supportDesire || null,
+      });
+    }
+
+    if (modules.exercise) {
+      await addExerciseResponse(id, {
+        hasExerciseHabit: form.hasExerciseHabit!,
+        exerciseDays: form.exerciseDays,
+      });
+    }
+
     router.push("/survey/complete");
   };
 

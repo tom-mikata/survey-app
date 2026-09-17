@@ -1,5 +1,5 @@
 import { CONDITION_TO_PAIN_DEFAULT, QQ_CONDITIONS } from "./constants";
-import type { Gender, PainAreaCode, QqConditionId, QqConditionItem, SurveyResponse, SurveyRound } from "./types";
+import type { ClientModules, Gender, PainAreaCode, QqConditionId, QqConditionItem, SurveyResponse, SurveyRound } from "./types";
 import { supabase } from "./supabase";
 
 function buildDefaultQqConditions(): QqConditionItem[] {
@@ -29,6 +29,35 @@ export async function clientExists(code: string): Promise<boolean> {
 export async function createClientRecord(code: string, name: string): Promise<{ error: string | null }> {
   const { error } = await supabase.from("clients").insert({ code, name });
   return { error: error?.message ?? null };
+}
+
+const NO_MODULES: ClientModules = {
+  mentalHealth: false,
+  companySupport: false,
+  workLife: false,
+  exercise: false,
+};
+
+/**
+ * #20: 企業ごとの第2部モジュールON/OFF設定を取得する。
+ * clients テーブルは匿名ユーザーからSELECTできない（RLS）ため、
+ * client_exists と同様に RLS を経由しない RPC（get_client_modules）を使用する。
+ */
+export async function getClientModules(clientCode: string): Promise<ClientModules> {
+  const { data, error } = await supabase.rpc("get_client_modules", { p_code: clientCode });
+  if (error || !data || data.length === 0) return NO_MODULES;
+  const row = (data as {
+    module_mental_health: boolean;
+    module_company_support: boolean;
+    module_work_life: boolean;
+    module_exercise: boolean;
+  }[])[0];
+  return {
+    mentalHealth: row.module_mental_health,
+    companySupport: row.module_company_support,
+    workLife: row.module_work_life,
+    exercise: row.module_exercise,
+  };
 }
 
 export async function getDepartments(clientCode: string | null): Promise<string[]> {
@@ -170,6 +199,60 @@ export async function addResponse(response: SurveyResponse): Promise<void> {
     consultation_family: response.consultationFamily,
     consultation_mental: response.consultationMental,
     expert_support_intent: response.expertSupportIntent,
+  });
+}
+
+/** #20: 問17（心の健康、17-1〜17-6・各0〜4点）を mental_health_responses に保存する */
+export async function addMentalHealthResponse(
+  surveyResponseId: string,
+  scores: { q17_1: number; q17_2: number; q17_3: number; q17_4: number; q17_5: number; q17_6: number },
+): Promise<void> {
+  await supabase.from("mental_health_responses").insert({
+    survey_response_id: surveyResponseId,
+    q17_1_score: scores.q17_1,
+    q17_2_score: scores.q17_2,
+    q17_3_score: scores.q17_3,
+    q17_4_score: scores.q17_4,
+    q17_5_score: scores.q17_5,
+    q17_6_score: scores.q17_6,
+  });
+}
+
+/** #20: 問18（会社のサポート、18-1〜18-4・各1〜7点）を company_support_responses に保存する */
+export async function addCompanySupportResponse(
+  surveyResponseId: string,
+  scores: { q18_1: number; q18_2: number; q18_3: number; q18_4: number },
+): Promise<void> {
+  await supabase.from("company_support_responses").insert({
+    survey_response_id: surveyResponseId,
+    q18_1_score: scores.q18_1,
+    q18_2_score: scores.q18_2,
+    q18_3_score: scores.q18_3,
+    q18_4_score: scores.q18_4,
+  });
+}
+
+/** #20: 問19〜20（仕事以外の負担）を work_life_responses に保存する */
+export async function addWorkLifeResponse(
+  surveyResponseId: string,
+  data: { roleImpact: string; supportDesire: string | null },
+): Promise<void> {
+  await supabase.from("work_life_responses").insert({
+    survey_response_id: surveyResponseId,
+    role_impact: data.roleImpact,
+    support_desire: data.supportDesire,
+  });
+}
+
+/** #20: 問21〜22（運動の習慣）を exercise_responses に保存する */
+export async function addExerciseResponse(
+  surveyResponseId: string,
+  data: { hasExerciseHabit: boolean; exerciseDays: number | null },
+): Promise<void> {
+  await supabase.from("exercise_responses").insert({
+    survey_response_id: surveyResponseId,
+    has_exercise_habit: data.hasExerciseHabit,
+    exercise_days: data.exerciseDays,
   });
 }
 

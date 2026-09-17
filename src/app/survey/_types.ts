@@ -1,4 +1,6 @@
-import type { Gender } from "@/lib/types";
+import type { ClientModules, Gender } from "@/lib/types";
+
+export type { ClientModules };
 
 /** アンケートフォーム全体の状態。設問設計書 v1.1 に対応 */
 export type FormState = {
@@ -108,14 +110,6 @@ export const INITIAL_FORM: FormState = {
 
   hasExerciseHabit: null,
   exerciseDays: null,
-};
-
-/** 企業ごとの第2部モジュール設定 */
-export type ClientModules = {
-  mentalHealth: boolean;
-  companySupport: boolean;
-  workLife: boolean;
-  exercise: boolean;
 };
 
 /** アンケートの画面（スクリーン）識別子 */
