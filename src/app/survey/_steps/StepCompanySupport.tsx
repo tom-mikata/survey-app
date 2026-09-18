@@ -6,19 +6,15 @@ import type { StepProps } from "../_types";
 /** 学生B 担当: 問18（会社のサポートモジュール、18-1〜18-4の4項目、SPOS-J採用）
  *  表示条件: 企業設定で module_company_support = true の場合のみ
  *
- * 問18: 会社の支援の感じ方について（4項目・7段階）
+ * 問18: 会社の支援の感じ方について（4項目・7段階、0〜6点）
  *   → form.q18_1Score 〜 form.q18_4Score
  *
  * ⚠️ 2026-08-29時点、産業医科大学へのSPOS-J商用利用許可はまだ申請中・未回答。
  *    許可が下りるまでは本番（main）へのリリース不可。許可後は、原文の質問文に加えて
  *    引用表記（クレジット）の表示が必要になる（issue#20参照）。
- *
- * ⚠️ 既知の不一致：設計書（260820 PDF）ではスコアは0〜6点（7段階、0点=まったくそう思わない）
- *    だが、DBのCHECK制約（mental_company_score系マイグレーション）は 1〜7 のまま。
- *    UI側は暫定的に現行DB制約に合わせて1〜7で実装している。範囲の修正要否は要確認。
  */
 
-const SUPPORT_SCALE = [1, 2, 3, 4, 5, 6, 7];
+const SUPPORT_SCALE = [0, 1, 2, 3, 4, 5, 6];
 
 const QUESTIONS: { key: keyof Pick<import("../_types").FormState, "q18_1Score"|"q18_2Score"|"q18_3Score"|"q18_4Score">; text: string }[] = [
   { key: "q18_1Score", text: "私が所属する組織は、私が自分の能力を最大限に発揮して仕事ができるように積極的に支援をしてくれる。" },

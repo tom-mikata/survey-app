@@ -218,7 +218,7 @@ export async function addMentalHealthResponse(
   });
 }
 
-/** #20: 問18（会社のサポート、18-1〜18-4・各1〜7点）を company_support_responses に保存する */
+/** #20: 問18（会社のサポート、18-1〜18-4・各0〜6点）を company_support_responses に保存する */
 export async function addCompanySupportResponse(
   surveyResponseId: string,
   scores: { q18_1: number; q18_2: number; q18_3: number; q18_4: number },
