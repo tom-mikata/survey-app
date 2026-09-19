@@ -15,15 +15,30 @@ import {
   getSurveyRounds,
   setDepartments,
   setQqConditions,
+  updateClientModules,
   updateClientRecord,
   updateSurveyRound,
 } from "@/lib/storage";
 import { getAuthUser } from "@/lib/auth";
 import type { AuthUser, UserRole } from "@/lib/auth";
-import type { PainAreaCode, QqConditionItem, SurveyRound } from "@/lib/types";
+import type { ClientModules, PainAreaCode, QqConditionItem, SurveyRound } from "@/lib/types";
 import type { AdminAccount } from "@/app/api/admin/accounts/route";
 
 type Tab = "clients" | "departments" | "questions" | "rounds" | "accounts";
+
+const MODULE_LABELS: { key: keyof ClientModules; label: string }[] = [
+  { key: "mentalHealth", label: "問17：心の健康（K6）" },
+  { key: "companySupport", label: "問18：会社のサポート（SPOS-J）" },
+  { key: "workLife", label: "問19〜20：仕事以外の負担" },
+  { key: "exercise", label: "問21〜22：運動の習慣" },
+];
+
+const NO_MODULES: ClientModules = {
+  mentalHealth: false,
+  companySupport: false,
+  workLife: false,
+  exercise: false,
+};
 
 const PAIN_AREA_LABELS: { code: PainAreaCode; label: string }[] = [
   { code: "face", label: "顔" },
@@ -50,7 +65,7 @@ export default function SettingsPage() {
   const [tab, setTab] = useState<Tab>("departments");
 
   // --- クライアント ---
-  const [clients, setClients] = useState<{ code: string; name: string }[]>([]);
+  const [clients, setClients] = useState<{ code: string; name: string; modules: ClientModules }[]>([]);
   const [selectedClientCode, setSelectedClientCode] = useState<string>("");
   const [newClientCode, setNewClientCode] = useState("");
   const [newClientName, setNewClientName] = useState("");
@@ -58,6 +73,7 @@ export default function SettingsPage() {
   const [clientError, setClientError] = useState("");
   const [editingClientCode, setEditingClientCode] = useState<string | null>(null);
   const [editClientName, setEditClientName] = useState("");
+  const [editClientModules, setEditClientModules] = useState<ClientModules>(NO_MODULES);
   const [editClientError, setEditClientError] = useState("");
   const [deletingClientCode, setDeletingClientCode] = useState<string | null>(null);
   const [deleteConfirmInput, setDeleteConfirmInput] = useState("");
@@ -162,10 +178,15 @@ export default function SettingsPage() {
     loadClients();
   };
 
-  const startEditingClient = (c: { code: string; name: string }) => {
+  const startEditingClient = (c: { code: string; name: string; modules: ClientModules }) => {
     setEditingClientCode(c.code);
     setEditClientName(c.name);
+    setEditClientModules(c.modules);
     setEditClientError("");
+  };
+
+  const toggleEditClientModule = (key: keyof ClientModules) => {
+    setEditClientModules((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
   const cancelEditingClient = () => {
@@ -179,6 +200,8 @@ export default function SettingsPage() {
     if (!name) { setEditClientError("企業名を入力してください"); return; }
     const { error } = await updateClientRecord(code, name);
     if (error) { setEditClientError(error); return; }
+    const { error: modulesError } = await updateClientModules(code, editClientModules);
+    if (modulesError) { setEditClientError(modulesError); return; }
     setEditingClientCode(null);
     loadClients();
   };
@@ -476,6 +499,20 @@ export default function SettingsPage() {
                           onChange={(e) => setEditClientName(e.target.value)}
                           className="flex-1 rounded-xl border border-sky-300 bg-white px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-sky-500/30"
                         />
+                      </div>
+                      <div className="pl-[8.75rem] space-y-1.5">
+                        <p className="text-xs font-semibold text-slate-500">第2部の表示設定</p>
+                        {MODULE_LABELS.map(({ key, label }) => (
+                          <label key={key} className="flex items-center gap-2 text-sm text-slate-700">
+                            <input
+                              type="checkbox"
+                              checked={editClientModules[key]}
+                              onChange={() => toggleEditClientModule(key)}
+                              className="rounded border-slate-300 text-sky-600 focus:ring-sky-500/30"
+                            />
+                            {label}
+                          </label>
+                        ))}
                       </div>
                       {editClientError && <p className="text-xs text-red-600">{editClientError}</p>}
                       <div className="flex gap-2">

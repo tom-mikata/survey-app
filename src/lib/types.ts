@@ -74,6 +74,14 @@ export interface QqConditionItem {
   painAreas: PainAreaCode[];
 }
 
+/** 企業ごとの第2部モジュール設定 */
+export interface ClientModules {
+  mentalHealth: boolean;
+  companySupport: boolean;
+  workLife: boolean;
+  exercise: boolean;
+}
+
 export interface SurveyRound {
   id: number;
   clientCode: string;
