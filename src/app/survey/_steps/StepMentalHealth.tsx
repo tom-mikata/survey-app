@@ -10,8 +10,7 @@ import type { StepProps } from "../_types";
  *   スコア: 0〜4（まったくない / 少しだけ / ときどき / たいてい / いつも）
  *   → form.q17_1Score 〜 form.q17_6Score
  *
- * 2026-08-26 クライアント合意により、UI上は「17-1」等の番号を表示せず設問文のみ表示する
- * （内部的な項目順序はスコア集計のため保持）。
+ * レビューフィードバック（2026-09-19）により「問17-1.」等の番号を設問文の先頭に表示する。
  *
  * 集計ロジック（analytics.ts にて実装）:
  *   合計スコア = q17_1〜q17_6 の合計（0〜24点）
@@ -51,9 +50,9 @@ export function StepMentalHealth({ form, onChange, onNext, onPrev, isFirst, isLa
           過去30日の間にどれくらいの頻度で次のことがありましたか？
         </p>
 
-        {QUESTIONS.map(({ key, text }) => (
+        {QUESTIONS.map(({ key, text }, i) => (
           <div key={key}>
-            <p className="text-sm font-semibold text-slate-700 mb-3">{text}</p>
+            <p className="text-sm font-semibold text-slate-700 mb-3">問17-{i + 1}. {text}</p>
             <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
               {MENTAL_SCALE.map((opt) => (
                 <button

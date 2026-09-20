@@ -14,7 +14,15 @@ import type { StepProps } from "../_types";
  *    引用表記（クレジット）の表示が必要になる（issue#20参照）。
  */
 
-const SUPPORT_SCALE = [0, 1, 2, 3, 4, 5, 6];
+const SUPPORT_SCALE = [
+  { value: 0, label: "まったくそう思わない" },
+  { value: 1, label: "そう思わない" },
+  { value: 2, label: "あまりそう思わない" },
+  { value: 3, label: "どちらともいえない" },
+  { value: 4, label: "少しそう思う" },
+  { value: 5, label: "そう思う" },
+  { value: 6, label: "非常にそう思う" },
+];
 
 const QUESTIONS: { key: keyof Pick<import("../_types").FormState, "q18_1Score"|"q18_2Score"|"q18_3Score"|"q18_4Score">; text: string }[] = [
   { key: "q18_1Score", text: "私が所属する組織は、私が自分の能力を最大限に発揮して仕事ができるように積極的に支援をしてくれる。" },
@@ -39,28 +47,24 @@ export function StepCompanySupport({ form, onChange, onNext, onPrev, isFirst, is
           以下には、あなたが所属する組織で働くことについて、あなたが抱いている可能性のある意見が記載されています。各項目に対するあなたの同意または不同意の度合いについて、あなたの見解に最も近い選択肢を選んでください。
         </p>
 
-        {QUESTIONS.map(({ key, text }) => (
+        {QUESTIONS.map(({ key, text }, i) => (
           <div key={key}>
-            <p className="text-sm font-semibold text-slate-700 mb-3">{text}</p>
-            <div className="flex flex-wrap gap-2">
-              {SUPPORT_SCALE.map((n) => (
+            <p className="text-sm font-semibold text-slate-700 mb-3">問18-{i + 1}. {text}</p>
+            <div className="grid grid-cols-1 gap-2">
+              {SUPPORT_SCALE.map((opt) => (
                 <button
-                  key={n}
+                  key={opt.value}
                   type="button"
-                  onClick={() => onChange({ [key]: n })}
-                  className={`w-10 h-10 rounded-lg text-sm font-bold border ${
-                    form[key] === n
-                      ? "border-sky-600 bg-sky-600 text-white"
-                      : "border-slate-200 bg-white hover:bg-slate-50"
+                  onClick={() => onChange({ [key]: opt.value })}
+                  className={`rounded-xl border px-4 py-3 text-sm font-medium text-left transition-colors ${
+                    form[key] === opt.value
+                      ? "border-sky-500 bg-sky-50 text-sky-900"
+                      : "border-slate-200 hover:bg-slate-50"
                   }`}
                 >
-                  {n}
+                  {opt.label}
                 </button>
               ))}
-            </div>
-            <div className="flex justify-between mt-1">
-              <span className="text-xs text-slate-400">まったくそう思わない</span>
-              <span className="text-xs text-slate-400">非常にそう思う</span>
             </div>
           </div>
         ))}
