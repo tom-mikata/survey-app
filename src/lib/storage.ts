@@ -10,13 +10,31 @@ function buildDefaultQqConditions(): QqConditionItem[] {
   }));
 }
 
-export async function getClients(): Promise<{ code: string; name: string }[]> {
+export async function getClients(): Promise<
+  { code: string; name: string; modules: ClientModules }[]
+> {
   const { data, error } = await supabase
     .from("clients")
-    .select("code, name")
+    .select("code, name, module_mental_health, module_company_support, module_work_life, module_exercise")
     .order("name");
   if (error || !data) return [];
-  return data as { code: string; name: string }[];
+  return (data as {
+    code: string;
+    name: string;
+    module_mental_health: boolean;
+    module_company_support: boolean;
+    module_work_life: boolean;
+    module_exercise: boolean;
+  }[]).map((r) => ({
+    code: r.code,
+    name: r.name,
+    modules: {
+      mentalHealth: r.module_mental_health,
+      companySupport: r.module_company_support,
+      workLife: r.module_work_life,
+      exercise: r.module_exercise,
+    },
+  }));
 }
 
 /** #18: 匿名ユーザーからのクライアントコード存在確認。RLSを経由しないRPC（client_exists）を使用する。 */
@@ -62,6 +80,27 @@ export async function getClientModules(clientCode: string): Promise<ClientModule
 
 export async function updateClientRecord(code: string, name: string): Promise<{ error: string | null }> {
   const { error } = await supabase.from("clients").update({ name }).eq("code", code);
+  return { error: error?.message ?? null };
+}
+
+/**
+ * #20: 企業ごとの第2部モジュール（問17〜22）のON/OFF設定を更新する。
+ * 設定画面はsystem_adminのみ表示され、clients テーブルはsystem_adminにFOR ALLで
+ * 許可されているため、RLSの追加対応は不要（anonからの参照とは別経路）。
+ */
+export async function updateClientModules(
+  code: string,
+  modules: ClientModules,
+): Promise<{ error: string | null }> {
+  const { error } = await supabase
+    .from("clients")
+    .update({
+      module_mental_health: modules.mentalHealth,
+      module_company_support: modules.companySupport,
+      module_work_life: modules.workLife,
+      module_exercise: modules.exercise,
+    })
+    .eq("code", code);
   return { error: error?.message ?? null };
 }
 
