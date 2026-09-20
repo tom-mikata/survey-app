@@ -7,7 +7,7 @@ import type { StepProps } from "../_types";
  *  全員表示（問6の結果に関わらず）
  *
  * 問12: この1か月で利用した場所（複数選択）          → form.treatmentPlaces[]
- *       選択肢: 病院・クリニック / 整骨院・整体・鍼灸・マッサージなどの施術 / その他 / 利用していない
+ *       選択肢: 病院・クリニック / 整骨院・鍼灸・マッサージなどの施術 / 利用していない / その他
  *       「利用していない」は排他制御
  *       「その他」選択時に自由記述欄表示              → form.treatmentPlacesOther
  * 問13: 月あたり合計利用回数（記入）                 → form.treatmentFrequency
@@ -20,9 +20,9 @@ import type { StepProps } from "../_types";
 
 const TREATMENT_PLACES = [
   { id: "hospital", label: "病院・クリニック" },
-  { id: "massage", label: "整骨院・整体・鍼灸・マッサージなどの施術" },
-  { id: "other", label: "その他" },
+  { id: "massage", label: "整骨院・鍼灸・マッサージなどの施術" },
   { id: "none", label: "利用していない" },
+  { id: "other", label: "その他" },
 ];
 
 const DAILY_ITEMS = [
@@ -74,7 +74,7 @@ export function StepPainCare({ form, onChange, onNext, onPrev, isFirst, isLast, 
         {/* TODO(#20-学生B): 問12 この1か月で利用した場所 */}
         <div>
           <p className="text-sm font-semibold text-slate-700 mb-3">
-            問12. この1か月間で、体の不調（肩こり・腰痛・頭痛・関節痛など）のために利用したところはありますか（いくつでも選べます）。
+            問12. この1か月間で、体の不調（腰痛・肩こり・頭痛・胃腸の不調・不眠など）のために利用したところはありますか（いくつでも選べます）。
           </p>
           <div className="grid grid-cols-1 gap-2">
             {TREATMENT_PLACES.map((opt) => (
@@ -107,7 +107,7 @@ export function StepPainCare({ form, onChange, onNext, onPrev, isFirst, isLast, 
         {hasUsedTreatment && (
           <div>
             <p className="text-sm font-semibold text-slate-700 mb-2">
-              問13. それらは1か月あたり、合計でおよそ何回ですか。
+              問13. それらは1か月(直近30日間)あたり、合計でおよそ何回ですか。
             </p>
             <input
               type="number"
@@ -125,7 +125,7 @@ export function StepPainCare({ form, onChange, onNext, onPrev, isFirst, isLast, 
         {/* TODO(#20-学生B): 問14 日常的に使っているもの */}
         <div>
           <p className="text-sm font-semibold text-slate-700 mb-3">
-            問14. 体の不調のために、日常的に使っているものはありますか（いくつでも選べます）。
+            問14. 健康管理のために、日常的に使っているものはありますか（いくつでも選べます）。
           </p>
           <div className="grid grid-cols-1 gap-2">
             {DAILY_ITEMS.map((opt) => (

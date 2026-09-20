@@ -6,12 +6,11 @@ import type { StepProps } from "../_types";
 /** 学生B 担当: 問17（心の健康モジュール、17-1〜17-6の6項目）
  *  表示条件: 企業設定で module_mental_health = true の場合のみ
  *
- * 問17: こころの健康について（6項目・5段階）
+ * 問17: こころの健康について（6項目・5段階、K6日本語版を使用）
  *   スコア: 0〜4（まったくない / 少しだけ / ときどき / たいてい / いつも）
  *   → form.q17_1Score 〜 form.q17_6Score
  *
- * ⚠️  問題文は牧氏から入手後に確定。現在は「17-1」〜「17-6」のプレースホルダー表示のみ。
- *    問題文が確定したら QUESTIONS 配列の placeholder を更新すること。
+ * レビューフィードバック（2026-09-19）により「問17-1.」等の番号を設問文の先頭に表示する。
  *
  * 集計ロジック（analytics.ts にて実装）:
  *   合計スコア = q17_1〜q17_6 の合計（0〜24点）
@@ -26,14 +25,13 @@ const MENTAL_SCALE = [
   { value: 4, label: "いつも" },
 ];
 
-// TODO(#20-学生B): 牧氏から問題文を入手したらここを更新する
-const QUESTIONS: { key: keyof Pick<import("../_types").FormState, "q17_1Score"|"q17_2Score"|"q17_3Score"|"q17_4Score"|"q17_5Score"|"q17_6Score">; placeholder: string }[] = [
-  { key: "q17_1Score", placeholder: "17-1の問題文（牧氏から入手後に更新）" },
-  { key: "q17_2Score", placeholder: "17-2の問題文（牧氏から入手後に更新）" },
-  { key: "q17_3Score", placeholder: "17-3の問題文（牧氏から入手後に更新）" },
-  { key: "q17_4Score", placeholder: "17-4の問題文（牧氏から入手後に更新）" },
-  { key: "q17_5Score", placeholder: "17-5の問題文（牧氏から入手後に更新）" },
-  { key: "q17_6Score", placeholder: "17-6の問題文（牧氏から入手後に更新）" },
+const QUESTIONS: { key: keyof Pick<import("../_types").FormState, "q17_1Score"|"q17_2Score"|"q17_3Score"|"q17_4Score"|"q17_5Score"|"q17_6Score">; text: string }[] = [
+  { key: "q17_1Score", text: "神経過敏に感じましたか" },
+  { key: "q17_2Score", text: "絶望的だと感じましたか" },
+  { key: "q17_3Score", text: "そわそわ、落ち着かなく感じましたか" },
+  { key: "q17_4Score", text: "気分が沈みこんで、何が起こっても気が晴れないように感じましたか" },
+  { key: "q17_5Score", text: "何をするのも骨折りだと感じましたか" },
+  { key: "q17_6Score", text: "自分は価値のない人間だと感じましたか" },
 ];
 
 export function StepMentalHealth({ form, onChange, onNext, onPrev, isFirst, isLast, onSubmit }: StepProps) {
@@ -52,12 +50,9 @@ export function StepMentalHealth({ form, onChange, onNext, onPrev, isFirst, isLa
           過去30日の間にどれくらいの頻度で次のことがありましたか？
         </p>
 
-        {QUESTIONS.map(({ key, placeholder }, i) => (
+        {QUESTIONS.map(({ key, text }, i) => (
           <div key={key}>
-            {/* TODO(#20-学生B): placeholder を実際の問題文に差し替える */}
-            <p className="text-sm font-semibold text-slate-700 mb-3">
-              17-{i + 1}. <span className="text-slate-400 italic">{placeholder}</span>
-            </p>
+            <p className="text-sm font-semibold text-slate-700 mb-3">問17-{i + 1}. {text}</p>
             <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
               {MENTAL_SCALE.map((opt) => (
                 <button
@@ -76,6 +71,11 @@ export function StepMentalHealth({ form, onChange, onNext, onPrev, isFirst, isLa
             </div>
           </div>
         ))}
+
+        <p className="text-xs text-slate-400">
+          引用文献：古川壽亮，大野裕，他．一般人口中の精神疾患の簡便なスクリーニングに関する研究，
+          平成14年度厚生労働科学研究費補助金（厚生労働科学特別研究事業）心の健康問題と対策基盤の実態に関する研究／研究協力報告書
+        </p>
       </div>
 
       <div className="mt-8 flex items-center justify-between">

@@ -1,4 +1,6 @@
-import type { Gender } from "@/lib/types";
+import type { ClientModules, Gender } from "@/lib/types";
+
+export type { ClientModules };
 
 /** アンケートフォーム全体の状態。設問設計書 v1.1 に対応 */
 export type FormState = {
@@ -37,8 +39,8 @@ export type FormState = {
   consultationMental: string;     // 問15: 気持ちや心の落ち込みの相談先
   expertSupportIntent: string;    // 問16: 専門家の支援を利用したいか
 
-  // 問17 心の健康モジュール（6項目・17-1〜17-6、企業設定ONの場合のみ）
-  // ※ 問題文は牧氏から入手後に確定。スコアは 0〜4
+  // 問17 心の健康モジュール（6項目・17-1〜17-6、企業設定ONの場合のみ、K6日本語版）
+  // スコアは 0〜4
   q17_1Score: number | null;
   q17_2Score: number | null;
   q17_3Score: number | null;
@@ -46,8 +48,8 @@ export type FormState = {
   q17_5Score: number | null;
   q17_6Score: number | null;
 
-  // 問18 会社のサポートモジュール（4項目・18-1〜18-4、企業設定ONの場合のみ）
-  // ※ 問題文は牧氏から入手後に確定。スコアは 1〜7
+  // 問18 会社のサポートモジュール（4項目・18-1〜18-4、企業設定ONの場合のみ、SPOS-J）
+  // スコアは 0〜6
   q18_1Score: number | null;
   q18_2Score: number | null;
   q18_3Score: number | null;
@@ -108,14 +110,6 @@ export const INITIAL_FORM: FormState = {
 
   hasExerciseHabit: null,
   exerciseDays: null,
-};
-
-/** 企業ごとの第2部モジュール設定 */
-export type ClientModules = {
-  mentalHealth: boolean;
-  companySupport: boolean;
-  workLife: boolean;
-  exercise: boolean;
 };
 
 /** アンケートの画面（スクリーン）識別子 */
