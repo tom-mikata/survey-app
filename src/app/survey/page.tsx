@@ -56,9 +56,10 @@ export default function SurveyPage({
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
   const [currentScreen, setCurrentScreen] = useState<ScreenId>("basic_info");
   const [clientStatus, setClientStatus] = useState<"checking" | "valid" | "invalid">("checking");
+  const [consent, setConsent] = useState<"pending" | "agreed" | "declined">("pending");
 
   const load = useCallback(async () => {
-    if (!clientCode) {
+    if (!clientCode || !surveyRoundId) {
       setClientStatus("invalid");
       return;
     }
@@ -200,6 +201,69 @@ export default function SurveyPage({
               URLが正しくありません。
               <br />
               担当者よりご案内のあったURLをご確認ください。
+            </p>
+          </div>
+        </main>
+      </AppChrome>
+    );
+  }
+
+  if (consent === "pending") {
+    return (
+      <AppChrome title="従業員健康診断アンケート">
+        <main className="max-w-2xl mx-auto px-6 py-10">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full p-8 max-h-[90vh] overflow-y-auto">
+              <h2 className="text-lg font-bold text-slate-800 mb-4">個人情報の取り扱いについて</h2>
+              <div className="text-sm text-slate-600 mb-6 space-y-3 leading-relaxed">
+                <p>
+                  このアンケートでは、健康状態および就労状況に関する個人情報を収集します。収集した情報は、職場の健康管理施策の立案・改善を目的にのみ使用し、個人を特定する形での第三者提供はいたしません。
+                </p>
+                <p>
+                  詳しくは
+                  <a
+                    href="/privacy-policy.pdf"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-sky-600 hover:underline"
+                  >
+                    個人情報保護方針（PDF）
+                  </a>
+                  をご確認ください。
+                </p>
+              </div>
+              <div className="flex gap-3 justify-end">
+                <button
+                  type="button"
+                  onClick={() => setConsent("declined")}
+                  className="px-5 py-2.5 text-sm font-semibold text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50"
+                >
+                  同意しない
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConsent("agreed")}
+                  className="px-5 py-2.5 text-sm font-semibold text-white bg-sky-600 rounded-xl hover:bg-sky-700"
+                >
+                  同意する
+                </button>
+              </div>
+            </div>
+          </div>
+        </main>
+      </AppChrome>
+    );
+  }
+
+  if (consent === "declined") {
+    return (
+      <AppChrome title="従業員健康診断アンケート">
+        <main className="max-w-2xl mx-auto px-6 py-10">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 text-center">
+            <p className="text-sm font-semibold text-slate-700">
+              個人情報の取り扱いへの同意が必要なため、
+              <br />
+              アンケートを開始できません。
             </p>
           </div>
         </main>
