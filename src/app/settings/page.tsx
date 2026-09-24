@@ -382,7 +382,7 @@ export default function SettingsPage() {
   const isAdmin = authUser?.role === "system_admin";
   const tabs: Tab[] = isAdmin
     ? ["clients", "departments", "rounds", "accounts"]
-    : ["departments"];
+    : ["departments", "rounds"];
   const tabLabel: Record<Tab, string> = { clients: "クライアント", departments: "部署", rounds: "実施回", accounts: "管理者アカウント" };
 
   return (
@@ -567,6 +567,44 @@ export default function SettingsPage() {
               <button type="button" onClick={saveDepts} className="bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold px-6 py-3 rounded-xl">保存する</button>
               {deptSaved && <span className="text-sm text-emerald-600 font-semibold">保存しました</span>}
             </div>
+          </div>
+        )}
+
+        {/* 実施回タブ（client_admin: URL コピーのみ） */}
+        {tab === "rounds" && !isAdmin && (
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8">
+            <p className="text-slate-500 text-sm leading-relaxed mb-6">
+              各実施回のアンケートURLを従業員に共有してください。
+            </p>
+            <ul className="space-y-3">
+              {rounds.map((r) => (
+                <li key={r.id} className="rounded-xl border border-slate-100 bg-slate-50/80 px-4 py-3 space-y-2">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800">{r.title}</p>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      {r.startedAt ? r.startedAt.slice(0, 10) : "開始日未設定"} 〜 {r.endedAt ? r.endedAt.slice(0, 10) : "終了日未設定"}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      readOnly
+                      value={surveyUrl(r.id)}
+                      className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-mono text-slate-600 outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => navigator.clipboard.writeText(surveyUrl(r.id))}
+                      className="shrink-0 text-xs text-sky-600 hover:text-sky-700 font-semibold px-2 py-1.5 rounded-md hover:bg-sky-50"
+                    >
+                      コピー
+                    </button>
+                  </div>
+                </li>
+              ))}
+              {rounds.length === 0 && (
+                <li className="text-sm text-slate-400 py-2">実施回がまだ登録されていません。管理者にお問い合わせください。</li>
+              )}
+            </ul>
           </div>
         )}
 
