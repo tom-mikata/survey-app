@@ -1,5 +1,5 @@
 import { CONDITION_TO_PAIN_DEFAULT, QQ_CONDITIONS } from "./constants";
-import type { ClientModules, Gender, PainAreaCode, QqConditionId, QqConditionItem, SurveyResponse, SurveyRound } from "./types";
+import type { ClientModules, CompanySupportRow, ExerciseRow, Gender, MentalHealthRow, PainAreaCode, QqConditionId, QqConditionItem, SecondPartData, SurveyResponse, SurveyRound, WorkLifeRow } from "./types";
 import { supabase } from "./supabase";
 
 function buildDefaultQqConditions(): QqConditionItem[] {
@@ -356,6 +356,62 @@ export async function createSurveyRound(
 
 export async function deleteSurveyRound(id: number): Promise<void> {
   await supabase.from("survey_rounds").delete().eq("id", id);
+}
+
+export async function getSecondPartData(responseIds: string[]): Promise<SecondPartData> {
+  if (responseIds.length === 0) return { mental: [], support: [], workLife: [], exercise: [] };
+
+  const [mentalRes, supportRes, workLifeRes, exerciseRes] = await Promise.all([
+    supabase.from("mental_health_responses")
+      .select("survey_response_id, q17_1_score, q17_2_score, q17_3_score, q17_4_score, q17_5_score, q17_6_score")
+      .in("survey_response_id", responseIds),
+    supabase.from("company_support_responses")
+      .select("survey_response_id, q18_1_score, q18_2_score, q18_3_score, q18_4_score")
+      .in("survey_response_id", responseIds),
+    supabase.from("work_life_responses")
+      .select("survey_response_id, role_impact, support_desire")
+      .in("survey_response_id", responseIds),
+    supabase.from("exercise_responses")
+      .select("survey_response_id, has_exercise_habit, exercise_days")
+      .in("survey_response_id", responseIds),
+  ]);
+
+  const mental: MentalHealthRow[] = (mentalRes.data ?? []).map((r: {
+    survey_response_id: string;
+    q17_1_score: number; q17_2_score: number; q17_3_score: number;
+    q17_4_score: number; q17_5_score: number; q17_6_score: number;
+  }) => ({
+    surveyResponseId: r.survey_response_id,
+    q17_1Score: r.q17_1_score, q17_2Score: r.q17_2_score, q17_3Score: r.q17_3_score,
+    q17_4Score: r.q17_4_score, q17_5Score: r.q17_5_score, q17_6Score: r.q17_6_score,
+  }));
+
+  const support: CompanySupportRow[] = (supportRes.data ?? []).map((r: {
+    survey_response_id: string;
+    q18_1_score: number; q18_2_score: number; q18_3_score: number; q18_4_score: number;
+  }) => ({
+    surveyResponseId: r.survey_response_id,
+    q18_1Score: r.q18_1_score, q18_2Score: r.q18_2_score,
+    q18_3Score: r.q18_3_score, q18_4Score: r.q18_4_score,
+  }));
+
+  const workLife: WorkLifeRow[] = (workLifeRes.data ?? []).map((r: {
+    survey_response_id: string; role_impact: string; support_desire: string | null;
+  }) => ({
+    surveyResponseId: r.survey_response_id,
+    roleImpact: r.role_impact,
+    supportDesire: r.support_desire,
+  }));
+
+  const exercise: ExerciseRow[] = (exerciseRes.data ?? []).map((r: {
+    survey_response_id: string; has_exercise_habit: boolean; exercise_days: number | null;
+  }) => ({
+    surveyResponseId: r.survey_response_id,
+    hasExerciseHabit: r.has_exercise_habit,
+    exerciseDays: r.exercise_days,
+  }));
+
+  return { mental, support, workLife, exercise };
 }
 
 export async function updateSurveyRound(
