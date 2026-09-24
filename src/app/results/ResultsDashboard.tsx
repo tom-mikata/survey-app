@@ -13,8 +13,9 @@ import {
   summarizeOccupational,
 } from "@/lib/analytics";
 import { QQ_CONDITIONS } from "@/lib/constants";
-import type { SecondPartData, SummaryAxis, SurveyResponse, SurveyRound } from "@/lib/types";
-import { getDepartments, getClients, getResponses, getSecondPartData, getSurveyRounds } from "@/lib/storage";
+import type { ClientModules, SecondPartData, SummaryAxis, SurveyResponse, SurveyRound } from "@/lib/types";
+import { getDepartments, getClients, getClientModules, getResponses, getSecondPartData, getSurveyRounds } from "@/lib/storage";
+import { downloadCsv } from "@/lib/csv-export";
 import { getAuthUser } from "@/lib/auth";
 import type { AuthUser } from "@/lib/auth";
 import {
@@ -112,6 +113,7 @@ export default function ResultsDashboard() {
   const [baseRows, setBaseRows] = useState<SurveyResponse[]>([]);
   const [secondPart, setSecondPart] = useState<SecondPartData>({ mental: [], support: [], workLife: [], exercise: [] });
   const [baseSecondPart, setBaseSecondPart] = useState<SecondPartData>({ mental: [], support: [], workLife: [], exercise: [] });
+  const [modules, setModules] = useState<ClientModules>({ mentalHealth: false, companySupport: false, workLife: false, exercise: false });
   const [axis, setAxis] = useState<SummaryAxis>("department");
   const [tab, setTab] = useState<string>("all");
   const [middleView, setMiddleView] = useState<"loss" | "health">("loss");
@@ -126,11 +128,13 @@ export default function ResultsDashboard() {
   ) => {
     const seq = ++loadSeq.current;
 
-    const [depts, responses, baseResponses, rounds] = await Promise.all([
+    const NO_MODULES: ClientModules = { mentalHealth: false, companySupport: false, workLife: false, exercise: false };
+    const [depts, responses, baseResponses, rounds, mods] = await Promise.all([
       clientCode ? getDepartments(clientCode) : Promise.resolve([]),
       getResponses(clientCode, displayId),
       compareId !== null ? getResponses(clientCode, compareId) : Promise.resolve([]),
       clientCode ? getSurveyRounds(clientCode) : Promise.resolve([]),
+      clientCode ? getClientModules(clientCode) : Promise.resolve(NO_MODULES),
     ]);
 
     if (seq !== loadSeq.current) return;
@@ -148,6 +152,7 @@ export default function ResultsDashboard() {
     setSecondPart(sp);
     setBaseSecondPart(baseSp);
     setSurveyRounds(rounds);
+    setModules(mods);
   }, []);
 
   useEffect(() => {
@@ -303,6 +308,15 @@ export default function ResultsDashboard() {
                     </select>
                   </div>
                 </>
+              )}
+              {displayRoundId !== null && (
+                <button
+                  type="button"
+                  onClick={() => downloadCsv(rows, secondPart, surveyRounds, modules, displayRoundId)}
+                  className="ml-auto flex items-center gap-1.5 rounded-xl border border-teal-500 bg-white px-4 py-1.5 text-sm font-semibold text-teal-700 transition hover:bg-teal-50"
+                >
+                  CSVダウンロード
+                </button>
               )}
             </div>
           ) : null}
