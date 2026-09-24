@@ -12,8 +12,9 @@ import {
   segmentLabel,
   summarizeOccupational,
 } from "@/lib/analytics";
-import type { QqConditionItem, SecondPartData, SummaryAxis, SurveyResponse, SurveyRound } from "@/lib/types";
-import { getDepartments, getClients, getQqConditions, getResponses, getSecondPartData, getSurveyRounds } from "@/lib/storage";
+import { QQ_CONDITIONS } from "@/lib/constants";
+import type { SecondPartData, SummaryAxis, SurveyResponse, SurveyRound } from "@/lib/types";
+import { getDepartments, getClients, getResponses, getSecondPartData, getSurveyRounds } from "@/lib/storage";
 import { getAuthUser } from "@/lib/auth";
 import type { AuthUser } from "@/lib/auth";
 import {
@@ -111,7 +112,6 @@ export default function ResultsDashboard() {
   const [baseRows, setBaseRows] = useState<SurveyResponse[]>([]);
   const [secondPart, setSecondPart] = useState<SecondPartData>({ mental: [], support: [], workLife: [], exercise: [] });
   const [baseSecondPart, setBaseSecondPart] = useState<SecondPartData>({ mental: [], support: [], workLife: [], exercise: [] });
-  const [qqConditions, setQqConditions] = useState<QqConditionItem[]>([]);
   const [axis, setAxis] = useState<SummaryAxis>("department");
   const [tab, setTab] = useState<string>("all");
   const [middleView, setMiddleView] = useState<"loss" | "health">("loss");
@@ -126,11 +126,10 @@ export default function ResultsDashboard() {
   ) => {
     const seq = ++loadSeq.current;
 
-    const [depts, responses, baseResponses, conditions, rounds] = await Promise.all([
+    const [depts, responses, baseResponses, rounds] = await Promise.all([
       clientCode ? getDepartments(clientCode) : Promise.resolve([]),
       getResponses(clientCode, displayId),
       compareId !== null ? getResponses(clientCode, compareId) : Promise.resolve([]),
-      getQqConditions(clientCode),
       clientCode ? getSurveyRounds(clientCode) : Promise.resolve([]),
     ]);
 
@@ -148,7 +147,6 @@ export default function ResultsDashboard() {
     setBaseRows(baseResponses);
     setSecondPart(sp);
     setBaseSecondPart(baseSp);
-    setQqConditions(conditions);
     setSurveyRounds(rounds);
   }, []);
 
@@ -206,13 +204,9 @@ export default function ResultsDashboard() {
   const filtered = useMemo(() => filterResponses(rows, axis, activeTab), [rows, axis, activeTab]);
   const filteredBase = useMemo(() => filterResponses(baseRows, axis, activeTab), [baseRows, axis, activeTab]);
 
-  const conditionPainMap = useMemo(
-    () => Object.fromEntries(qqConditions.map((c) => [c.id, c.painAreas])),
-    [qqConditions],
-  );
+  const occ = useMemo(() => summarizeOccupational(filtered), [filtered]);
+  const occBase = useMemo(() => summarizeOccupational(filteredBase), [filteredBase]);
 
-  const occ = useMemo(() => summarizeOccupational(filtered, conditionPainMap), [filtered, conditionPainMap]);
-  const occBase = useMemo(() => summarizeOccupational(filteredBase, conditionPainMap), [filteredBase, conditionPainMap]);
 
   const lossTotal = useMemo(() => laborLossTotalManYen(filtered), [filtered]);
   const lossTotalBase = useMemo(() => laborLossTotalManYen(filteredBase), [filteredBase]);
@@ -223,7 +217,7 @@ export default function ResultsDashboard() {
   const prodAbsBase = useMemo(() => productivityAndAbsentTotalsManYen(filteredBase), [filteredBase]);
 
   const conditionBars = useMemo(() => {
-    const entries = qqConditions
+    const entries = QQ_CONDITIONS
       .filter((c) => c.id !== "none")
       .map((c) => ({
         id: c.id,
@@ -233,7 +227,7 @@ export default function ResultsDashboard() {
       .sort((a, b) => b.count - a.count);
     const max = Math.max(1, ...entries.map((e) => e.count));
     return { entries, max };
-  }, [qqConditions, occ.healthProblems.conditionCounts]);
+  }, [occ.healthProblems.conditionCounts]);
 
   const lossByCategory = useMemo(() => {
     const entries = LOSS_LEGEND.map((L) => ({

@@ -68,12 +68,6 @@ export interface SurveyResponse {
   expertSupportIntent: string;
 }
 
-export interface QqConditionItem {
-  id: string;
-  label: string;
-  painAreas: PainAreaCode[];
-}
-
 /** 企業ごとの第2部モジュール設定 */
 export interface ClientModules {
   mentalHealth: boolean;
@@ -81,6 +75,7 @@ export interface ClientModules {
   workLife: boolean;
   exercise: boolean;
 }
+
 
 export interface SurveyRound {
   id: number;

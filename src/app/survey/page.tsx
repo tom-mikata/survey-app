@@ -13,8 +13,8 @@ import {
   clientExists,
   getClientModules,
   getDepartments,
-  getQqConditions,
 } from "@/lib/storage";
+import { QQ_CONDITIONS } from "@/lib/constants";
 import {
   buildScreenList,
   INITIAL_FORM,
@@ -51,7 +51,6 @@ export default function SurveyPage({
   const router = useRouter();
 
   const [departments, setDepartments] = useState<string[]>([]);
-  const [qqConditions, setQqConditions] = useState<{ id: string; label: string }[]>([]);
   const [modules, setModules] = useState<ClientModules>(DEFAULT_MODULES);
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
   const [currentScreen, setCurrentScreen] = useState<ScreenId>("basic_info");
@@ -69,13 +68,11 @@ export default function SurveyPage({
       return;
     }
     setClientStatus("valid");
-    const [depts, conditions, clientModules] = await Promise.all([
+    const [depts, clientModules] = await Promise.all([
       getDepartments(clientCode),
-      getQqConditions(clientCode),
       getClientModules(clientCode),
     ]);
     setDepartments(depts);
-    setQqConditions(conditions);
     setModules(clientModules);
   }, [clientCode]);
 
@@ -288,7 +285,7 @@ export default function SurveyPage({
           <StepBasicInfo {...stepProps} departments={departments} />
         )}
         {currentScreen === "symptoms" && (
-          <StepSymptoms {...stepProps} qqConditions={qqConditions} />
+          <StepSymptoms {...stepProps} qqConditions={QQ_CONDITIONS} />
         )}
         {currentScreen === "qq" && <StepQQ {...stepProps} />}
         {currentScreen === "pain_care" && <StepPainCare {...stepProps} />}
