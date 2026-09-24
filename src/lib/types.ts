@@ -86,6 +86,7 @@ export interface SurveyRound {
   createdAt: string;
 }
 
+
 export type SummaryAxis = "department" | "age" | "gender";
 
 export type SegmentTabValue = "all" | string;
