@@ -1,5 +1,8 @@
 import type { AgeGroup, Gender, PainAreaCode, QqConditionId } from "./types";
 
+/** プレゼンティーイズム・欠勤損失の共通単価（万円/日）。¥10,000/日固定 */
+export const DAILY_LABOR_COST_MAN_YEN = 1;
+
 export const AGE_GROUPS: { id: AgeGroup; label: string }[] = [
   { id: "20s", label: "20代" },
   { id: "30s", label: "30代" },
@@ -12,7 +15,6 @@ export const GENDERS: { id: Gender; label: string }[] = [
   { id: "male", label: "男性" },
   { id: "female", label: "女性" },
   { id: "other", label: "その他" },
-  { id: "prefer_not", label: "回答しない" },
 ];
 
 /** 健康問題IDから痛み部位へのデフォルトマッピング */
@@ -31,12 +33,11 @@ export const CONDITION_TO_PAIN_DEFAULT: Record<QqConditionId, PainAreaCode[]> = 
   sleep: ["head"],
   fatigue: ["shoulder", "lower_back"],
   eye: ["head"],
-  mens_pain: ["lower_back"],
-  mens_other: ["head"],
+  womens_health: ["lower_back", "head"],
   other: ["lower_back"],
 };
 
-/** QQメソッド 質問1の選択肢（解説記事の標準例に準拠） */
+/** QQメソッド 質問1の選択肢（v1.1: womens_health に統合） */
 export const QQ_CONDITIONS: { id: QqConditionId; label: string }[] = [
   { id: "none", label: "健康上の問題や不調はない" },
   { id: "allergy", label: "アレルギーによる疾患（花粉症・アレルギー性結膜炎など）" },
@@ -52,7 +53,6 @@ export const QQ_CONDITIONS: { id: QqConditionId; label: string }[] = [
   { id: "sleep", label: "睡眠に関する不調（寝ようとしても眠れないなど）" },
   { id: "fatigue", label: "全身の倦怠感、疲労感" },
   { id: "eye", label: "眼の不調（視力低下・眼精疲労・ドライアイ・緑内障など）" },
-  { id: "mens_pain", label: "（女性のみ）月経痛（生理痛）" },
-  { id: "mens_other", label: "（女性のみ）月経前症状（イライラ・憂うつ・頭痛）" },
+  { id: "womens_health", label: "女性特有の不調（月経痛・月経前症状など）" },
   { id: "other", label: "その他" },
 ];

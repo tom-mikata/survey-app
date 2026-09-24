@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AppChrome } from "@/components/AppChrome";
 import {
   axisTabs,
@@ -11,26 +11,91 @@ import {
   productivityAndAbsentTotalsManYen,
   segmentLabel,
   summarizeOccupational,
-  workEngagementByDepartment,
-  workEngagementSummary,
 } from "@/lib/analytics";
-import type { QqConditionItem, SummaryAxis, SurveyResponse } from "@/lib/types";
-import { getDepartments, getClients, getQqConditions, getResponses } from "@/lib/storage";
+import { QQ_CONDITIONS } from "@/lib/constants";
+import type { ClientModules, SecondPartData, SummaryAxis, SurveyResponse, SurveyRound } from "@/lib/types";
+import { getDepartments, getClients, getClientModules, getResponses, getSecondPartData, getSurveyRounds } from "@/lib/storage";
+import { downloadCsv } from "@/lib/csv-export";
 import { getAuthUser } from "@/lib/auth";
 import type { AuthUser } from "@/lib/auth";
 import {
   LOSS_LEGEND,
-  INDUSTRY,
-  INDUSTRY_LABEL,
   PRODUCTIVITY_COLOR,
   ABSENT_COLOR,
 } from "./components/designTokens";
 import { Card, AccentTitle, CardHeader, SelectBox } from "./components/common";
 import { MetricRow } from "./components/MetricCard";
 import { LegendAmountRow, HorizontalBars } from "./components/DepartmentBarsCard";
-import { PainFigure } from "./components/PainFigureCard";
 import { StackedDepartmentChart } from "./components/DepartmentLossChart";
-import { WeScoreCard, WeCompareColumn, ScoreLegendChip } from "./components/WorkEngagementCard";
+import { SurveyResultsSections } from "./components/SurveyResultsSections";
+
+/* 前回/今回の差分バッジ */
+function DeltaBadge({
+  base,
+  current,
+  unit = "pt",
+  goodDirection = "decrease",
+}: {
+  base: number;
+  current: number;
+  unit?: string;
+  goodDirection?: "decrease" | "increase";
+}) {
+  const diff = current - base;
+  if (Math.abs(diff) < 0.05) return <span className="text-sm font-semibold text-slate-400">±0{unit}</span>;
+  const isGood = goodDirection === "decrease" ? diff < 0 : diff > 0;
+  const symbol = diff > 0 ? "▲" : "▼";
+  const abs = Math.abs(diff);
+  const formatted = unit === "pt" ? `${Math.round(abs)}` : abs.toFixed(1);
+  return (
+    <span className={`text-sm font-bold ${isGood ? "text-teal-600" : "text-red-500"}`}>
+      {symbol}{formatted}{unit}
+    </span>
+  );
+}
+
+/* 比較モード用メトリクス行（%前回→今回） */
+function ComparePercentRow({
+  accent,
+  title,
+  basePct,
+  baseCount,
+  baseDenom,
+  currentPct,
+  currentCount,
+  currentDenom,
+  label,
+  goodDirection = "decrease",
+}: {
+  accent: string;
+  title: string;
+  basePct: number;
+  baseCount: number;
+  baseDenom: number;
+  currentPct: number;
+  currentCount: number;
+  currentDenom: number;
+  label: string;
+  goodDirection?: "decrease" | "increase";
+}) {
+  return (
+    <div>
+      <div className="flex items-center gap-3">
+        <span className="inline-block h-6 w-[3px] rounded-sm" style={{ background: accent }} />
+        <p className="text-sm font-bold text-slate-700">{title}</p>
+      </div>
+      <div className="mt-3 flex flex-wrap items-baseline gap-2">
+        <span className="text-3xl font-bold text-slate-400">{basePct}%</span>
+        <span className="text-base text-slate-400">→</span>
+        <span className="text-3xl font-bold text-slate-800">{currentPct}%</span>
+        <DeltaBadge base={basePct} current={currentPct} unit="pt" goodDirection={goodDirection} />
+      </div>
+      <p className="mt-1 text-xs text-slate-400">
+        {baseCount}/{baseDenom}人 → {currentCount}/{currentDenom}人（{label}）
+      </p>
+    </div>
+  );
+}
 
 /* =============================================================================
  * ページ本体
@@ -40,22 +105,54 @@ export default function ResultsDashboard() {
   const [authUser, setAuthUser] = useState<AuthUser | null>(null);
   const [clients, setClients] = useState<{ code: string; name: string }[]>([]);
   const [selectedClientCode, setSelectedClientCode] = useState<string | null>(null);
+  const [surveyRounds, setSurveyRounds] = useState<SurveyRound[]>([]);
+  const [displayRoundId, setDisplayRoundId] = useState<number | null>(null);
+  const [compareRoundId, setCompareRoundId] = useState<number | null>(null);
   const [departments, setDepartments] = useState<string[]>([]);
   const [rows, setRows] = useState<SurveyResponse[]>([]);
-  const [qqConditions, setQqConditions] = useState<QqConditionItem[]>([]);
+  const [baseRows, setBaseRows] = useState<SurveyResponse[]>([]);
+  const [secondPart, setSecondPart] = useState<SecondPartData>({ mental: [], support: [], workLife: [], exercise: [] });
+  const [baseSecondPart, setBaseSecondPart] = useState<SecondPartData>({ mental: [], support: [], workLife: [], exercise: [] });
+  const [modules, setModules] = useState<ClientModules>({ mentalHealth: false, companySupport: false, workLife: false, exercise: false });
   const [axis, setAxis] = useState<SummaryAxis>("department");
   const [tab, setTab] = useState<string>("all");
   const [middleView, setMiddleView] = useState<"loss" | "health">("loss");
 
-  const loadData = useCallback(async (clientCode: string | null) => {
-    const [depts, responses, conditions] = await Promise.all([
-      getDepartments(clientCode),
-      getResponses(clientCode),
-      getQqConditions(clientCode),
+  // レースコンディション防止
+  const loadSeq = useRef(0);
+
+  const loadData = useCallback(async (
+    clientCode: string | null,
+    displayId: number | null,
+    compareId: number | null,
+  ) => {
+    const seq = ++loadSeq.current;
+
+    const NO_MODULES: ClientModules = { mentalHealth: false, companySupport: false, workLife: false, exercise: false };
+    const [depts, responses, baseResponses, rounds, mods] = await Promise.all([
+      clientCode ? getDepartments(clientCode) : Promise.resolve([]),
+      getResponses(clientCode, displayId),
+      compareId !== null ? getResponses(clientCode, compareId) : Promise.resolve([]),
+      clientCode ? getSurveyRounds(clientCode) : Promise.resolve([]),
+      clientCode ? getClientModules(clientCode) : Promise.resolve(NO_MODULES),
     ]);
+
+    if (seq !== loadSeq.current) return;
+
+    const [sp, baseSp] = await Promise.all([
+      getSecondPartData(responses.map((r) => r.id)),
+      compareId !== null ? getSecondPartData(baseResponses.map((r) => r.id)) : Promise.resolve({ mental: [], support: [], workLife: [], exercise: [] }),
+    ]);
+
+    if (seq !== loadSeq.current) return;
+
     setDepartments(depts);
     setRows(responses);
-    setQqConditions(conditions);
+    setBaseRows(baseResponses);
+    setSecondPart(sp);
+    setBaseSecondPart(baseSp);
+    setSurveyRounds(rounds);
+    setModules(mods);
   }, []);
 
   useEffect(() => {
@@ -67,12 +164,12 @@ export default function ResultsDashboard() {
       if (user.role === "system_admin") {
         const list = await getClients();
         setClients(list);
-        setSelectedClientCode(null);
-        loadData(null);
+        setAxis("age");
+        loadData(null, null, null);
       } else {
         const code = user.clientCode ?? null;
         setSelectedClientCode(code);
-        loadData(code);
+        loadData(code, null, null);
       }
     })();
   }, [loadData]);
@@ -80,8 +177,28 @@ export default function ResultsDashboard() {
   const handleClientFilter = (code: string) => {
     const val = code === "" ? null : code;
     setSelectedClientCode(val);
-    loadData(val);
+    setDisplayRoundId(null);
+    setCompareRoundId(null);
+    if (val === null && axis === "department") setAxis("age");
+    setTab("all");
+    loadData(val, null, null);
   };
+
+  const handleDisplayRoundFilter = (roundIdStr: string) => {
+    const val = roundIdStr === "" ? null : Number(roundIdStr);
+    setDisplayRoundId(val);
+    setTab("all");
+    loadData(selectedClientCode, val, compareRoundId);
+  };
+
+  const handleCompareRoundFilter = (roundIdStr: string) => {
+    const val = roundIdStr === "" ? null : Number(roundIdStr);
+    setCompareRoundId(val);
+    setTab("all");
+    loadData(selectedClientCode, displayRoundId, val);
+  };
+
+  const isComparing = compareRoundId !== null;
 
   const tabs = useMemo(() => axisTabs(axis, departments), [axis, departments]);
   const activeTab = useMemo(() => {
@@ -90,21 +207,22 @@ export default function ResultsDashboard() {
   }, [tabs, tab]);
 
   const filtered = useMemo(() => filterResponses(rows, axis, activeTab), [rows, axis, activeTab]);
-  const conditionPainMap = useMemo(
-    () => Object.fromEntries(qqConditions.map((c) => [c.id, c.painAreas])),
-    [qqConditions],
-  );
-  const occ = useMemo(() => summarizeOccupational(filtered, conditionPainMap), [filtered, conditionPainMap]);
+  const filteredBase = useMemo(() => filterResponses(baseRows, axis, activeTab), [baseRows, axis, activeTab]);
+
+  const occ = useMemo(() => summarizeOccupational(filtered), [filtered]);
+  const occBase = useMemo(() => summarizeOccupational(filteredBase), [filteredBase]);
+
+
   const lossTotal = useMemo(() => laborLossTotalManYen(filtered), [filtered]);
+  const lossTotalBase = useMemo(() => laborLossTotalManYen(filteredBase), [filteredBase]);
   const lossSplit = useMemo(() => laborLossSplitForTotal(filtered), [filtered]);
   const deptLoss = useMemo(() => laborLossByDepartment(filtered, departments), [filtered, departments]);
-  const we = useMemo(() => workEngagementSummary(filtered), [filtered]);
-  const weByDept = useMemo(() => workEngagementByDepartment(filtered, departments), [filtered, departments]);
-  const companyAvg = useMemo(() => workEngagementSummary(rows), [rows]);
+  const deptLossBase = useMemo(() => laborLossByDepartment(filteredBase, departments), [filteredBase, departments]);
   const prodAbs = useMemo(() => productivityAndAbsentTotalsManYen(filtered), [filtered]);
+  const prodAbsBase = useMemo(() => productivityAndAbsentTotalsManYen(filteredBase), [filteredBase]);
 
   const conditionBars = useMemo(() => {
-    const entries = qqConditions
+    const entries = QQ_CONDITIONS
       .filter((c) => c.id !== "none")
       .map((c) => ({
         id: c.id,
@@ -114,15 +232,8 @@ export default function ResultsDashboard() {
       .sort((a, b) => b.count - a.count);
     const max = Math.max(1, ...entries.map((e) => e.count));
     return { entries, max };
-  }, [qqConditions, occ.healthProblems.conditionCounts]);
+  }, [occ.healthProblems.conditionCounts]);
 
-  const painHotspots = useMemo(() => {
-    const entries = Object.entries(occ.painCounts) as [string, number][];
-    const max = Math.max(1, ...entries.map(([, v]) => v));
-    return entries.map(([k, v]) => ({ id: k, intensity: v / max, count: v }));
-  }, [occ.painCounts]);
-
-  // 症状カテゴリ別の損失額バー
   const lossByCategory = useMemo(() => {
     const entries = LOSS_LEGEND.map((L) => ({
       key: L.key,
@@ -135,6 +246,8 @@ export default function ResultsDashboard() {
 
   const presenteeismPct = Math.round(occ.presenteeism.rate * 100);
   const absenteeismPct = Math.round(occ.absenteeismAmongInterference.rate * 100);
+  const presenteeismPctBase = Math.round(occBase.presenteeism.rate * 100);
+  const absenteeismPctBase = Math.round(occBase.absenteeismAmongInterference.rate * 100);
   const productivityLoss = prodAbs.productivity;
   const absentDrivenLoss = prodAbs.absent;
   const segment = segmentLabel(axis, activeTab);
@@ -143,23 +256,72 @@ export default function ResultsDashboard() {
     <AppChrome title="ダッシュボード">
       <div className="min-h-screen bg-[#eef3f3]">
         <main className="mx-auto max-w-7xl space-y-7 px-4 py-8 sm:px-6 lg:px-10">
-          {/* クライアントフィルター（system_admin のみ） */}
-          {authUser?.role === "system_admin" && clients.length > 0 && (
-            <div className="flex items-center gap-3">
-              <span className="text-sm font-semibold text-slate-600 shrink-0">クライアント：</span>
-              <select
-                value={selectedClientCode ?? ""}
-                onChange={(e) => handleClientFilter(e.target.value)}
-                className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400"
-              >
-                <option value="">全クライアント</option>
-                {clients.map((c) => (
-                  <option key={c.code} value={c.code}>{c.name}</option>
-                ))}
-              </select>
-            </div>
-          )}
+
           {/* ---------------- フィルター行 ---------------- */}
+          {(authUser?.role === "system_admin" && clients.length > 0) || surveyRounds.length > 0 ? (
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+              {/* クライアントフィルター（system_admin のみ） */}
+              {authUser?.role === "system_admin" && clients.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-slate-600 shrink-0">クライアント：</span>
+                  <select
+                    value={selectedClientCode ?? ""}
+                    onChange={(e) => handleClientFilter(e.target.value)}
+                    className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400"
+                  >
+                    <option value="">全クライアント</option>
+                    {clients.map((c) => (
+                      <option key={c.code} value={c.code}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* 2つの実施回セレクター */}
+              {surveyRounds.length > 0 && (
+                <>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-slate-600 shrink-0">比較実施回（前回）：</span>
+                    <select
+                      value={compareRoundId ?? ""}
+                      onChange={(e) => handleCompareRoundFilter(e.target.value)}
+                      className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400"
+                    >
+                      <option value="">比較なし</option>
+                      {surveyRounds.map((r) => (
+                        <option key={r.id} value={r.id}>{r.title}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <span className="text-slate-400 text-sm">→</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-slate-600 shrink-0">表示実施回（今回）：</span>
+                    <select
+                      value={displayRoundId ?? ""}
+                      onChange={(e) => handleDisplayRoundFilter(e.target.value)}
+                      className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400"
+                    >
+                      <option value="">全期間</option>
+                      {surveyRounds.map((r) => (
+                        <option key={r.id} value={r.id}>{r.title}</option>
+                      ))}
+                    </select>
+                  </div>
+                </>
+              )}
+              {displayRoundId !== null && (
+                <button
+                  type="button"
+                  onClick={() => downloadCsv(rows, secondPart, surveyRounds, modules, displayRoundId)}
+                  className="ml-auto flex items-center gap-1.5 rounded-xl border border-teal-500 bg-white px-4 py-1.5 text-sm font-semibold text-teal-700 transition hover:bg-teal-50"
+                >
+                  CSVダウンロード
+                </button>
+              )}
+            </div>
+          ) : null}
+
+          {/* ---------------- 軸・セグメントフィルター行 ---------------- */}
           <section className="flex flex-col gap-4 xl:flex-row xl:items-center">
             <div className="flex shrink-0 items-center gap-3">
               <AccentTitle>職業病サマリー</AccentTitle>
@@ -170,7 +332,9 @@ export default function ResultsDashboard() {
                   setTab("all");
                 }}
                 options={[
-                  { value: "department", label: "部署ごと" },
+                  ...(selectedClientCode !== null
+                    ? [{ value: "department", label: "部署ごと" }]
+                    : []),
                   { value: "age", label: "年代ごと" },
                   { value: "gender", label: "性別ごと" },
                 ]}
@@ -199,33 +363,65 @@ export default function ResultsDashboard() {
             </div>
           </section>
 
-          {/* ---------------- 上段 3 カード ---------------- */}
-          <section className="grid grid-cols-1 gap-5 xl:grid-cols-3">
+          {/* ---------------- 上段 2カード ---------------- */}
+          <section className="grid grid-cols-1 gap-5 xl:grid-cols-2">
             {/* Card 1 : 損失額が生じている従業員数 */}
             <Card>
               <CardHeader title="損失額が生じている従業員数" />
               <div className="mt-5 divide-y divide-slate-100">
-                <MetricRow
-                  accent={PRODUCTIVITY_COLOR}
-                  ringTrack="#f5ecd8"
-                  title="業務に支障がある人"
-                  count={occ.presenteeism.count}
-                  denom={occ.total}
-                  percent={presenteeismPct}
-                  percentLabel="Presenteeism"
-                  description={`${segment}では、身体的な痛みにより業務に支障がある人が${occ.presenteeism.count}人います。これは${segment}の従業員の${presenteeismPct}%に相当します。`}
-                />
-                <div className="pt-6" />
-                <MetricRow
-                  accent={ABSENT_COLOR}
-                  ringTrack="#f1dede"
-                  title="欠勤したことがある人"
-                  count={occ.absenteeismAmongInterference.count}
-                  denom={occ.absenteeismAmongInterference.denominator}
-                  percent={absenteeismPct}
-                  percentLabel="Absenteeism"
-                  description={`${segment}では、身体的な痛みにより欠勤したことがある人が${occ.absenteeismAmongInterference.count}人います。これは業務に支障がある人の${absenteeismPct}%に相当します。`}
-                />
+                {isComparing ? (
+                  <>
+                    <ComparePercentRow
+                      accent={PRODUCTIVITY_COLOR}
+                      title="業務に支障がある人"
+                      basePct={presenteeismPctBase}
+                      baseCount={occBase.presenteeism.count}
+                      baseDenom={occBase.total}
+                      currentPct={presenteeismPct}
+                      currentCount={occ.presenteeism.count}
+                      currentDenom={occ.total}
+                      label="Presenteeism"
+                      goodDirection="decrease"
+                    />
+                    <div className="pt-6" />
+                    <ComparePercentRow
+                      accent={ABSENT_COLOR}
+                      title="欠勤したことがある人"
+                      basePct={absenteeismPctBase}
+                      baseCount={occBase.absenteeismAmongInterference.count}
+                      baseDenom={occBase.absenteeismAmongInterference.denominator}
+                      currentPct={absenteeismPct}
+                      currentCount={occ.absenteeismAmongInterference.count}
+                      currentDenom={occ.absenteeismAmongInterference.denominator}
+                      label="Absenteeism"
+                      goodDirection="decrease"
+                    />
+                  </>
+                ) : (
+                  <>
+                    <MetricRow
+                      accent={PRODUCTIVITY_COLOR}
+                      ringTrack="#f5ecd8"
+                      title="業務に支障がある人"
+                      count={occ.presenteeism.count}
+                      denom={occ.total}
+                      percent={presenteeismPct}
+                      percentLabel="Presenteeism"
+                      description={`${segment}では、身体的な痛みにより業務に支障がある人が${occ.presenteeism.count}人います。これは${segment}の従業員の${presenteeismPct}%に相当します。`}
+                    />
+                    <div className="pt-6" />
+                    <MetricRow
+                      accent={ABSENT_COLOR}
+                      ringTrack="#f1dede"
+                      title="欠勤したことがある人"
+                      count={occ.absenteeismAmongInterference.count}
+                      denom={occ.absenteeismAmongInterference.denominator}
+                      percent={absenteeismPct}
+                      percentLabel="Absenteeism"
+                      description={`${segment}では、身体的な痛みにより欠勤したことがある人が${occ.absenteeismAmongInterference.count}人います。これは業務に支障がある人の${absenteeismPct}%に相当します。`}
+                    />
+                  </>
+                )}
               </div>
             </Card>
 
@@ -247,38 +443,76 @@ export default function ResultsDashboard() {
               </div>
 
               {middleView === "loss" ? (
-                <>
-                  <p className="mt-5 text-[40px] font-bold leading-none tracking-tight text-slate-800">
-                    {lossTotal.toFixed(1)}
-                    <span className="ml-1 text-xl font-bold text-slate-600">万円</span>
-                  </p>
-                  <div className="mt-5 space-y-2.5">
-                    <LegendAmountRow
-                      color={PRODUCTIVITY_COLOR}
-                      amount={productivityLoss}
-                      label="生産性低下による労働損失額"
-                    />
-                    <LegendAmountRow
-                      color={ABSENT_COLOR}
-                      amount={absentDrivenLoss}
-                      label="欠勤による労働損失額"
-                    />
+                isComparing ? (
+                  <div className="mt-5">
+                    <div className="flex flex-wrap items-baseline gap-2">
+                      <span className="text-2xl font-bold text-slate-400">{lossTotalBase.toFixed(1)}</span>
+                      <span className="text-lg text-slate-400">万円 →</span>
+                      <span className="text-[40px] font-bold leading-none tracking-tight text-slate-800">
+                        {lossTotal.toFixed(1)}
+                      </span>
+                      <span className="text-xl font-bold text-slate-600">万円</span>
+                    </div>
+                    <div className="mt-1">
+                      <DeltaBadge base={lossTotalBase} current={lossTotal} unit="万円" goodDirection="decrease" />
+                    </div>
+                    <div className="mt-5 space-y-3">
+                      <div className="flex items-center gap-3">
+                        <span className="inline-block h-3 w-3 shrink-0 rounded-sm" style={{ background: PRODUCTIVITY_COLOR }} />
+                        <span className="text-xs text-slate-500 flex-1">生産性低下による損失額</span>
+                        <span className="text-sm font-bold text-slate-700 tabular-nums">
+                          {prodAbsBase.productivity.toFixed(1)}
+                          <span className="text-xs font-normal text-slate-500"> → </span>
+                          {productivityLoss.toFixed(1)}
+                          <span className="ml-0.5 text-xs font-normal text-slate-500">万円</span>
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="inline-block h-3 w-3 shrink-0 rounded-sm" style={{ background: ABSENT_COLOR }} />
+                        <span className="text-xs text-slate-500 flex-1">欠勤による損失額</span>
+                        <span className="text-sm font-bold text-slate-700 tabular-nums">
+                          {prodAbsBase.absent.toFixed(1)}
+                          <span className="text-xs font-normal text-slate-500"> → </span>
+                          {absentDrivenLoss.toFixed(1)}
+                          <span className="ml-0.5 text-xs font-normal text-slate-500">万円</span>
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="mt-6 pt-5">
-                    <HorizontalBars
-                      entries={lossByCategory.entries.map((e) => ({
-                        id: e.key,
-                        label: e.label,
-                        value: e.value,
-                      }))}
-                      max={lossByCategory.max}
-                      color={PRODUCTIVITY_COLOR}
-                      accent={ABSENT_COLOR}
-                      accentRatio={lossTotal > 0 ? absentDrivenLoss / lossTotal : 0}
-                      unit="万"
-                    />
-                  </div>
-                </>
+                ) : (
+                  <>
+                    <p className="mt-5 text-[40px] font-bold leading-none tracking-tight text-slate-800">
+                      {lossTotal.toFixed(1)}
+                      <span className="ml-1 text-xl font-bold text-slate-600">万円</span>
+                    </p>
+                    <div className="mt-5 space-y-2.5">
+                      <LegendAmountRow
+                        color={PRODUCTIVITY_COLOR}
+                        amount={productivityLoss}
+                        label="生産性低下による労働損失額"
+                      />
+                      <LegendAmountRow
+                        color={ABSENT_COLOR}
+                        amount={absentDrivenLoss}
+                        label="欠勤による労働損失額"
+                      />
+                    </div>
+                    <div className="mt-6 pt-5">
+                      <HorizontalBars
+                        entries={lossByCategory.entries.map((e) => ({
+                          id: e.key,
+                          label: e.label,
+                          value: e.value,
+                        }))}
+                        max={lossByCategory.max}
+                        color={PRODUCTIVITY_COLOR}
+                        accent={ABSENT_COLOR}
+                        accentRatio={lossTotal > 0 ? absentDrivenLoss / lossTotal : 0}
+                        unit="万"
+                      />
+                    </div>
+                  </>
+                )
               ) : (
                 <>
                   <p className="mt-5 text-[40px] font-bold leading-none tracking-tight text-slate-800">
@@ -310,12 +544,6 @@ export default function ResultsDashboard() {
                 </>
               )}
             </Card>
-
-            {/* Card 3 : 痛みの部位 */}
-            <Card>
-              <CardHeader title="痛みの部位" />
-              <PainFigure hotspots={painHotspots} />
-            </Card>
           </section>
 
           {/* ---------------- 部署ごとの労働損失額 ---------------- */}
@@ -331,6 +559,7 @@ export default function ResultsDashboard() {
             <div className="mt-6 space-y-5">
               <StackedDepartmentChart
                 rows={deptLoss.slice().sort((a, b) => b.totalManYen - a.totalManYen)}
+                baseTotals={isComparing ? deptLossBase : undefined}
               />
               <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-600">
                 {LOSS_LEGEND.map((L) => (
@@ -346,76 +575,16 @@ export default function ResultsDashboard() {
             </div>
           </Card>
 
-          {/* ---------------- ワークエンゲージメント スコア ---------------- */}
-          <Card>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <CardHeader title="ワークエンゲージメントスコア" />
-              <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-slate-500">
-                <span>
-                  現在の表示：
-                  <span className="mx-1 rounded-md bg-slate-100 px-2 py-0.5 font-semibold text-slate-700">
-                    {segment}
-                  </span>
-                </span>
-                <span>
-                  比較対象業界：
-                  <span className="mx-1 rounded-md bg-slate-100 px-2 py-0.5 font-semibold text-slate-700">
-                    {INDUSTRY_LABEL}
-                  </span>
-                </span>
-              </div>
-            </div>
-            <div className="mt-6 grid grid-cols-2 gap-4 xl:grid-cols-4">
-              <WeScoreCard title="総合スコア" score={we.overall} industry={INDUSTRY.overall} />
-              <WeScoreCard title="活力" score={we.vigor} industry={INDUSTRY.vigor} />
-              <WeScoreCard title="熱意" score={we.dedication} industry={INDUSTRY.dedication} />
-              <WeScoreCard title="没頭" score={we.absorption} industry={INDUSTRY.absorption} />
-            </div>
-          </Card>
-
-          {/* ---------------- ワークエンゲージメント 属性別比較 ---------------- */}
-          <Card>
-            <CardHeader title="ワークエンゲージメント属性別比較" />
-            <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <WeCompareColumn
-                label="エンゲージメントスコア"
-                rows={weByDept}
-                field="overall"
-                companyAvg={companyAvg.overall}
-              />
-              <WeCompareColumn
-                label="活力"
-                rows={weByDept}
-                field="vigor"
-                companyAvg={companyAvg.vigor}
-              />
-              <WeCompareColumn
-                label="熱意"
-                rows={weByDept}
-                field="dedication"
-                companyAvg={companyAvg.dedication}
-              />
-              <WeCompareColumn
-                label="没頭"
-                rows={weByDept}
-                field="absorption"
-                companyAvg={companyAvg.absorption}
-              />
-            </div>
-
-            <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] text-slate-500">
-              <span className="mr-1 inline-flex items-center gap-1.5 font-semibold text-slate-600">
-                評価基準
-              </span>
-              <ScoreLegendChip color="#10b981" label="4.5-6.0：非常に高い" />
-              <ScoreLegendChip color="#14b8a6" label="3.0-4.4：やや高い" />
-              <ScoreLegendChip color="#f5a524" label="1.5-2.9：やや低い" />
-              <ScoreLegendChip color="#e4572e" label="0.1-1.4：非常に低い" />
-            </div>
-          </Card>
+          {/* ---------------- アンケート設問別結果（問6-22） ---------------- */}
+          <SurveyResultsSections
+            rows={filtered}
+            baseRows={isComparing ? filteredBase : undefined}
+            secondPart={secondPart}
+            baseSecondPart={isComparing ? baseSecondPart : undefined}
+          />
 
           <p className="mx-auto max-w-2xl pb-6 text-center text-[11px] leading-relaxed text-slate-400">
-            労働損失額は QQメソッドの定義に基づき、パフォーマンス低下度（1 − 量/10 × 質/10）と年間損失（有症状日数 / 30 × 低下度 × 月給 × 12）により算出しています（
+            労働損失額は QQメソッドの定義に基づき、プレゼンティーイズム損失（有症状日数 × 12 × パフォーマンス低下度（1 − 量/10 × 質/10）× ¥10,000/日）と欠勤損失（欠勤日数 × ¥10,000/日）の合計により算出しています（
             <a
               href="https://wellaboswp.com/column/qq-method-presenteeism-guide/"
               className="text-teal-600 hover:underline"
@@ -424,7 +593,7 @@ export default function ResultsDashboard() {
             >
               解説
             </a>
-            ）。数値はローカル保存の回答によるデモ集計です。
+            ）。
           </p>
         </main>
       </div>

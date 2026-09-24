@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { use, useState } from "react";
-import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { getAuthUser } from "@/lib/auth";
 
 export default function LoginPage({
   searchParams,
@@ -11,8 +11,6 @@ export default function LoginPage({
   searchParams: Promise<{ next?: string }>;
 }) {
   const { next = "/results" } = use(searchParams);
-  const router = useRouter();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -36,8 +34,11 @@ export default function LoginPage({
       return;
     }
 
-    router.push(next);
-    router.refresh();
+    const user = await getAuthUser();
+    const destination = next !== "/results"
+      ? next
+      : user?.role === "system_admin" ? "/settings" : "/results";
+    window.location.href = destination;
   };
 
   return (
