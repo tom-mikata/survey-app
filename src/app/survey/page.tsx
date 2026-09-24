@@ -55,9 +55,10 @@ export default function SurveyPage({
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
   const [currentScreen, setCurrentScreen] = useState<ScreenId>("basic_info");
   const [clientStatus, setClientStatus] = useState<"checking" | "valid" | "invalid">("checking");
+  const [consent, setConsent] = useState<"pending" | "agreed" | "declined">("pending");
 
   const load = useCallback(async () => {
-    if (!clientCode) {
+    if (!clientCode || !surveyRoundId) {
       setClientStatus("invalid");
       return;
     }
@@ -197,6 +198,64 @@ export default function SurveyPage({
               URLが正しくありません。
               <br />
               担当者よりご案内のあったURLをご確認ください。
+            </p>
+          </div>
+        </main>
+      </AppChrome>
+    );
+  }
+
+  if (consent === "pending") {
+    return (
+      <AppChrome title="従業員健康診断アンケート">
+        <main className="max-w-2xl mx-auto px-6 py-10">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-8 relative">
+              <button
+                type="button"
+                onClick={() => setConsent("declined")}
+                className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+                aria-label="閉じる"
+              >
+                ✕
+              </button>
+              <div className="flex justify-center mb-4">
+                <div className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-500 text-xl">
+                  🛡
+                </div>
+              </div>
+              <h2 className="text-lg font-bold text-slate-800 mb-4 text-center">プライバシーについて</h2>
+              <div className="text-sm text-slate-600 mb-6 space-y-4 leading-relaxed text-center">
+                <p>
+                  アンケートの結果は全体の集計結果として取りまとめ、個人の回答内容は会社に公開されることはありません。
+                </p>
+                <p>
+                  皆さまの率直なご意見をよろしくお願いいたします。調査結果は学会、論文等で公表することがあります。
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setConsent("agreed")}
+                className="w-full py-3 text-sm font-semibold text-slate-700 bg-slate-100 rounded-xl hover:bg-slate-200"
+              >
+                同意して進む
+              </button>
+            </div>
+          </div>
+        </main>
+      </AppChrome>
+    );
+  }
+
+  if (consent === "declined") {
+    return (
+      <AppChrome title="従業員健康診断アンケート">
+        <main className="max-w-2xl mx-auto px-6 py-10">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 text-center">
+            <p className="text-sm font-semibold text-slate-700">
+              個人情報の取り扱いへの同意が必要なため、
+              <br />
+              アンケートを開始できません。
             </p>
           </div>
         </main>

@@ -89,3 +89,42 @@ export interface SurveyRound {
 export type SummaryAxis = "department" | "age" | "gender";
 
 export type SegmentTabValue = "all" | string;
+
+/* ── 第2部モジュール行 ── */
+
+export interface MentalHealthRow {
+  surveyResponseId: string;
+  q17_1Score: number;
+  q17_2Score: number;
+  q17_3Score: number;
+  q17_4Score: number;
+  q17_5Score: number;
+  q17_6Score: number;
+}
+
+export interface CompanySupportRow {
+  surveyResponseId: string;
+  q18_1Score: number;
+  q18_2Score: number;
+  q18_3Score: number;
+  q18_4Score: number;
+}
+
+export interface WorkLifeRow {
+  surveyResponseId: string;
+  roleImpact: string;
+  supportDesire: string | null;
+}
+
+export interface ExerciseRow {
+  surveyResponseId: string;
+  hasExerciseHabit: boolean;
+  exerciseDays: number | null;
+}
+
+export interface SecondPartData {
+  mental: MentalHealthRow[];
+  support: CompanySupportRow[];
+  workLife: WorkLifeRow[];
+  exercise: ExerciseRow[];
+}
