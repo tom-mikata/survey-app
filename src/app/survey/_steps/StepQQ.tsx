@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import type { StepProps } from "../_types";
 
 /** 学生A 担当: 問8〜11（QQメソッド）
@@ -58,13 +58,13 @@ export function StepQQ({ form, onChange, onNext, onPrev, isFirst, isLast, onSubm
           <p className="text-sm text-slate-600 mb-3">
             直近30日間で、その症状は何日ありましたか。
           </p>
-          <DaysField
+          <DaySelect
             value={form.symptomDaysPast30}
             max={30}
+            unit="日"
             ariaLabel="問8 直近30日間で症状があった日数"
-            onCommit={(n) => onChange({ symptomDaysPast30: n })}
+            onChange={(n) => onChange({ symptomDaysPast30: n })}
           />
-          <p className="mt-2 text-xs text-slate-400">※ 0〜30日の範囲で入力してください</p>
         </div>
 
         {/* 問9 直近1年間の欠勤日数 */}
@@ -73,17 +73,15 @@ export function StepQQ({ form, onChange, onNext, onPrev, isFirst, isLast, onSubm
             問9. その症状で仕事を休んだ日数
           </p>
           <p className="text-sm text-slate-600 mb-3">
-            直近1年間で、その症状で何日仕事を休みましたか。
+            直近1年間で、その症状で何日仕事を休みましたか。休んでいない場合は「0日」を選んでください。
           </p>
-          <DaysField
+          <DaySelect
             value={form.absenteeDaysPastYear}
             max={MAX_ABSENTEE_DAYS}
+            unit="日"
             ariaLabel="問9 直近1年間で症状のために休んだ日数"
-            onCommit={(n) => onChange({ absenteeDaysPastYear: n })}
+            onChange={(n) => onChange({ absenteeDaysPastYear: n })}
           />
-          <p className="mt-2 text-xs text-slate-400">
-            ※ 休んでいない場合は 0 を入力してください（0〜{MAX_ABSENTEE_DAYS}日）
-          </p>
         </div>
 
         {/* 問10 症状があるときの仕事量（0〜10） */}
@@ -144,74 +142,33 @@ export function StepQQ({ form, onChange, onNext, onPrev, isFirst, isLast, onSubm
   );
 }
 
-/** 全角数字を半角に直し、数字以外を除去する（日本語IMEで入力された値の対策） */
-function toHalfWidthDigits(raw: string): string {
-  return raw
-    .replace(/[０-９]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0))
-    .replace(/[^0-9]/g, "");
-}
-
-/** 日数入力（数値入力 + スライダー）。入力中は空欄を許容し、確定値は 0〜max に収める */
-function DaysField({
+/** 日数選択（ドロップダウン）。0〜max の各値をオプションとして表示する */
+function DaySelect({
   value,
   max,
+  unit,
   ariaLabel,
-  onCommit,
+  onChange,
 }: {
   value: number;
   max: number;
+  unit: string;
   ariaLabel: string;
-  onCommit: (n: number) => void;
+  onChange: (n: number) => void;
 }) {
-  // input の表示は文字列で保持する。数値に直接バインドすると
-  // 全角入力や一時的な空欄で値が 0 に飛んでしまうため。
-  const [text, setText] = useState(() => String(value));
-
-  const handleText = (raw: string) => {
-    const digits = toHalfWidthDigits(raw);
-    if (digits === "") {
-      setText("");
-      onCommit(0);
-      return;
-    }
-    const clamped = Math.min(max, Number(digits));
-    setText(String(clamped));
-    onCommit(clamped);
-  };
-
-  const handleSlider = (n: number) => {
-    setText(String(n));
-    onCommit(n);
-  };
-
   return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-3">
-        <input
-          type="text"
-          inputMode="numeric"
-          value={text}
-          onChange={(e) => handleText(e.target.value)}
-          onBlur={() => { if (text === "") setText("0"); }}
-          aria-label={ariaLabel}
-          className="w-28 rounded-xl border border-slate-200 px-4 py-3 text-lg font-semibold text-right outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400"
-        />
-        <span className="text-sm text-slate-500">日</span>
-      </div>
-      <input
-        type="range"
-        min={0}
-        max={max}
-        value={value}
-        onChange={(e) => handleSlider(Number(e.target.value))}
-        aria-label={`${ariaLabel}（スライダー）`}
-        className="w-full accent-sky-600"
-      />
-      <div className="flex justify-between text-xs text-slate-400">
-        <span>0日</span>
-        <span>{max}日</span>
-      </div>
-    </div>
+    <select
+      value={value}
+      onChange={(e) => onChange(Number(e.target.value))}
+      aria-label={ariaLabel}
+      className="w-40 rounded-xl border border-slate-200 px-4 py-3 text-sm bg-white outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400"
+    >
+      {Array.from({ length: max + 1 }, (_, n) => (
+        <option key={n} value={n}>
+          {n}{unit}
+        </option>
+      ))}
+    </select>
   );
 }
 

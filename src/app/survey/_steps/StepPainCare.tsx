@@ -111,16 +111,18 @@ export function StepPainCare({ form, onChange, onNext, onPrev, isFirst, isLast, 
             <p className="text-sm text-slate-700 mb-2">
               それらは1か月(直近30日間)あたり、合計でおよそ何回ですか。
             </p>
-            <input
-              type="number"
-              min={1}
+            <select
               value={form.treatmentFrequency ?? ""}
               onChange={(e) =>
-                onChange({ treatmentFrequency: e.target.value ? Math.max(1, Number(e.target.value)) : null })
+                onChange({ treatmentFrequency: e.target.value ? Number(e.target.value) : null })
               }
-              placeholder="例：3"
-              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500/30"
-            />
+              className="w-40 rounded-xl border border-slate-200 px-4 py-3 text-sm bg-white outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400"
+            >
+              <option value="">選択してください</option>
+              {Array.from({ length: 30 }, (_, i) => i + 1).map((n) => (
+                <option key={n} value={n}>{n}回</option>
+              ))}
+            </select>
           </div>
         )}
 
