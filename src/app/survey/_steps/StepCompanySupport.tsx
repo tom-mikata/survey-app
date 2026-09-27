@@ -49,7 +49,7 @@ export function StepCompanySupport({ form, onChange, onNext, onPrev, isFirst, is
 
         {QUESTIONS.map(({ key, text }, i) => (
           <div key={key}>
-            <p className="text-sm font-semibold text-slate-700 mb-3">問18-{i + 1}. {text}</p>
+            <p className="inline-block text-sm font-semibold text-slate-700 bg-slate-100 rounded px-2.5 py-0.5 mb-2">問18-{i + 1}. {text}</p>
             <div className="grid grid-cols-1 gap-2">
               {SUPPORT_SCALE.map((opt) => (
                 <button

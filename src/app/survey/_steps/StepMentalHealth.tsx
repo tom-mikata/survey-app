@@ -52,7 +52,7 @@ export function StepMentalHealth({ form, onChange, onNext, onPrev, isFirst, isLa
 
         {QUESTIONS.map(({ key, text }, i) => (
           <div key={key}>
-            <p className="text-sm font-semibold text-slate-700 mb-3">問17-{i + 1}. {text}</p>
+            <p className="inline-block text-sm font-semibold text-slate-700 bg-slate-100 rounded px-2.5 py-0.5 mb-2">問17-{i + 1}. {text}</p>
             <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
               {MENTAL_SCALE.map((opt) => (
                 <button

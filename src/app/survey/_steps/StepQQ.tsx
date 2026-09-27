@@ -52,7 +52,7 @@ export function StepQQ({ form, onChange, onNext, onPrev, isFirst, isLast, onSubm
 
         {/* 問8 直近30日間の有症状日数（0〜30） */}
         <div>
-          <p className="text-sm font-semibold text-slate-700 mb-1">問8. その症状があった日数</p>
+          <p className="inline-block text-sm font-semibold text-slate-700 bg-slate-100 rounded px-2.5 py-0.5 mb-2">問8. その症状があった日数</p>
           <p className="text-sm text-slate-600 mb-3">
             直近30日間で、その症状は何日ありましたか。
           </p>
@@ -67,7 +67,7 @@ export function StepQQ({ form, onChange, onNext, onPrev, isFirst, isLast, onSubm
 
         {/* 問9 直近1年間の欠勤日数 */}
         <div>
-          <p className="text-sm font-semibold text-slate-700 mb-1">
+          <p className="inline-block text-sm font-semibold text-slate-700 bg-slate-100 rounded px-2.5 py-0.5 mb-2">
             問9. その症状で仕事を休んだ日数
           </p>
           <p className="text-sm text-slate-600 mb-3">
@@ -86,7 +86,7 @@ export function StepQQ({ form, onChange, onNext, onPrev, isFirst, isLast, onSubm
 
         {/* 問10 症状があるときの仕事量（0〜10） */}
         <div>
-          <p className="text-sm font-semibold text-slate-700 mb-1">問10. 症状があるときの仕事量</p>
+          <p className="inline-block text-sm font-semibold text-slate-700 bg-slate-100 rounded px-2.5 py-0.5 mb-2">問10. 症状があるときの仕事量</p>
           <p className="text-sm text-slate-600 mb-3">
             症状がないときを「10」とすると、症状があるときはどのくらいの仕事量ですか
             （0＝全くできない 〜 10＝いつも通り）。
@@ -100,7 +100,7 @@ export function StepQQ({ form, onChange, onNext, onPrev, isFirst, isLast, onSubm
 
         {/* 問11 症状があるときの仕事の質（0〜10） */}
         <div>
-          <p className="text-sm font-semibold text-slate-700 mb-1">問11. 症状があるときの仕事の質</p>
+          <p className="inline-block text-sm font-semibold text-slate-700 bg-slate-100 rounded px-2.5 py-0.5 mb-2">問11. 症状があるときの仕事の質</p>
           <p className="text-sm text-slate-600 mb-3">
             症状がないときを「10」とすると、症状があるときはどのくらいの仕事の質ですか
             （0＝ほとんど保てない 〜 10＝いつも通り）。

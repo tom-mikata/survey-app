@@ -73,8 +73,9 @@ export function StepPainCare({ form, onChange, onNext, onPrev, isFirst, isLast, 
 
         {/* TODO(#20-学生B): 問12 この1か月で利用した場所 */}
         <div>
-          <p className="text-sm font-semibold text-slate-700 mb-3">
-            問12. この1か月間で、体の不調（腰痛・肩こり・頭痛・胃腸の不調・不眠など）のために利用したところはありますか（いくつでも選べます）。
+          <p className="inline-block text-sm font-semibold text-slate-700 bg-slate-100 rounded px-2.5 py-0.5 mb-2">問12</p>
+          <p className="text-sm text-slate-700 mb-3">
+            この1か月間で、体の不調（腰痛・肩こり・頭痛・胃腸の不調・不眠など）のために利用したところはありますか（いくつでも選べます）。
           </p>
           <div className="grid grid-cols-1 gap-2">
             {TREATMENT_PLACES.map((opt) => (
@@ -106,8 +107,9 @@ export function StepPainCare({ form, onChange, onNext, onPrev, isFirst, isLast, 
         {/* TODO(#20-学生B): 問13 月あたり利用回数（問12で利用ありの場合のみ） */}
         {hasUsedTreatment && (
           <div>
-            <p className="text-sm font-semibold text-slate-700 mb-2">
-              問13. それらは1か月(直近30日間)あたり、合計でおよそ何回ですか。
+            <p className="inline-block text-sm font-semibold text-slate-700 bg-slate-100 rounded px-2.5 py-0.5 mb-2">問13</p>
+            <p className="text-sm text-slate-700 mb-2">
+              それらは1か月(直近30日間)あたり、合計でおよそ何回ですか。
             </p>
             <input
               type="number"
@@ -124,8 +126,9 @@ export function StepPainCare({ form, onChange, onNext, onPrev, isFirst, isLast, 
 
         {/* TODO(#20-学生B): 問14 日常的に使っているもの */}
         <div>
-          <p className="text-sm font-semibold text-slate-700 mb-3">
-            問14. 健康管理のために、日常的に使っているものはありますか（いくつでも選べます）。
+          <p className="inline-block text-sm font-semibold text-slate-700 bg-slate-100 rounded px-2.5 py-0.5 mb-2">問14</p>
+          <p className="text-sm text-slate-700 mb-3">
+            健康管理のために、日常的に使っているものはありますか（いくつでも選べます）。
           </p>
           <div className="grid grid-cols-1 gap-2">
             {DAILY_ITEMS.map((opt) => (
