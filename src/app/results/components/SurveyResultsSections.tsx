@@ -811,6 +811,11 @@ export function SurveyResultsSections({
       <Q15Card rows={rows} base={baseRows} />
       <Q16Card rows={rows} base={baseRows} />
 
+      {/* D-5: 追加設問エリアの説明 */}
+      <div className="mt-6 mb-1 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-700">
+        以下は企業様のオプション設問（問17以降）です。会社により欠番があります。
+      </div>
+
       <SecHead>心の健康 <span className="text-[13px] font-normal text-slate-400 ml-1">── 問17（K6）</span></SecHead>
       <Q17Card mental={secondPart.mental} baseMental={baseSecondPart?.mental} />
 
