@@ -22,8 +22,8 @@ export type FormState = {
   // 問8〜11 QQメソッド（問6で「不調はない」以外の人のみ）
   symptomDaysPast30: number;     // 問8: 直近30日間の有症状日数
   absenteeDaysPastYear: number;  // 問9: 直近1年間の欠勤日数
-  workQuantity: number;          // 問10: 症状ありの日の仕事量（0〜10）
-  workQuality: number;           // 問11: 症状ありの日の仕事の質（0〜10）
+  workQuantity: number | null;   // 問10: 症状ありの日の仕事量（0〜10）E-6: 初期値は未選択
+  workQuality: number | null;    // 問11: 症状ありの日の仕事の質（0〜10）E-6: 初期値は未選択
 
   // 問12〜14 不調への対処（全員表示）
   treatmentPlaces: string[];       // 問12: この1か月で利用した場所
@@ -78,8 +78,8 @@ export const INITIAL_FORM: FormState = {
 
   symptomDaysPast30: 0,
   absenteeDaysPastYear: 0,
-  workQuantity: 7,
-  workQuality: 7,
+  workQuantity: null,
+  workQuality: null,
 
   treatmentPlaces: [],
   treatmentPlacesOther: "",

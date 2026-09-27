@@ -93,7 +93,7 @@ export function StepBasicInfo({
 
         {/* 問1 お名前 */}
         <label className="block">
-          <span className="text-sm font-medium text-slate-600">
+          <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-700 bg-slate-100 rounded px-2.5 py-0.5">
             問1. お名前 <RequiredBadge />
           </span>
           <input
@@ -109,7 +109,7 @@ export function StepBasicInfo({
 
         {/* 問1 フリガナ（字種の制限なし） */}
         <label className="block">
-          <span className="text-sm font-medium text-slate-600">
+          <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-700 bg-slate-100 rounded px-2.5 py-0.5">
             フリガナ <RequiredBadge />
           </span>
           <input
@@ -125,7 +125,7 @@ export function StepBasicInfo({
 
         {/* 問2 性別（設問設計書は 男/女/その他 の3択。「回答しない」は使わない） */}
         <div>
-          <span className="text-sm font-medium text-slate-600">
+          <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-700 bg-slate-100 rounded px-2.5 py-0.5">
             問2. 性別 <RequiredBadge />
           </span>
           <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -149,13 +149,14 @@ export function StepBasicInfo({
 
         {/* 問3 生年月日 */}
         <label className="block">
-          <span className="text-sm font-medium text-slate-600">
+          <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-700 bg-slate-100 rounded px-2.5 py-0.5">
             問3. 生年月日 <RequiredBadge />
           </span>
           <input
             type="date"
             value={form.dateOfBirth}
             onChange={(e) => onChange({ dateOfBirth: e.target.value })}
+            max={new Date().toISOString().slice(0, 10)}
             aria-invalid={dateOfBirthError !== null}
             autoComplete="bday"
             className={`mt-2 w-full rounded-xl border px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500/30 ${
@@ -173,7 +174,7 @@ export function StepBasicInfo({
 
         {/* 問4 部署 */}
         <label className="block">
-          <span className="text-sm font-medium text-slate-600">
+          <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-700 bg-slate-100 rounded px-2.5 py-0.5">
             問4. 部署 <RequiredBadge />
           </span>
           <select
@@ -203,7 +204,7 @@ export function StepBasicInfo({
 
         {/* 問5 雇用形態 */}
         <div>
-          <span className="text-sm font-medium text-slate-600">
+          <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-700 bg-slate-100 rounded px-2.5 py-0.5">
             問5. 雇用形態 <RequiredBadge />
           </span>
           <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">

@@ -186,7 +186,7 @@ export async function getResponses(
 }
 
 export async function addResponse(response: SurveyResponse): Promise<void> {
-  await supabase.from("survey_responses").insert({
+  const { error } = await supabase.from("survey_responses").insert({
     id: response.id,
     client_code: response.clientCode,
     survey_round_id: response.surveyRoundId,
@@ -215,6 +215,7 @@ export async function addResponse(response: SurveyResponse): Promise<void> {
     consultation_mental: response.consultationMental,
     expert_support_intent: response.expertSupportIntent,
   });
+  if (error) throw new Error(error.message);
 }
 
 /** #20: 問17（心の健康、17-1〜17-6・各0〜4点）を mental_health_responses に保存する */
@@ -280,7 +281,7 @@ export async function getSurveyRounds(clientCode: string): Promise<SurveyRound[]
     .from("survey_rounds")
     .select("id, client_code, title, started_at, ended_at, created_at")
     .eq("client_code", clientCode)
-    .order("created_at", { ascending: false });
+    .order("ended_at", { ascending: false, nullsFirst: false });
   if (error || !data) return [];
   return data.map((r: {
     id: number;

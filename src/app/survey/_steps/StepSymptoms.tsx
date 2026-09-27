@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { INITIAL_FORM, type StepProps } from "../_types";
 
 /** 学生A 担当: 問6〜7（体の不調）
@@ -30,6 +30,21 @@ export function StepSymptoms({
   qqConditions,
 }: StepProps & { qqConditions: { id: string; label: string }[] }) {
   const hasNoCondition = form.symptomConditions.includes("none");
+  // 問2で男性を選んだ場合は「女性特有の不調」を選択肢から除外し、選択済みなら自動解除する
+  const visibleConditions = useMemo(
+    () => form.gender === "male" ? qqConditions.filter((c) => c.id !== "womens_health") : qqConditions,
+    [qqConditions, form.gender],
+  );
+  useEffect(() => {
+    if (form.gender !== "male") return;
+    if (!form.symptomConditions.includes("womens_health")) return;
+    const next = form.symptomConditions.filter((c) => c !== "womens_health");
+    onChange({
+      symptomConditions: next,
+      primaryCondition: form.primaryCondition === "womens_health" ? "" : form.primaryCondition,
+    });
+  }, [form.gender]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // 症状が1つだけの場合はそれを問7の回答として自動選択し、問7自体は表示しない
   const showPrimaryCondition =
     form.symptomConditions.length > 1 && !hasNoCondition;
@@ -71,29 +86,21 @@ export function StepSymptoms({
   return (
     <div>
       <h1 className="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight mb-6">
-        問6. この1か月の体の不調について
+        この1か月の体の不調について
       </h1>
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6">
-        <p className="text-sm text-slate-600">
-          この1か月間で、当てはまる症状すべてに答えてください（いくつでも選べます）。
-        </p>
+        <p className="inline-block text-sm font-semibold text-slate-900 bg-slate-100 rounded px-2.5 py-0.5 mb-1">問6</p>
+        <p className="text-sm text-slate-600 mb-3">この1か月間で、当てはまる症状すべてに答えてください（いくつでも選べます）。</p>
 
-        {hasNoCondition && (
-          <p className="text-sm text-slate-500 bg-slate-50 rounded-xl px-4 py-3">
-            「不調はない」を選択中は、他の項目を選べません。変更する場合は「不調はない」をもう一度押して解除してください。
-          </p>
-        )}
-
-        {/* 問6 複数選択（「不調はない」は他の選択肢と排他） */}
+        {/* 問6 複数選択（「不調はない」は他の選択肢と排他。E-2: 他の症状タップで「不調はない」を自動解除） */}
         <div className="grid grid-cols-1 gap-2 max-h-[28rem] overflow-y-auto pr-1">
-          {qqConditions.map((c) => (
+          {visibleConditions.map((c) => (
             <button
               key={c.id}
               type="button"
               onClick={() => toggleSymptom(c.id)}
-              disabled={hasNoCondition && c.id !== "none"}
               aria-pressed={form.symptomConditions.includes(c.id)}
-              className={`rounded-xl border px-4 py-3 text-sm text-left font-medium leading-snug transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+              className={`rounded-xl border px-4 py-3 text-sm text-left font-medium leading-snug transition-colors ${
                 form.symptomConditions.includes(c.id)
                   ? "border-sky-500 bg-sky-50 text-sky-900"
                   : "border-slate-200 hover:bg-slate-50"
@@ -124,14 +131,12 @@ export function StepSymptoms({
         {/* 問7 いちばん仕事に影響している不調（問6で症状ありの場合のみ表示） */}
         {showPrimaryCondition && (
           <div className="border-t border-slate-100 pt-6">
-            <p className="text-sm font-semibold text-slate-700 mb-1">
-              問7. いちばん仕事に影響している不調
-            </p>
+            <p className="inline-block text-sm font-semibold text-slate-700 bg-slate-100 rounded px-2.5 py-0.5 mb-1">問7. いちばん仕事に影響している不調</p>
             <p className="text-sm text-slate-600 mb-3">
               問6で選んだ症状のうち、仕事に1番影響しているものを1つ選んでください。
             </p>
             <div className="grid grid-cols-1 gap-2">
-              {qqConditions
+              {visibleConditions
                 .filter((c) => form.symptomConditions.includes(c.id))
                 .map((c) => (
                   <button

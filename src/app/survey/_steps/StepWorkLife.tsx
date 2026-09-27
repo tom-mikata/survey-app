@@ -54,8 +54,9 @@ export function StepWorkLife({ form, onChange, onNext, onPrev, isFirst, isLast, 
 
         {/* 問19: 役割による影響（5段階） */}
         <div>
-          <p className="text-sm font-semibold text-slate-700 mb-3">
-            問19. 仕事以外の役割や責任（家族の介護・育児・看病など）が、あなたの体調や仕事に影響していると感じることがありますか。
+          <p className="inline-block text-sm font-semibold text-slate-700 bg-slate-100 rounded px-2.5 py-0.5 mb-2">問19</p>
+          <p className="text-sm text-slate-700 mb-3">
+            仕事以外の役割や責任（家族の介護・育児・看病など）が、あなたの体調や仕事に影響していると感じることがありますか。
           </p>
           <div className="grid grid-cols-1 gap-2">
             {ROLE_IMPACT_OPTIONS.map((opt) => (
@@ -84,8 +85,9 @@ export function StepWorkLife({ form, onChange, onNext, onPrev, isFirst, isLast, 
         {/* 問20: 支援の希望（問19でときどきある以上の場合のみ表示） */}
         {showSupportDesire && (
           <div>
-            <p className="text-sm font-semibold text-slate-700 mb-3">
-              問20. その負担を軽くするために、情報提供や相談の機会があれば利用したいと思いますか。
+            <p className="inline-block text-sm font-semibold text-slate-700 bg-slate-100 rounded px-2.5 py-0.5 mb-2">問20</p>
+            <p className="text-sm text-slate-700 mb-3">
+              その負担を軽くするために、情報提供や相談の機会があれば利用したいと思いますか。
             </p>
             <div className="grid grid-cols-1 gap-2">
               {SUPPORT_DESIRE_OPTIONS.map((opt) => (

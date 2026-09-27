@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { getAuthUser, signOut } from "@/lib/auth";
+import type { UserRole } from "@/lib/auth";
 
 export function AppChrome({
   children,
@@ -15,16 +16,14 @@ export function AppChrome({
 }) {
   const router = useRouter();
   const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [surveyHref, setSurveyHref] = useState("/survey");
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUserEmail(user?.email ?? null);
     });
     getAuthUser().then((u) => {
-      if (u?.role === "client_admin" && u.clientCode) {
-        setSurveyHref(`/survey?client=${u.clientCode}`);
-      }
+      if (u) setUserRole(u.role);
     });
   }, []);
 
@@ -33,6 +32,8 @@ export function AppChrome({
     router.push("/login");
     router.refresh();
   };
+
+  const settingsLabel = userRole === "client_admin" ? "部署・回答URL参照" : "設定";
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-800">
@@ -55,10 +56,7 @@ export function AppChrome({
         </Link>
         <nav className="flex items-center gap-2 text-xs sm:text-sm flex-shrink-0">
           <Link href="/settings" className="text-slate-500 hover:text-sky-700 font-medium px-2 py-1 rounded-md hover:bg-sky-50">
-            設定
-          </Link>
-          <Link href={surveyHref} className="text-slate-500 hover:text-sky-700 font-medium px-2 py-1 rounded-md hover:bg-sky-50">
-            アンケート
+            {settingsLabel}
           </Link>
           <Link href="/results" className="bg-sky-600 hover:bg-sky-700 text-white font-semibold px-3 py-1.5 rounded-lg transition-colors">
             分析結果

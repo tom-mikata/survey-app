@@ -31,8 +31,9 @@ export function StepExercise({ form, onChange, onNext, onPrev, isFirst, isLast, 
 
         {/* 問21: 運動の習慣があるか */}
         <div>
-          <p className="text-sm font-semibold text-slate-700 mb-3">
-            問21. 健康のために、体を動かすこと（運動・スポーツ・ウォーキングなど）を習慣的に行っていますか。
+          <p className="inline-block text-sm font-semibold text-slate-700 bg-slate-100 rounded px-2.5 py-0.5 mb-2">問21</p>
+          <p className="text-sm text-slate-700 mb-3">
+            健康のために、体を動かすこと（運動・スポーツ・ウォーキングなど）を習慣的に行っていますか。
           </p>
           <div className="flex gap-2">
             {[
@@ -63,8 +64,9 @@ export function StepExercise({ form, onChange, onNext, onPrev, isFirst, isLast, 
         {/* 問22: 週あたり運動日数（問21で「している」の場合のみ） */}
         {showExerciseDays && (
           <div>
-            <p className="text-sm font-semibold text-slate-700 mb-3">
-              問22. 平均すると、週に何日くらい行っていますか。あてはまりそうな日数に迷う場合は、少ない方をお選びください。
+            <p className="inline-block text-sm font-semibold text-slate-700 bg-slate-100 rounded px-2.5 py-0.5 mb-2">問22</p>
+            <p className="text-sm text-slate-700 mb-3">
+              平均すると、週に何日くらい行っていますか。あてはまりそうな日数に迷う場合は、少ない方をお選びください。
             </p>
             <div className="flex flex-wrap gap-2">
               {[1, 2, 3, 4, 5, 6, 7].map((n) => (

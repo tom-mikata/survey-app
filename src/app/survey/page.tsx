@@ -56,6 +56,7 @@ export default function SurveyPage({
   const [currentScreen, setCurrentScreen] = useState<ScreenId>("basic_info");
   const [clientStatus, setClientStatus] = useState<"checking" | "valid" | "invalid">("checking");
   const [consent, setConsent] = useState<"pending" | "agreed" | "declined">("pending");
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!clientCode || !surveyRoundId) {
@@ -92,18 +93,31 @@ export default function SurveyPage({
     }
   }, [screens, currentScreen, currentIndex]);
 
+  const scrollToTop = () => {
+    // 描画後に実行されるよう setTimeout 経由でリセット（E-5）
+    setTimeout(() => window.scrollTo({ top: 0, behavior: "instant" }), 0);
+  };
+
   const goNext = () => {
-    if (currentIndex < screens.length - 1) setCurrentScreen(screens[currentIndex + 1]);
+    if (currentIndex < screens.length - 1) {
+      setCurrentScreen(screens[currentIndex + 1]);
+      scrollToTop();
+    }
   };
 
   const goPrev = () => {
-    if (currentIndex > 0) setCurrentScreen(screens[currentIndex - 1]);
+    if (currentIndex > 0) {
+      setCurrentScreen(screens[currentIndex - 1]);
+      scrollToTop();
+    }
   };
 
   const submit = async () => {
+    setSubmitError(null);
     const id = crypto.randomUUID();
     const submittedAt = new Date().toISOString();
 
+    try {
     await addResponse({
       id,
       clientCode,
@@ -120,8 +134,8 @@ export default function SurveyPage({
       primaryCondition: form.primaryCondition || null,
       symptomDaysPast30: form.symptomDaysPast30,
       absenteeDaysPastYear: form.absenteeDaysPastYear,
-      workQuantity: form.workQuantity,
-      workQuality: form.workQuality,
+      workQuantity: form.workQuantity ?? 0,
+      workQuality: form.workQuality ?? 0,
       treatmentPlaces: form.treatmentPlaces,
       treatmentPlacesOther: form.treatmentPlacesOther || null,
       treatmentFrequency: form.treatmentFrequency,
@@ -169,6 +183,9 @@ export default function SurveyPage({
     }
 
     router.push("/survey/complete");
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "送信に失敗しました。時間をおいて再度お試しください。");
+    }
   };
 
   const stepProps = {
@@ -294,6 +311,11 @@ export default function SurveyPage({
         {currentScreen === "company_support" && <StepCompanySupport {...stepProps} />}
         {currentScreen === "work_life" && <StepWorkLife {...stepProps} />}
         {currentScreen === "exercise" && <StepExercise {...stepProps} />}
+        {submitError && (
+          <div className="mt-4 rounded-xl bg-rose-50 border border-rose-200 px-4 py-3 text-sm font-medium text-rose-700">
+            {submitError}
+          </div>
+        )}
       </main>
     </AppChrome>
   );

@@ -55,13 +55,14 @@ export function StepConsultation({ form, onChange, onNext, onPrev, isFirst, isLa
 
         {/* TODO(#20-学生B): 問15 相談先マトリクス（4分野 × 4択） */}
         <div>
-          <p className="text-sm font-semibold text-slate-700 mb-4">
-            問15. 次のことについて、困ったときに相談できる相手や場所がありますか。それぞれお答えください。
+          <p className="inline-block text-sm font-semibold text-slate-700 bg-slate-100 rounded px-2.5 py-0.5 mb-2">問15</p>
+          <p className="text-sm text-slate-700 mb-4">
+            次のことについて、困ったときに相談できる相手や場所がありますか。それぞれお答えください。
           </p>
           <div className="space-y-6">
             {CONSULTATION_FIELDS.map(({ key, label }) => (
               <div key={key}>
-                <p className="text-sm font-medium text-slate-600 mb-2">{label}</p>
+                <p className="text-sm font-semibold text-slate-900 mb-2">・{label}</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {CONSULTATION_OPTIONS.map((opt) => (
                     <button
@@ -85,8 +86,9 @@ export function StepConsultation({ form, onChange, onNext, onPrev, isFirst, isLa
 
         {/* TODO(#20-学生B): 問16 専門家の支援を利用したいか（3択） */}
         <div>
-          <p className="text-sm font-semibold text-slate-700 mb-3">
-            問16. 仕事の合間に、体の不調を無理なくケアできる方法や、専門家（理学療法士・作業療法士等）に気軽に相談できる機会があれば、利用してみたいと思いますか。
+          <p className="inline-block text-sm font-semibold text-slate-700 bg-slate-100 rounded px-2.5 py-0.5 mb-2">問16</p>
+          <p className="text-sm text-slate-700 mb-3">
+            仕事の合間に、体の不調を無理なくケアできる方法や、専門家（理学療法士・作業療法士等）に気軽に相談できる機会があれば、利用してみたいと思いますか。
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             {EXPERT_SUPPORT_OPTIONS.map((opt) => (

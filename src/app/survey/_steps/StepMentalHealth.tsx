@@ -18,7 +18,7 @@ import type { StepProps } from "../_types";
  */
 
 const MENTAL_SCALE = [
-  { value: 0, label: "まったくない" },
+  { value: 0, label: "全くない" },
   { value: 1, label: "少しだけ" },
   { value: 2, label: "ときどき" },
   { value: 3, label: "たいてい" },
@@ -52,7 +52,7 @@ export function StepMentalHealth({ form, onChange, onNext, onPrev, isFirst, isLa
 
         {QUESTIONS.map(({ key, text }, i) => (
           <div key={key}>
-            <p className="text-sm font-semibold text-slate-700 mb-3">問17-{i + 1}. {text}</p>
+            <p className="inline-block text-sm font-semibold text-slate-700 bg-slate-100 rounded px-2.5 py-0.5 mb-2">問17-{i + 1}. {text}</p>
             <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
               {MENTAL_SCALE.map((opt) => (
                 <button
@@ -73,8 +73,7 @@ export function StepMentalHealth({ form, onChange, onNext, onPrev, isFirst, isLa
         ))}
 
         <p className="text-xs text-slate-400">
-          引用文献：古川壽亮，大野裕，他．一般人口中の精神疾患の簡便なスクリーニングに関する研究，
-          平成14年度厚生労働科学研究費補助金（厚生労働科学特別研究事業）心の健康問題と対策基盤の実態に関する研究／研究協力報告書
+          この設問は、心の健康状態を確認するための尺度『Kessler心理的苦痛尺度（K6）』を使用しています。
         </p>
       </div>
 

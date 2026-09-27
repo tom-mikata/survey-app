@@ -15,7 +15,7 @@ import type { StepProps } from "../_types";
  */
 
 const SUPPORT_SCALE = [
-  { value: 0, label: "まったくそう思わない" },
+  { value: 0, label: "全くそう思わない" },
   { value: 1, label: "そう思わない" },
   { value: 2, label: "あまりそう思わない" },
   { value: 3, label: "どちらともいえない" },
@@ -49,7 +49,7 @@ export function StepCompanySupport({ form, onChange, onNext, onPrev, isFirst, is
 
         {QUESTIONS.map(({ key, text }, i) => (
           <div key={key}>
-            <p className="text-sm font-semibold text-slate-700 mb-3">問18-{i + 1}. {text}</p>
+            <p className="inline-block text-sm font-semibold text-slate-700 bg-slate-100 rounded px-2.5 py-0.5 mb-2">問18-{i + 1}. {text}</p>
             <div className="grid grid-cols-1 gap-2">
               {SUPPORT_SCALE.map((opt) => (
                 <button
@@ -68,6 +68,10 @@ export function StepCompanySupport({ form, onChange, onNext, onPrev, isFirst, is
             </div>
           </div>
         ))}
+
+        <p className="text-xs text-slate-400">
+          本尺度は、産業医科大学 産業生態科学研究所 産業保健経営学が開発した『日本語語版「知覚された組織的支援尺度」(SPOS-J)』を使用しています。
+        </p>
       </div>
 
       <div className="mt-8 flex items-center justify-between">

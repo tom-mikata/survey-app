@@ -289,8 +289,7 @@ function Q6Card({ rows, base }: { rows: SurveyResponse[]; base?: SurveyResponse[
 
   const top = Object.entries(d.counts)
     .filter(([k]) => k !== "none")
-    .sort((a, x) => x[1] - a[1])
-    .slice(0, 6);
+    .sort((a, x) => x[1] - a[1]);
 
   return (
     <QCard qno="問6" title="この1か月の体の不調">
@@ -323,7 +322,7 @@ function Q7Card({ rows, base }: { rows: SurveyResponse[]; base?: SurveyResponse[
   const b = base ? summarizePrimaryCondition(base) : undefined;
   if (d.total === 0) return <QCard qno="問7" title="いちばん仕事に影響している不調"><NoData /></QCard>;
 
-  const top = Object.entries(d.counts).sort((a, x) => x[1] - a[1]).slice(0, 6);
+  const top = Object.entries(d.counts).sort((a, x) => x[1] - a[1]);
 
   return (
     <QCard qno="問7" title="いちばん仕事に影響している不調">
@@ -810,6 +809,11 @@ export function SurveyResultsSections({
       <SecHead>相談先と専門家 <span className="text-[13px] font-normal text-slate-400 ml-1">── 問15〜16</span></SecHead>
       <Q15Card rows={rows} base={baseRows} />
       <Q16Card rows={rows} base={baseRows} />
+
+      {/* D-5: 追加設問エリアの説明 */}
+      <div className="mt-6 mb-1 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-700">
+        以下は企業様のオプション設問（問17以降）です。会社により欠番があります。
+      </div>
 
       <SecHead>心の健康 <span className="text-[13px] font-normal text-slate-400 ml-1">── 問17（K6）</span></SecHead>
       <Q17Card mental={secondPart.mental} baseMental={baseSecondPart?.mental} />
