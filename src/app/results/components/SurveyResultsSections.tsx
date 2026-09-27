@@ -289,8 +289,7 @@ function Q6Card({ rows, base }: { rows: SurveyResponse[]; base?: SurveyResponse[
 
   const top = Object.entries(d.counts)
     .filter(([k]) => k !== "none")
-    .sort((a, x) => x[1] - a[1])
-    .slice(0, 6);
+    .sort((a, x) => x[1] - a[1]);
 
   return (
     <QCard qno="問6" title="この1か月の体の不調">
@@ -323,7 +322,7 @@ function Q7Card({ rows, base }: { rows: SurveyResponse[]; base?: SurveyResponse[
   const b = base ? summarizePrimaryCondition(base) : undefined;
   if (d.total === 0) return <QCard qno="問7" title="いちばん仕事に影響している不調"><NoData /></QCard>;
 
-  const top = Object.entries(d.counts).sort((a, x) => x[1] - a[1]).slice(0, 6);
+  const top = Object.entries(d.counts).sort((a, x) => x[1] - a[1]);
 
   return (
     <QCard qno="問7" title="いちばん仕事に影響している不調">
