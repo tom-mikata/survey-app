@@ -62,7 +62,7 @@ export function StepConsultation({ form, onChange, onNext, onPrev, isFirst, isLa
           <div className="space-y-6">
             {CONSULTATION_FIELDS.map(({ key, label }) => (
               <div key={key}>
-                <p className="text-sm font-medium text-slate-600 mb-2">{label}</p>
+                <p className="text-sm font-semibold text-slate-900 mb-2">・{label}</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {CONSULTATION_OPTIONS.map((opt) => (
                     <button
