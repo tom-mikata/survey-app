@@ -385,12 +385,17 @@ export default function SettingsPage() {
     : ["departments", "rounds"];
   const tabLabel: Record<Tab, string> = { clients: "クライアント", departments: "部署", rounds: "実施回", accounts: "管理者アカウント" };
 
+  const pageTitle = isAdmin ? "設定" : "回答URL参照";
+  const pageDescription = isAdmin
+    ? "アンケートで使用する部署名を管理します。"
+    : "各実施回のアンケートURLを確認できます。";
+
   return (
-    <AppChrome title="設定">
+    <AppChrome title={pageTitle}>
       <main className="max-w-2xl mx-auto px-6 py-10">
-        <h1 className="text-2xl font-bold text-slate-800 tracking-tight mb-2">設定</h1>
+        <h1 className="text-2xl font-bold text-slate-800 tracking-tight mb-2">{pageTitle}</h1>
         <p className="text-slate-500 text-sm leading-relaxed mb-6">
-          アンケートで使用する部署名を管理します。
+          {pageDescription}
         </p>
 
         {/* クライアント選択（system_admin のみ・departments/rounds タブ表示中） */}
@@ -535,7 +540,9 @@ export default function SettingsPage() {
         {tab === "departments" && (
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8">
             <p className="text-slate-500 text-sm leading-relaxed mb-6">
-              選択肢として表示する部署名を登録してください。
+              {isAdmin
+                ? "選択肢として表示する部署名を登録してください。"
+                : "登録されている部署名の一覧です。変更が必要な場合はシステム管理者にお問い合わせください。"}
             </p>
             <ul className="space-y-2 mb-6">
               {deptRows.map((name, i) => (
@@ -543,30 +550,42 @@ export default function SettingsPage() {
                   key={`${name}-${i}`}
                   className="flex items-center gap-1 rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2"
                 >
-                  <div className="flex flex-col gap-0.5 mr-1">
-                    <button type="button" disabled={i === 0} onClick={() => moveDept(i, -1)} className="text-slate-400 hover:text-slate-700 disabled:opacity-20 leading-none px-1" aria-label="上へ">▲</button>
-                    <button type="button" disabled={i === deptRows.length - 1} onClick={() => moveDept(i, 1)} className="text-slate-400 hover:text-slate-700 disabled:opacity-20 leading-none px-1" aria-label="下へ">▼</button>
-                  </div>
+                  {isAdmin && (
+                    <div className="flex flex-col gap-0.5 mr-1">
+                      <button type="button" disabled={i === 0} onClick={() => moveDept(i, -1)} className="text-slate-400 hover:text-slate-700 disabled:opacity-20 leading-none px-1" aria-label="上へ">▲</button>
+                      <button type="button" disabled={i === deptRows.length - 1} onClick={() => moveDept(i, 1)} className="text-slate-400 hover:text-slate-700 disabled:opacity-20 leading-none px-1" aria-label="下へ">▼</button>
+                    </div>
+                  )}
                   <span className="text-sm text-slate-700 font-medium flex-1">{name}</span>
-                  <button type="button" onClick={() => removeDept(i)} className="text-xs text-red-600 hover:text-red-700 font-semibold px-2 py-1 rounded-md hover:bg-red-50">削除</button>
+                  {isAdmin && (
+                    <button type="button" onClick={() => removeDept(i)} className="text-xs text-red-600 hover:text-red-700 font-semibold px-2 py-1 rounded-md hover:bg-red-50">削除</button>
+                  )}
                 </li>
               ))}
-              {deptRows.length === 0 && <li className="text-sm text-slate-400 py-2">部署がまだありません。下の欄から追加してください。</li>}
+              {deptRows.length === 0 && (
+                <li className="text-sm text-slate-400 py-2">
+                  {isAdmin ? "部署がまだありません。下の欄から追加してください。" : "部署がまだ登録されていません。"}
+                </li>
+              )}
             </ul>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <input
-                value={deptDraft}
-                onChange={(e) => setDeptDraft(e.target.value)}
-                onKeyDown={(e) => { if (e.nativeEvent.isComposing) return; if (e.key === "Enter") { e.preventDefault(); addDept(); } }}
-                placeholder="例：営業部"
-                className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400"
-              />
-              <button type="button" onClick={addDept} className="rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-semibold px-5 py-2.5">追加</button>
-            </div>
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <button type="button" onClick={saveDepts} className="bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold px-6 py-3 rounded-xl">保存する</button>
-              {deptSaved && <span className="text-sm text-emerald-600 font-semibold">保存しました</span>}
-            </div>
+            {isAdmin && (
+              <>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <input
+                    value={deptDraft}
+                    onChange={(e) => setDeptDraft(e.target.value)}
+                    onKeyDown={(e) => { if (e.nativeEvent.isComposing) return; if (e.key === "Enter") { e.preventDefault(); addDept(); } }}
+                    placeholder="例：営業部"
+                    className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400"
+                  />
+                  <button type="button" onClick={addDept} className="rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-semibold px-5 py-2.5">追加</button>
+                </div>
+                <div className="mt-8 flex flex-wrap items-center gap-3">
+                  <button type="button" onClick={saveDepts} className="bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold px-6 py-3 rounded-xl">保存する</button>
+                  {deptSaved && <span className="text-sm text-emerald-600 font-semibold">保存しました</span>}
+                </div>
+              </>
+            )}
           </div>
         )}
 
