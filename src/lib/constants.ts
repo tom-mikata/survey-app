@@ -28,7 +28,7 @@ export const CONDITION_TO_PAIN_DEFAULT: Record<QqConditionId, PainAreaCode[]> = 
   lower_back: ["lower_back"],
   neck_shoulder: ["neck", "shoulder"],
   headache: ["head"],
-  dental: ["head"],
+  dental: ["face"],
   mental: ["head"],
   sleep: ["head"],
   fatigue: ["shoulder", "lower_back"],
