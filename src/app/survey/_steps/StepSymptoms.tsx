@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { INITIAL_FORM, type StepProps } from "../_types";
 
 /** 学生A 担当: 問6〜7（体の不調）
@@ -30,6 +30,21 @@ export function StepSymptoms({
   qqConditions,
 }: StepProps & { qqConditions: { id: string; label: string }[] }) {
   const hasNoCondition = form.symptomConditions.includes("none");
+  // 問2で男性を選んだ場合は「女性特有の不調」を選択肢から除外し、選択済みなら自動解除する
+  const visibleConditions = useMemo(
+    () => form.gender === "male" ? qqConditions.filter((c) => c.id !== "womens_health") : qqConditions,
+    [qqConditions, form.gender],
+  );
+  useEffect(() => {
+    if (form.gender !== "male") return;
+    if (!form.symptomConditions.includes("womens_health")) return;
+    const next = form.symptomConditions.filter((c) => c !== "womens_health");
+    onChange({
+      symptomConditions: next,
+      primaryCondition: form.primaryCondition === "womens_health" ? "" : form.primaryCondition,
+    });
+  }, [form.gender]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // 症状が1つだけの場合はそれを問7の回答として自動選択し、問7自体は表示しない
   const showPrimaryCondition =
     form.symptomConditions.length > 1 && !hasNoCondition;
@@ -79,7 +94,7 @@ export function StepSymptoms({
 
         {/* 問6 複数選択（「不調はない」は他の選択肢と排他。E-2: 他の症状タップで「不調はない」を自動解除） */}
         <div className="grid grid-cols-1 gap-2 max-h-[28rem] overflow-y-auto pr-1">
-          {qqConditions.map((c) => (
+          {visibleConditions.map((c) => (
             <button
               key={c.id}
               type="button"
@@ -121,7 +136,7 @@ export function StepSymptoms({
               問6で選んだ症状のうち、仕事に1番影響しているものを1つ選んでください。
             </p>
             <div className="grid grid-cols-1 gap-2">
-              {qqConditions
+              {visibleConditions
                 .filter((c) => form.symptomConditions.includes(c.id))
                 .map((c) => (
                   <button
