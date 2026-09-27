@@ -29,8 +29,10 @@ export function StepQQ({ form, onChange, onNext, onPrev, isFirst, isLast, onSubm
       form.symptomDaysPast30 <= 30 &&
       form.absenteeDaysPastYear >= 0 &&
       form.absenteeDaysPastYear <= MAX_ABSENTEE_DAYS &&
+      form.workQuantity !== null &&
       form.workQuantity >= 0 &&
       form.workQuantity <= 10 &&
+      form.workQuality !== null &&
       form.workQuality >= 0 &&
       form.workQuality <= 10,
     [form.symptomDaysPast30, form.absenteeDaysPastYear, form.workQuantity, form.workQuality],
@@ -112,6 +114,13 @@ export function StepQQ({ form, onChange, onNext, onPrev, isFirst, isLast, onSubm
           />
         </div>
       </div>
+
+      {/* E-6: 未選択警告 */}
+      {(!canNext && (form.workQuantity === null || form.workQuality === null)) && (
+        <p className="mt-3 text-xs font-medium text-rose-600">
+          問10・問11をすべて選んでから次へ進んでください。
+        </p>
+      )}
 
       <div className="mt-8 flex items-center justify-between">
         <button
@@ -211,25 +220,30 @@ function Scale0to10({
   ariaLabel,
   onChange,
 }: {
-  value: number;
+  value: number | null;
   ariaLabel: string;
   onChange: (n: number) => void;
 }) {
   return (
-    <div role="group" aria-label={ariaLabel} className="flex flex-wrap gap-2">
-      {Array.from({ length: 11 }).map((_, n) => (
-        <button
-          key={n}
-          type="button"
-          aria-pressed={value === n}
-          onClick={() => onChange(n)}
-          className={`min-w-[2.25rem] h-10 px-2 rounded-lg text-sm font-bold border ${
-            value === n ? "border-sky-600 bg-sky-600 text-white" : "border-slate-200 bg-white hover:bg-slate-50"
-          }`}
-        >
-          {n}
-        </button>
-      ))}
+    <div>
+      {value === null && (
+        <p className="mb-2 text-xs text-slate-400">当てはまる数字を押してください</p>
+      )}
+      <div role="group" aria-label={ariaLabel} className="flex flex-wrap gap-2">
+        {Array.from({ length: 11 }).map((_, n) => (
+          <button
+            key={n}
+            type="button"
+            aria-pressed={value === n}
+            onClick={() => onChange(n)}
+            className={`min-w-[2.25rem] h-10 px-2 rounded-lg text-sm font-bold border ${
+              value === n ? "border-sky-600 bg-sky-600 text-white" : "border-slate-200 bg-white hover:bg-slate-50"
+            }`}
+          >
+            {n}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
