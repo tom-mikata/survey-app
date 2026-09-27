@@ -156,6 +156,7 @@ export function StepBasicInfo({
             type="date"
             value={form.dateOfBirth}
             onChange={(e) => onChange({ dateOfBirth: e.target.value })}
+            max={new Date().toISOString().slice(0, 10)}
             aria-invalid={dateOfBirthError !== null}
             autoComplete="bday"
             className={`mt-2 w-full rounded-xl border px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500/30 ${
