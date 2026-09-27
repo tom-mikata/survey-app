@@ -33,7 +33,7 @@ export function AppChrome({
     router.refresh();
   };
 
-  const settingsLabel = userRole === "client_admin" ? "回答URL参照" : "設定";
+  const settingsLabel = userRole === "client_admin" ? "部署・回答URL参照" : "設定";
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-800">

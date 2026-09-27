@@ -337,8 +337,8 @@ export default function ResultsDashboard() {
                   </div>
                 </>
               )}
-              {/* D-3: client_admin にはCSVダウンロードボタンを非表示 */}
-              {displayRoundId !== null && authUser?.role !== "client_admin" && (
+              {/* D-3: client_admin 非表示、比較モード時も非表示 */}
+              {displayRoundId !== null && authUser?.role !== "client_admin" && !isComparing && (
                 <button
                   type="button"
                   onClick={() => downloadCsv(rows, secondPart, surveyRounds, modules, displayRoundId)}

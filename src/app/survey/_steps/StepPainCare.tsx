@@ -21,8 +21,8 @@ import type { StepProps } from "../_types";
 const TREATMENT_PLACES = [
   { id: "hospital", label: "病院・クリニック" },
   { id: "massage", label: "整骨院・鍼灸・マッサージなどの施術" },
-  { id: "none", label: "利用していない" },
   { id: "other", label: "その他" },
+  { id: "none", label: "利用していない" },
 ];
 
 const DAILY_ITEMS = [
@@ -79,29 +79,30 @@ export function StepPainCare({ form, onChange, onNext, onPrev, isFirst, isLast, 
           </p>
           <div className="grid grid-cols-1 gap-2">
             {TREATMENT_PLACES.map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                onClick={() => toggleTreatmentPlace(opt.id)}
-                className={`rounded-xl border px-4 py-3 text-sm text-left font-medium transition-colors ${
-                  form.treatmentPlaces.includes(opt.id)
-                    ? "border-sky-500 bg-sky-50 text-sky-900"
-                    : "border-slate-200 hover:bg-slate-50"
-                }`}
-              >
-                {opt.label}
-              </button>
+              <div key={opt.id}>
+                <button
+                  type="button"
+                  onClick={() => toggleTreatmentPlace(opt.id)}
+                  className={`w-full rounded-xl border px-4 py-3 text-sm text-left font-medium transition-colors ${
+                    form.treatmentPlaces.includes(opt.id)
+                      ? "border-sky-500 bg-sky-50 text-sky-900"
+                      : "border-slate-200 hover:bg-slate-50"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+                {opt.id === "other" && form.treatmentPlaces.includes("other") && (
+                  <input
+                    type="text"
+                    value={form.treatmentPlacesOther}
+                    onChange={(e) => onChange({ treatmentPlacesOther: e.target.value })}
+                    placeholder="その他の利用場所"
+                    className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500/30"
+                  />
+                )}
+              </div>
             ))}
           </div>
-          {form.treatmentPlaces.includes("other") && (
-            <input
-              type="text"
-              value={form.treatmentPlacesOther}
-              onChange={(e) => onChange({ treatmentPlacesOther: e.target.value })}
-              placeholder="その他の利用場所"
-              className="mt-3 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500/30"
-            />
-          )}
         </div>
 
         {/* TODO(#20-学生B): 問13 月あたり利用回数（問12で利用ありの場合のみ） */}
@@ -134,29 +135,30 @@ export function StepPainCare({ form, onChange, onNext, onPrev, isFirst, isLast, 
           </p>
           <div className="grid grid-cols-1 gap-2">
             {DAILY_ITEMS.map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                onClick={() => toggleDailyItem(opt.id)}
-                className={`rounded-xl border px-4 py-3 text-sm text-left font-medium transition-colors ${
-                  form.dailyItems.includes(opt.id)
-                    ? "border-sky-500 bg-sky-50 text-sky-900"
-                    : "border-slate-200 hover:bg-slate-50"
-                }`}
-              >
-                {opt.label}
-              </button>
+              <div key={opt.id}>
+                <button
+                  type="button"
+                  onClick={() => toggleDailyItem(opt.id)}
+                  className={`w-full rounded-xl border px-4 py-3 text-sm text-left font-medium transition-colors ${
+                    form.dailyItems.includes(opt.id)
+                      ? "border-sky-500 bg-sky-50 text-sky-900"
+                      : "border-slate-200 hover:bg-slate-50"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+                {opt.id === "other" && form.dailyItems.includes("other") && (
+                  <input
+                    type="text"
+                    value={form.dailyItemsOther}
+                    onChange={(e) => onChange({ dailyItemsOther: e.target.value })}
+                    placeholder="その他のもの"
+                    className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500/30"
+                  />
+                )}
+              </div>
             ))}
           </div>
-          {form.dailyItems.includes("other") && (
-            <input
-              type="text"
-              value={form.dailyItemsOther}
-              onChange={(e) => onChange({ dailyItemsOther: e.target.value })}
-              placeholder="その他のもの"
-              className="mt-3 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500/30"
-            />
-          )}
         </div>
       </div>
 

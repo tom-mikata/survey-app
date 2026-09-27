@@ -56,6 +56,7 @@ export default function SurveyPage({
   const [currentScreen, setCurrentScreen] = useState<ScreenId>("basic_info");
   const [clientStatus, setClientStatus] = useState<"checking" | "valid" | "invalid">("checking");
   const [consent, setConsent] = useState<"pending" | "agreed" | "declined">("pending");
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!clientCode || !surveyRoundId) {
@@ -112,9 +113,11 @@ export default function SurveyPage({
   };
 
   const submit = async () => {
+    setSubmitError(null);
     const id = crypto.randomUUID();
     const submittedAt = new Date().toISOString();
 
+    try {
     await addResponse({
       id,
       clientCode,
@@ -180,6 +183,9 @@ export default function SurveyPage({
     }
 
     router.push("/survey/complete");
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "送信に失敗しました。時間をおいて再度お試しください。");
+    }
   };
 
   const stepProps = {
@@ -305,6 +311,11 @@ export default function SurveyPage({
         {currentScreen === "company_support" && <StepCompanySupport {...stepProps} />}
         {currentScreen === "work_life" && <StepWorkLife {...stepProps} />}
         {currentScreen === "exercise" && <StepExercise {...stepProps} />}
+        {submitError && (
+          <div className="mt-4 rounded-xl bg-rose-50 border border-rose-200 px-4 py-3 text-sm font-medium text-rose-700">
+            {submitError}
+          </div>
+        )}
       </main>
     </AppChrome>
   );

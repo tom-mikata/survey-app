@@ -15,7 +15,7 @@ import type { StepProps } from "../_types";
  */
 
 const SUPPORT_SCALE = [
-  { value: 0, label: "まったくそう思わない" },
+  { value: 0, label: "全くそう思わない" },
   { value: 1, label: "そう思わない" },
   { value: 2, label: "あまりそう思わない" },
   { value: 3, label: "どちらともいえない" },

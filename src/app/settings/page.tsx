@@ -385,10 +385,10 @@ export default function SettingsPage() {
     : ["departments", "rounds"];
   const tabLabel: Record<Tab, string> = { clients: "クライアント", departments: "部署", rounds: "実施回", accounts: "管理者アカウント" };
 
-  const pageTitle = isAdmin ? "設定" : "回答URL参照";
+  const pageTitle = isAdmin ? "設定" : "部署・回答URL参照";
   const pageDescription = isAdmin
     ? "アンケートで使用する部署名を管理します。"
-    : "各実施回のアンケートURLを確認できます。";
+    : "登録されている部署名、各実施回のアンケートURLを確認できます。";
 
   return (
     <AppChrome title={pageTitle}>

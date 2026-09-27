@@ -14,11 +14,7 @@ export default function SurveyCompletePage() {
         <p className="text-slate-500 text-sm leading-relaxed mb-10">
           送信が完了しました。集計には個人を特定する情報は含まれません。
         </p>
-        <p>
-          <Link href="/" className="text-sm text-sky-600 hover:underline">
-            トップへ
-          </Link>
-        </p>
+        <p className="text-sm text-slate-500">この画面を閉じることができます。</p>
       </main>
     </AppChrome>
   );

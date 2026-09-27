@@ -74,9 +74,8 @@ export function StepSymptoms({
         この1か月の体の不調について
       </h1>
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6">
-        <p className="text-sm text-slate-600">
-          <strong>問6</strong> この1か月間で、当てはまる症状すべてに答えてください（いくつでも選べます）。
-        </p>
+        <p className="inline-block text-sm font-semibold text-slate-900 bg-slate-100 rounded px-2.5 py-0.5 mb-1">問6</p>
+        <p className="text-sm text-slate-600 mb-3">この1か月間で、当てはまる症状すべてに答えてください（いくつでも選べます）。</p>
 
         {/* 問6 複数選択（「不調はない」は他の選択肢と排他。E-2: 他の症状タップで「不調はない」を自動解除） */}
         <div className="grid grid-cols-1 gap-2 max-h-[28rem] overflow-y-auto pr-1">
@@ -117,9 +116,7 @@ export function StepSymptoms({
         {/* 問7 いちばん仕事に影響している不調（問6で症状ありの場合のみ表示） */}
         {showPrimaryCondition && (
           <div className="border-t border-slate-100 pt-6">
-            <p className="text-sm font-semibold text-slate-700 mb-1">
-              問7. いちばん仕事に影響している不調
-            </p>
+            <p className="inline-block text-sm font-semibold text-slate-700 bg-slate-100 rounded px-2.5 py-0.5 mb-1">問7. いちばん仕事に影響している不調</p>
             <p className="text-sm text-slate-600 mb-3">
               問6で選んだ症状のうち、仕事に1番影響しているものを1つ選んでください。
             </p>

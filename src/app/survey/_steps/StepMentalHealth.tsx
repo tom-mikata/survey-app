@@ -18,7 +18,7 @@ import type { StepProps } from "../_types";
  */
 
 const MENTAL_SCALE = [
-  { value: 0, label: "まったくない" },
+  { value: 0, label: "全くない" },
   { value: 1, label: "少しだけ" },
   { value: 2, label: "ときどき" },
   { value: 3, label: "たいてい" },
