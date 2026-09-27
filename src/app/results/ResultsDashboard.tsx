@@ -28,6 +28,7 @@ import { MetricRow } from "./components/MetricCard";
 import { LegendAmountRow, HorizontalBars } from "./components/DepartmentBarsCard";
 import { StackedDepartmentChart } from "./components/DepartmentLossChart";
 import { SurveyResultsSections } from "./components/SurveyResultsSections";
+import { PainFigure } from "./components/PainFigureCard";
 
 /* 前回/今回の差分バッジ */
 function DeltaBadge({
@@ -120,6 +121,8 @@ export default function ResultsDashboard() {
 
   // レースコンディション防止
   const loadSeq = useRef(0);
+  // D-2: 初回ロード時の最新実施回自動選択（クライアント切り替え時もリセット）
+  const autoSelectDoneRef = useRef(false);
 
   const loadData = useCallback(async (
     clientCode: string | null,
@@ -174,11 +177,23 @@ export default function ResultsDashboard() {
     })();
   }, [loadData]);
 
+  // D-2: 実施回が最初にロードされたとき最新回を自動選択する
+  useEffect(() => {
+    if (!autoSelectDoneRef.current && surveyRounds.length > 0 && displayRoundId === null) {
+      autoSelectDoneRef.current = true;
+      const latestId = surveyRounds[0].id;
+      setDisplayRoundId(latestId);
+      loadData(selectedClientCode, latestId, null);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [surveyRounds]);
+
   const handleClientFilter = (code: string) => {
     const val = code === "" ? null : code;
     setSelectedClientCode(val);
     setDisplayRoundId(null);
     setCompareRoundId(null);
+    autoSelectDoneRef.current = false; // クライアント切り替え時にリセット
     if (val === null && axis === "department") setAxis("age");
     setTab("all");
     loadData(val, null, null);
@@ -233,6 +248,19 @@ export default function ResultsDashboard() {
     const max = Math.max(1, ...entries.map((e) => e.count));
     return { entries, max };
   }, [occ.healthProblems.conditionCounts]);
+
+  // D-4: 人体図ホットスポット
+  const painHotspots = useMemo(() => {
+    const entries = Object.entries(occ.painCounts) as [string, number][];
+    const max = Math.max(1, ...entries.map(([, v]) => v));
+    return entries.map(([k, v]) => ({ id: k, intensity: v / max, count: v }));
+  }, [occ.painCounts]);
+
+  const painHotspotsBase = useMemo(() => {
+    const entries = Object.entries(occBase.painCounts) as [string, number][];
+    const max = Math.max(1, ...entries.map(([, v]) => v));
+    return entries.map(([k, v]) => ({ id: k, intensity: v / max, count: v }));
+  }, [occBase.painCounts]);
 
   const lossByCategory = useMemo(() => {
     const entries = LOSS_LEGEND.map((L) => ({
@@ -301,7 +329,7 @@ export default function ResultsDashboard() {
                       onChange={(e) => handleDisplayRoundFilter(e.target.value)}
                       className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400"
                     >
-                      <option value="">全期間</option>
+                      {/* D-1: 「全期間」オプションを削除 */}
                       {surveyRounds.map((r) => (
                         <option key={r.id} value={r.id}>{r.title}</option>
                       ))}
@@ -309,7 +337,8 @@ export default function ResultsDashboard() {
                   </div>
                 </>
               )}
-              {displayRoundId !== null && (
+              {/* D-3: client_admin にはCSVダウンロードボタンを非表示 */}
+              {displayRoundId !== null && authUser?.role !== "client_admin" && (
                 <button
                   type="button"
                   onClick={() => downloadCsv(rows, secondPart, surveyRounds, modules, displayRoundId)}
@@ -545,6 +574,25 @@ export default function ResultsDashboard() {
               )}
             </Card>
           </section>
+
+          {/* ---------------- D-4: 人体図（痛みの部位） ---------------- */}
+          <Card>
+            <CardHeader title="痛みの部位" />
+            {isComparing ? (
+              <div className="mt-4 grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-center text-xs font-semibold text-slate-400 mb-2">前回</p>
+                  <PainFigure hotspots={painHotspotsBase} />
+                </div>
+                <div>
+                  <p className="text-center text-xs font-semibold text-slate-700 mb-2">今回</p>
+                  <PainFigure hotspots={painHotspots} />
+                </div>
+              </div>
+            ) : (
+              <PainFigure hotspots={painHotspots} />
+            )}
+          </Card>
 
           {/* ---------------- 部署ごとの労働損失額 ---------------- */}
           <Card>
