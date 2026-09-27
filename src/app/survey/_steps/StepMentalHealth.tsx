@@ -73,8 +73,7 @@ export function StepMentalHealth({ form, onChange, onNext, onPrev, isFirst, isLa
         ))}
 
         <p className="text-xs text-slate-400">
-          引用文献：古川壽亮，大野裕，他．一般人口中の精神疾患の簡便なスクリーニングに関する研究，
-          平成14年度厚生労働科学研究費補助金（厚生労働科学特別研究事業）心の健康問題と対策基盤の実態に関する研究／研究協力報告書
+          この設問は、心の健康状態を確認するための尺度『Kessler心理的苦痛尺度（K6）』を使用しています。
         </p>
       </div>
 

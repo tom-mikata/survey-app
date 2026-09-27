@@ -68,6 +68,10 @@ export function StepCompanySupport({ form, onChange, onNext, onPrev, isFirst, is
             </div>
           </div>
         ))}
+
+        <p className="text-xs text-slate-400">
+          本尺度は、産業医科大学 産業生態科学研究所 産業保健経営学が開発した『日本語語版「知覚された組織的支援尺度」(SPOS-J)』を使用しています。
+        </p>
       </div>
 
       <div className="mt-8 flex items-center justify-between">
