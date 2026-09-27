@@ -92,12 +92,23 @@ export default function SurveyPage({
     }
   }, [screens, currentScreen, currentIndex]);
 
+  const scrollToTop = () => {
+    // 描画後に実行されるよう setTimeout 経由でリセット（E-5）
+    setTimeout(() => window.scrollTo({ top: 0, behavior: "instant" }), 0);
+  };
+
   const goNext = () => {
-    if (currentIndex < screens.length - 1) setCurrentScreen(screens[currentIndex + 1]);
+    if (currentIndex < screens.length - 1) {
+      setCurrentScreen(screens[currentIndex + 1]);
+      scrollToTop();
+    }
   };
 
   const goPrev = () => {
-    if (currentIndex > 0) setCurrentScreen(screens[currentIndex - 1]);
+    if (currentIndex > 0) {
+      setCurrentScreen(screens[currentIndex - 1]);
+      scrollToTop();
+    }
   };
 
   const submit = async () => {
