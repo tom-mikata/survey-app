@@ -71,29 +71,22 @@ export function StepSymptoms({
   return (
     <div>
       <h1 className="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight mb-6">
-        問6. この1か月の体の不調について
+        この1か月の体の不調について
       </h1>
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6">
         <p className="text-sm text-slate-600">
-          この1か月間で、当てはまる症状すべてに答えてください（いくつでも選べます）。
+          <strong>問6</strong> この1か月間で、当てはまる症状すべてに答えてください（いくつでも選べます）。
         </p>
 
-        {hasNoCondition && (
-          <p className="text-sm text-slate-500 bg-slate-50 rounded-xl px-4 py-3">
-            「不調はない」を選択中は、他の項目を選べません。変更する場合は「不調はない」をもう一度押して解除してください。
-          </p>
-        )}
-
-        {/* 問6 複数選択（「不調はない」は他の選択肢と排他） */}
+        {/* 問6 複数選択（「不調はない」は他の選択肢と排他。E-2: 他の症状タップで「不調はない」を自動解除） */}
         <div className="grid grid-cols-1 gap-2 max-h-[28rem] overflow-y-auto pr-1">
           {qqConditions.map((c) => (
             <button
               key={c.id}
               type="button"
               onClick={() => toggleSymptom(c.id)}
-              disabled={hasNoCondition && c.id !== "none"}
               aria-pressed={form.symptomConditions.includes(c.id)}
-              className={`rounded-xl border px-4 py-3 text-sm text-left font-medium leading-snug transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+              className={`rounded-xl border px-4 py-3 text-sm text-left font-medium leading-snug transition-colors ${
                 form.symptomConditions.includes(c.id)
                   ? "border-sky-500 bg-sky-50 text-sky-900"
                   : "border-slate-200 hover:bg-slate-50"
