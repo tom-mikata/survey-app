@@ -1,0 +1,913 @@
+<title>職業病健康管理システム 機能説明資料</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;700&display=swap">
+<style>
+:root {
+  --bg: #EEF2F7;
+  --white: #FFFFFF;
+  --primary: #0369A1;
+  --primary-l: #E0F2FE;
+  --accent: #0F766E;
+  --text: #0F172A;
+  --text2: #334155;
+  --text3: #64748B;
+  --border: #CBD5E1;
+  --border-l: #E2E8F0;
+  --sky: #0284C7;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:#0F172A;--white:#1E293B;--primary:#38BDF8;--primary-l:#0C4A6E;
+    --accent:#2DD4BF;--text:#F1F5F9;--text2:#CBD5E1;--text3:#94A3B8;
+    --border:#334155;--border-l:#293548;--sky:#38BDF8;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:#0F172A;--white:#1E293B;--primary:#38BDF8;--primary-l:#0C4A6E;
+  --accent:#2DD4BF;--text:#F1F5F9;--text2:#CBD5E1;--text3:#94A3B8;
+  --border:#334155;--border-l:#293548;--sky:#38BDF8;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;padding-inline:16px;padding-block:32px;}
+.doc{max-width:920px;margin:0 auto;display:flex;flex-direction:column;gap:36px;}
+
+/* Cover */
+.cover{background:linear-gradient(135deg,#0369A1 0%,#0284C7 55%,#0EA5E9 100%);color:#fff;border-radius:16px;padding:44px 40px;}
+.cover-eye{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;opacity:.7;margin-bottom:10px;}
+.cover h1{font-family:'Noto Serif JP',serif;font-size:clamp(20px,3.5vw,30px);font-weight:700;line-height:1.35;margin-bottom:10px;}
+.cover-sub{font-size:13px;opacity:.85;line-height:1.75;max-width:500px;margin-bottom:24px;}
+.cover-meta{display:flex;gap:24px;flex-wrap:wrap;font-size:12px;opacity:.75;border-top:1px solid rgba(255,255,255,.2);padding-top:18px;}
+
+/* Overview */
+.ov{background:var(--white);border:1px solid var(--border-l);border-radius:12px;padding:28px 32px;}
+.ov h2{font-family:'Noto Serif JP',serif;font-size:17px;font-weight:700;color:var(--primary);border-bottom:2px solid var(--primary);display:inline-block;padding-bottom:6px;margin-bottom:16px;}
+.ov p{font-size:13px;color:var(--text2);line-height:1.85;margin-bottom:12px;}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;}
+.tag{background:var(--primary-l);color:var(--primary);font-size:12px;font-weight:600;padding:4px 12px;border-radius:99px;}
+
+/* Section label */
+.sec-label{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--text3);text-transform:uppercase;display:flex;align-items:center;gap:10px;}
+.sec-label::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* Screen card */
+.sc{background:var(--white);border:1px solid var(--border-l);border-radius:12px;overflow:hidden;}
+.sc-head{background:var(--bg);padding:18px 24px;border-bottom:1px solid var(--border-l);display:flex;align-items:flex-start;gap:12px;}
+.sc-num{background:var(--primary);color:#fff;font-size:11px;font-weight:700;min-width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+.sc-head h2{font-family:'Noto Serif JP',serif;font-size:16px;font-weight:700;margin-bottom:3px;}
+.sc-path{font-size:11px;color:var(--text3);font-family:monospace;}
+.sc-body{display:grid;grid-template-columns:1fr 1fr;gap:0;}
+@media(max-width:640px){.sc-body{grid-template-columns:1fr;}}
+.sc-desc{padding:22px 24px;border-right:1px solid var(--border-l);}
+@media(max-width:640px){.sc-desc{border-right:none;border-bottom:1px solid var(--border-l);}}
+.sc-desc>p{font-size:13px;color:var(--text2);line-height:1.8;margin-bottom:12px;}
+.flist{list-style:none;display:flex;flex-direction:column;gap:5px;}
+.flist li{font-size:13px;color:var(--text2);padding-left:16px;position:relative;line-height:1.65;}
+.flist li::before{content:'▸';position:absolute;left:0;color:var(--accent);font-size:10px;top:4px;}
+.mk-wrap{padding:16px;background:#F1F5F9;display:flex;justify-content:center;align-items:flex-start;}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .mk-wrap{background:#0F172A;}}
+:root[data-theme="dark"] .mk-wrap{background:#0F172A;}
+
+/* Mockup window */
+.mk{background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;box-shadow:0 2px 14px rgba(15,23,42,.10);width:100%;max-width:320px;font-size:11px;color:#334155;}
+.mk-bar{background:#F1F5F9;padding:7px 10px;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;gap:6px;}
+.dot{width:7px;height:7px;border-radius:50%;}
+.url-pill{flex:1;background:#fff;border:1px solid #E2E8F0;border-radius:3px;padding:2px 7px;font-size:9px;color:#94A3B8;font-family:monospace;}
+.app-nav{background:#fff;border-bottom:1px solid #E2E8F0;padding:8px 12px;display:flex;align-items:center;gap:8px;}
+.app-logo{width:24px;height:24px;background:#0284C7;border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.app-brand{font-size:11px;font-weight:700;color:#334155;}
+.nav-r{margin-left:auto;display:flex;gap:10px;font-size:10px;color:#64748B;}
+.p12{padding:12px;}
+.p16{padding:16px;}
+.bg-white{background:#fff;}
+.bg-gray{background:#F8FAFC;}
+
+/* App ui atoms */
+.inp{width:100%;border:1px solid #E2E8F0;border-radius:7px;padding:7px 10px;font-size:11px;color:#0F172A;background:#fff;margin-bottom:8px;}
+.lbl{font-size:10px;font-weight:700;color:#64748B;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px;}
+.btn-sky{background:#0284C7;color:#fff;font-size:11px;font-weight:700;padding:8px 14px;border-radius:8px;text-align:center;width:100%;}
+.btn-gray{background:#F1F5F9;color:#334155;font-size:11px;font-weight:700;padding:7px 12px;border-radius:7px;text-align:center;}
+.btn-sm{font-size:10px;font-weight:600;padding:4px 8px;border-radius:5px;}
+.btn-sky-sm{background:#0284C7;color:#fff;}
+.btn-red-sm{background:#FEE2E2;color:#DC2626;}
+.tabs{display:flex;border-bottom:1px solid #E2E8F0;background:#fff;}
+.tab{font-size:10px;font-weight:700;padding:7px 10px;color:#94A3B8;}
+.tab.on{color:#0284C7;border-bottom:2px solid #0284C7;margin-bottom:-1px;}
+.row-item{display:flex;align-items:center;padding:7px 10px;border-bottom:1px solid #F1F5F9;gap:6px;}
+.row-item:last-child{border-bottom:none;}
+.mono{font-family:monospace;font-size:10px;color:#94A3B8;}
+.badge{display:inline-block;font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;}
+.badge-slate{background:#F1F5F9;color:#64748B;}
+.badge-sky{background:#E0F2FE;color:#0369A1;}
+.badge-red{background:#FEF2F2;color:#DC2626;}
+.q-lbl{display:inline-flex;align-items:center;gap:4px;background:#F1F5F9;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700;color:#1E293B;margin-bottom:4px;}
+.req{background:#FEF2F2;color:#DC2626;font-size:9px;font-weight:700;border-radius:3px;padding:1px 4px;}
+.ch-btn{border:1px solid #E2E8F0;border-radius:7px;padding:6px 10px;font-size:11px;color:#334155;font-weight:500;background:#fff;margin-bottom:4px;width:100%;text-align:left;}
+.ch-btn.sel{border-color:#0284C7;background:#F0F9FF;color:#0C4A6E;}
+.pg-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.pg-pill{background:#F0F9FF;color:#0369A1;font-size:10px;font-weight:700;border-radius:99px;padding:3px 9px;}
+.pg-dots{display:flex;gap:3px;}
+.pg-dot{width:18px;height:4px;border-radius:99px;background:#E2E8F0;}
+.pg-dot.f{background:#0284C7;}
+.nav-row{display:flex;justify-content:space-between;align-items:center;padding-top:10px;}
+.prev-btn{font-size:11px;font-weight:700;color:#94A3B8;}
+.next-btn{background:#0284C7;color:#fff;font-size:11px;font-weight:700;padding:7px 14px;border-radius:7px;}
+.sp2{height:8px;}.sp3{height:12px;}.sp4{height:16px;}
+.title-lg{font-size:13px;font-weight:700;color:#0F172A;margin-bottom:4px;}
+.sub-sm{font-size:10px;color:#64748B;line-height:1.5;margin-bottom:8px;}
+.section-title{font-size:11px;font-weight:700;color:#0F172A;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #E2E8F0;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:4px;}
+.flex-row{display:flex;gap:8px;align-items:center;}
+.flex-between{display:flex;justify-content:space-between;align-items:center;}
+.num-big{font-size:26px;font-weight:700;color:#0F172A;line-height:1;}
+.unit-sm{font-size:12px;font-weight:700;color:#475569;margin-left:3px;}
+.card-inner{padding:12px;}
+.dash-bg{background:#EEF3F3;padding:12px;}
+.dash-card{background:#fff;border:1px solid #E2E8F0;border-radius:8px;padding:10px;margin-bottom:8px;}
+.dash-card-title{font-size:10px;font-weight:700;color:#0F172A;margin-bottom:8px;}
+.bar-row{display:flex;align-items:center;gap:5px;margin-bottom:3px;}
+.bar-lbl{font-size:9px;color:#64748B;width:52px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bar-track{flex:1;height:7px;background:#F1F5F9;border-radius:4px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:4px;}
+.ring-wrap{display:flex;gap:12px;align-items:center;}
+.ring{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#0F172A;flex-shrink:0;}
+.modal-overlay{background:rgba(0,0,0,.45);padding:20px 12px;display:flex;align-items:center;justify-content:center;}
+.modal{background:#fff;border-radius:12px;padding:20px 16px;width:100%;max-width:240px;text-align:center;}
+.modal-icon{width:36px;height:36px;border-radius:50%;border:1px solid #E2E8F0;display:flex;align-items:center;justify-content:center;font-size:18px;margin:0 auto 10px;}
+.chart-body{padding:8px 0;}
+</style>
+
+<div class="doc">
+
+<!-- ===== COVER ===== -->
+<div class="cover">
+  <p class="cover-eye">機能説明資料</p>
+  <h1>健康経営管理システム</h1>
+  <p class="cover-sub">従業員の職業性疼痛・体の不調を把握し、QQメソッドに基づき労働損失額を可視化するウェブシステムです。企業ごとに設問モジュールをカスタマイズでき、複数回の実施を通じた経年比較もサポートします。</p>
+  <div class="cover-meta">
+    <span>作成日：2026年9月</span>
+    <span>開発言語：TypeScript / Next.js</span>
+    <span>インフラ：Vercel / Supabase</span>
+  </div>
+</div>
+
+<!-- ===== OVERVIEW ===== -->
+<div class="ov">
+  <h2>システム概要</h2>
+  <p>本システムは、企業の従業員が抱える職業性の疼痛・不調の実態を定量的に把握し、それによって生じる労働損失額（プレゼンティーイズム・アブセンティーイズム）を可視化するためのWEBアプリケーションです。</p>
+  <p>管理者がクライアント企業・部署・実施回を設定し、URLを従業員に配布することでアンケートを収集します。回答データはリアルタイムで分析ダッシュボードに反映され、部署別・年代別・性別など多軸での集計・比較が可能です。第二部として、K6（メンタルヘルス）、SPOS-J（会社のサポート）、仕事以外の負担、運動習慣の4モジュールをクライアントごとに任意追加できます。</p>
+  <p style="font-size:11px;color:var(--text3);margin-top:4px;">※ 本資料に掲載している画面表示は説明のためのイメージであり、実際のシステム画面とは一部異なる場合があります。</p>
+  <div class="tags">
+    <span class="tag">Next.js 15 App Router</span>
+    <span class="tag">Supabase PostgreSQL + RLS</span>
+    <span class="tag">QQメソッド（産業医科大学）</span>
+    <span class="tag">K6スコア</span>
+    <span class="tag">SPOS-J</span>
+    <span class="tag">プレゼンティーイズム分析</span>
+    <span class="tag">役割ベースアクセス制御</span>
+  </div>
+</div>
+
+<!-- ===== ADMIN SCREENS ===== -->
+<p class="sec-label">管理画面</p>
+
+<!-- 1. Login -->
+<div class="sc">
+  <div class="sc-head">
+    <div class="sc-num">1</div>
+    <div>
+      <h2>ログイン画面</h2>
+      <p class="sc-path">/login</p>
+    </div>
+  </div>
+  <div class="sc-body">
+    <div class="sc-desc">
+      <p>管理者・担当者専用のログイン画面です。Supabase Authによるメール＋パスワード認証を使用します。ログイン後はロール（system_admin / client_admin）に応じて自動的に適切な画面に遷移します。</p>
+      <ul class="flist">
+        <li>メールアドレス・パスワードによる認証</li>
+        <li>system_admin はログイン後に設定画面へ、client_admin は結果ダッシュボードへ自動遷移</li>
+        <li>パスワードリセット機能（メール送信）</li>
+        <li>入力エラー時の日本語メッセージ表示</li>
+      </ul>
+    </div>
+    <div class="mk-wrap">
+      <div class="mk">
+        <div class="mk-bar"><div class="dot" style="background:#FDA4AF"></div><div class="dot" style="background:#FDE68A"></div><div class="dot" style="background:#86EFAC"></div><div class="url-pill">example.vercel.app/login</div></div>
+        <div class="p16 bg-white">
+          <div style="display:flex;align-items:center;gap:8px;justify-content:center;margin-bottom:18px;">
+            <div style="width:32px;height:32px;background:#0284C7;border-radius:7px;display:flex;align-items:center;justify-content:center;">
+              <svg width="18" height="18" fill="none" stroke="#fff" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            </div>
+            <span style="font-size:12px;font-weight:700;color:#334155;">健康管理システム</span>
+          </div>
+          <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:16px;">
+            <div style="font-size:13px;font-weight:700;color:#0F172A;margin-bottom:3px;">ログイン</div>
+            <div style="font-size:10px;color:#94A3B8;margin-bottom:12px;">管理者・担当者専用</div>
+            <div class="lbl">メールアドレス</div>
+            <div class="inp" style="color:#94A3B8;">admin@example.com</div>
+            <div class="lbl">パスワード</div>
+            <div class="inp" style="color:#94A3B8;letter-spacing:3px;">••••••••</div>
+            <div class="sp2"></div>
+            <div class="btn-sky">ログイン</div>
+            <div style="text-align:center;margin-top:10px;font-size:10px;color:#0284C7;">パスワードを変更する</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 2. Client Settings -->
+<div class="sc">
+  <div class="sc-head">
+    <div class="sc-num">2</div>
+    <div>
+      <h2>クライアント設定画面</h2>
+      <p class="sc-path">/settings → クライアントタブ（system_admin のみ）</p>
+    </div>
+  </div>
+  <div class="sc-body">
+    <div class="sc-desc">
+      <p>クライアント企業の登録・編集・削除を行う画面です。system_admin 専用のタブとして表示されます。各クライアントには識別コードと企業名を設定し、使用するアンケートモジュールを選択できます。</p>
+      <ul class="flist">
+        <li>クライアントコード（URL・内部識別子）と企業名の登録</li>
+        <li>第二部の表示モジュールをクライアントごとにON/OFF設定（K6・SPOS-J・仕事以外の負担・運動習慣）</li>
+        <li>企業名の編集機能</li>
+        <li>削除時はコード入力による確認を要求（誤削除防止）</li>
+      </ul>
+    </div>
+    <div class="mk-wrap">
+      <div class="mk">
+        <div class="mk-bar"><div class="dot" style="background:#FDA4AF"></div><div class="dot" style="background:#FDE68A"></div><div class="dot" style="background:#86EFAC"></div><div class="url-pill">example.vercel.app/settings</div></div>
+        <div class="app-nav"><div class="app-logo"><svg width="14" height="14" fill="none" stroke="#fff" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div><span class="app-brand">健康管理システム</span><div class="nav-r"><span>ダッシュボード</span><span>設定</span></div></div>
+        <div class="tabs"><div class="tab on">クライアント</div><div class="tab">部署</div><div class="tab">実施回</div><div class="tab">アカウント</div></div>
+        <div class="p12 bg-white">
+          <div style="font-size:10px;color:#64748B;margin-bottom:8px;">クライアント企業を登録します。コードはURLや内部識別子として使用されます。</div>
+          <div style="border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;margin-bottom:8px;">
+            <div class="row-item"><span class="mono">acme</span><span style="flex:1;font-weight:500;">ACME株式会社</span><span class="btn-sm btn-sky-sm">編集</span>&nbsp;<span class="btn-sm btn-red-sm">削除</span></div>
+            <div class="row-item"><span class="mono">sample</span><span style="flex:1;font-weight:500;">サンプル商事</span><span class="btn-sm btn-sky-sm">編集</span>&nbsp;<span class="btn-sm btn-red-sm">削除</span></div>
+          </div>
+          <div style="display:flex;gap:4px;margin-bottom:4px;">
+            <input class="inp" style="margin:0;font-size:10px;padding:5px 8px;" placeholder="コード（例：acme）" readonly>
+            <input class="inp" style="margin:0;font-size:10px;padding:5px 8px;" placeholder="企業名" readonly>
+            <div style="background:#F1F5F9;color:#334155;font-size:10px;font-weight:700;padding:5px 10px;border-radius:7px;white-space:nowrap;">追加</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 3. Department Settings -->
+<div class="sc">
+  <div class="sc-head">
+    <div class="sc-num">3</div>
+    <div>
+      <h2>部署設定画面</h2>
+      <p class="sc-path">/settings → 部署タブ</p>
+    </div>
+  </div>
+  <div class="sc-body">
+    <div class="sc-desc">
+      <p>アンケートの問4（部署選択）に表示する部署名を管理する画面です。system_admin は編集可能、client_admin は閲覧専用で表示されます。</p>
+      <ul class="flist">
+        <li>部署名の追加・削除・並べ替え（▲▼ボタン）</li>
+        <li>Enterキーで素早く追加可能</li>
+        <li>保存ボタンで一括保存（確認フィードバック付き）</li>
+        <li>client_admin には閲覧専用モードで表示</li>
+        <li>system_admin はクライアントをドロップダウンで切り替えて編集</li>
+      </ul>
+    </div>
+    <div class="mk-wrap">
+      <div class="mk">
+        <div class="mk-bar"><div class="dot" style="background:#FDA4AF"></div><div class="dot" style="background:#FDE68A"></div><div class="dot" style="background:#86EFAC"></div><div class="url-pill">example.vercel.app/settings</div></div>
+        <div class="app-nav"><div class="app-logo"><svg width="14" height="14" fill="none" stroke="#fff" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div><span class="app-brand">健康管理システム</span></div>
+        <div class="tabs"><div class="tab">クライアント</div><div class="tab on">部署</div><div class="tab">実施回</div><div class="tab">アカウント</div></div>
+        <div class="p12 bg-white">
+          <div style="font-size:10px;color:#64748B;margin-bottom:8px;">選択肢として表示する部署名を登録してください。</div>
+          <div style="border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;margin-bottom:8px;">
+            <div class="row-item"><div style="display:flex;flex-direction:column;gap:1px;margin-right:2px;"><span style="font-size:8px;color:#CBD5E1;">▲</span><span style="font-size:8px;color:#94A3B8;">▼</span></div><span style="flex:1;font-weight:500;">営業部</span><span class="btn-sm btn-red-sm">削除</span></div>
+            <div class="row-item"><div style="display:flex;flex-direction:column;gap:1px;margin-right:2px;"><span style="font-size:8px;color:#94A3B8;">▲</span><span style="font-size:8px;color:#94A3B8;">▼</span></div><span style="flex:1;font-weight:500;">製造部</span><span class="btn-sm btn-red-sm">削除</span></div>
+            <div class="row-item"><div style="display:flex;flex-direction:column;gap:1px;margin-right:2px;"><span style="font-size:8px;color:#94A3B8;">▲</span><span style="font-size:8px;color:#CBD5E1;">▼</span></div><span style="flex:1;font-weight:500;">総務部</span><span class="btn-sm btn-red-sm">削除</span></div>
+          </div>
+          <div style="display:flex;gap:4px;margin-bottom:8px;">
+            <input class="inp" style="margin:0;font-size:10px;padding:5px 8px;" placeholder="例：営業部" readonly>
+            <div style="background:#F1F5F9;color:#334155;font-size:10px;font-weight:700;padding:5px 10px;border-radius:7px;white-space:nowrap;">追加</div>
+          </div>
+          <div class="btn-sky" style="font-size:11px;padding:7px;">保存する</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 4. Survey Round Settings -->
+<div class="sc">
+  <div class="sc-head">
+    <div class="sc-num">4</div>
+    <div>
+      <h2>実施回設定画面</h2>
+      <p class="sc-path">/settings → 実施回タブ</p>
+    </div>
+  </div>
+  <div class="sc-body">
+    <div class="sc-desc">
+      <p>アンケートの実施回を管理する画面です。各実施回には名称・開始日・終了日を設定し、専用URLが自動生成されます。URLを従業員に共有することでアンケートを収集します。</p>
+      <ul class="flist">
+        <li>実施回名・開始日・終了日の登録・編集・削除</li>
+        <li>クライアントコードと実施回IDを含む専用URLを自動生成</li>
+        <li>URLのワンクリックコピー機能</li>
+        <li>client_admin はURL参照のみ可能（閲覧専用）</li>
+        <li>複数実施回の管理によりダッシュボードでの経年比較が可能</li>
+      </ul>
+    </div>
+    <div class="mk-wrap">
+      <div class="mk">
+        <div class="mk-bar"><div class="dot" style="background:#FDA4AF"></div><div class="dot" style="background:#FDE68A"></div><div class="dot" style="background:#86EFAC"></div><div class="url-pill">example.vercel.app/settings</div></div>
+        <div class="app-nav"><div class="app-logo"><svg width="14" height="14" fill="none" stroke="#fff" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div><span class="app-brand">健康管理システム</span></div>
+        <div class="tabs"><div class="tab">クライアント</div><div class="tab">部署</div><div class="tab on">実施回</div><div class="tab">アカウント</div></div>
+        <div class="p12 bg-white">
+          <div style="border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;margin-bottom:8px;">
+            <div style="padding:8px 10px;border-bottom:1px solid #F1F5F9;">
+              <div class="flex-between"><span style="font-size:11px;font-weight:600;">第1回 2026年4月</span><div style="display:flex;gap:4px;"><span class="btn-sm btn-sky-sm">編集</span><span class="btn-sm btn-red-sm">削除</span></div></div>
+              <div style="font-size:9px;color:#94A3B8;margin-top:2px;">2026-04-01 〜 2026-04-30</div>
+              <div style="display:flex;gap:4px;margin-top:6px;align-items:center;">
+                <div style="flex:1;border:1px solid #E2E8F0;border-radius:5px;padding:4px 7px;font-size:9px;font-family:monospace;color:#94A3B8;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">…/survey?client=acme&round=1</div>
+                <div style="color:#0284C7;font-size:10px;font-weight:600;white-space:nowrap;">コピー</div>
+              </div>
+            </div>
+            <div style="padding:8px 10px;">
+              <div class="flex-between"><span style="font-size:11px;font-weight:600;">第2回 2026年9月</span><div style="display:flex;gap:4px;"><span class="btn-sm btn-sky-sm">編集</span><span class="btn-sm btn-red-sm">削除</span></div></div>
+              <div style="font-size:9px;color:#94A3B8;margin-top:2px;">2026-09-01 〜 2026-09-30</div>
+              <div style="display:flex;gap:4px;margin-top:6px;align-items:center;">
+                <div style="flex:1;border:1px solid #E2E8F0;border-radius:5px;padding:4px 7px;font-size:9px;font-family:monospace;color:#94A3B8;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">…/survey?client=acme&round=2</div>
+                <div style="color:#0284C7;font-size:10px;font-weight:600;white-space:nowrap;">コピー</div>
+              </div>
+            </div>
+          </div>
+          <input class="inp" style="font-size:10px;padding:5px 8px;" placeholder="実施回名（例：第3回 2027年4月）" readonly>
+          <div style="display:flex;gap:4px;margin-bottom:6px;">
+            <div style="flex:1;"><div style="font-size:9px;color:#64748B;margin-bottom:2px;">開始日（任意）</div><input class="inp" style="margin:0;font-size:10px;padding:5px 8px;" value="2027-04-01" readonly></div>
+            <div style="flex:1;"><div style="font-size:9px;color:#64748B;margin-bottom:2px;">終了日（任意）</div><input class="inp" style="margin:0;font-size:10px;padding:5px 8px;" value="2027-04-30" readonly></div>
+          </div>
+          <div class="btn-sky" style="font-size:11px;padding:7px;">追加する</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 5. Admin Account Settings -->
+<div class="sc">
+  <div class="sc-head">
+    <div class="sc-num">5</div>
+    <div>
+      <h2>管理者アカウント設定画面</h2>
+      <p class="sc-path">/settings → 管理者アカウントタブ（system_admin のみ）</p>
+    </div>
+  </div>
+  <div class="sc-body">
+    <div class="sc-desc">
+      <p>管理者アカウントの一覧表示・招待・ロール変更・削除を行う画面です。system_admin 専用タブとして表示されます。</p>
+      <ul class="flist">
+        <li>登録済みアカウント一覧（メール・ロール・所属クライアント）</li>
+        <li>メールアドレスへの招待メール送信</li>
+        <li>ロール設定：system_admin（全クライアント管理）/ client_admin（特定クライアントのみ）</li>
+        <li>client_admin には所属クライアントを紐付け</li>
+        <li>ロール・所属クライアントの変更・アカウント削除</li>
+      </ul>
+    </div>
+    <div class="mk-wrap">
+      <div class="mk">
+        <div class="mk-bar"><div class="dot" style="background:#FDA4AF"></div><div class="dot" style="background:#FDE68A"></div><div class="dot" style="background:#86EFAC"></div><div class="url-pill">example.vercel.app/settings</div></div>
+        <div class="app-nav"><div class="app-logo"><svg width="14" height="14" fill="none" stroke="#fff" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div><span class="app-brand">健康管理システム</span></div>
+        <div class="tabs"><div class="tab">クライアント</div><div class="tab">部署</div><div class="tab">実施回</div><div class="tab on">管理者アカウント</div></div>
+        <div class="p12 bg-white">
+          <div style="border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;margin-bottom:10px;">
+            <div class="row-item"><div style="flex:1;"><div style="font-weight:500;font-size:11px;">admin@c-mikata.co.jp</div><div style="font-size:9px;color:#94A3B8;">system_admin</div></div><span class="btn-sm btn-sky-sm">編集</span>&nbsp;<span class="btn-sm btn-red-sm">削除</span></div>
+            <div class="row-item"><div style="flex:1;"><div style="font-weight:500;font-size:11px;">client@acme.co.jp</div><div style="font-size:9px;color:#94A3B8;">client_admin（acme）</div></div><span class="btn-sm btn-sky-sm">編集</span>&nbsp;<span class="btn-sm btn-red-sm">削除</span></div>
+          </div>
+          <div style="font-size:11px;font-weight:700;color:#0F172A;margin-bottom:6px;">招待メールを送信</div>
+          <input class="inp" style="font-size:10px;padding:5px 8px;" placeholder="メールアドレス" readonly>
+          <div style="display:flex;gap:4px;margin-bottom:6px;">
+            <select style="border:1px solid #E2E8F0;border-radius:7px;padding:5px 8px;font-size:10px;background:#fff;color:#334155;">
+              <option>client_admin</option>
+            </select>
+            <select style="flex:1;border:1px solid #E2E8F0;border-radius:7px;padding:5px 8px;font-size:10px;background:#fff;color:#334155;">
+              <option>クライアントを選択</option>
+            </select>
+          </div>
+          <div class="btn-sky" style="font-size:11px;padding:7px;">招待を送信</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SURVEY SCREENS ===== -->
+<p class="sec-label">アンケート回答画面</p>
+
+<!-- 6. Privacy Consent -->
+<div class="sc">
+  <div class="sc-head">
+    <div class="sc-num">6</div>
+    <div>
+      <h2>プライバシー同意画面</h2>
+      <p class="sc-path">/survey?client=xxx&round=n → 回答開始前モーダル</p>
+    </div>
+  </div>
+  <div class="sc-body">
+    <div class="sc-desc">
+      <p>URLにアクセスした従業員が最初に目にする同意確認画面です。回答前に個人情報の取り扱いについての説明を表示し、同意した場合のみアンケートに進めます。</p>
+      <ul class="flist">
+        <li>個人情報保護方針・データ利用目的の説明</li>
+        <li>「同意して進む」ボタンで回答開始</li>
+        <li>同意しない場合は回答不可のメッセージを表示</li>
+        <li>URLパラメータ（client・round）の整合性チェック（無効URLの場合はエラー表示）</li>
+      </ul>
+    </div>
+    <div class="mk-wrap">
+      <div class="mk">
+        <div class="mk-bar"><div class="dot" style="background:#FDA4AF"></div><div class="dot" style="background:#FDE68A"></div><div class="dot" style="background:#86EFAC"></div><div class="url-pill">example.vercel.app/survey?client=acme&round=2</div></div>
+        <div class="modal-overlay">
+          <div class="modal">
+            <div class="modal-icon">🛡</div>
+            <div style="font-size:13px;font-weight:700;color:#0F172A;margin-bottom:10px;">プライバシーについて</div>
+            <div style="font-size:11px;color:#475569;line-height:1.7;margin-bottom:14px;">
+              <p>アンケートの結果は全体の集計結果として取りまとめ、個人の回答内容は会社に公開されることはありません。</p>
+              <div style="height:8px;"></div>
+              <p>調査結果は学会、論文等で公表することがあります。</p>
+            </div>
+            <div class="btn-gray" style="font-size:11px;padding:8px;">同意して進む</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 7. Step1 Basic Info -->
+<div class="sc">
+  <div class="sc-head">
+    <div class="sc-num">7</div>
+    <div>
+      <h2>アンケート ステップ1：基本情報</h2>
+      <p class="sc-path">/survey — 問1〜5</p>
+    </div>
+  </div>
+  <div class="sc-body">
+    <div class="sc-desc">
+      <p>回答者の基本属性を入力するステップです。経年比較時に同一人物を特定するために氏名・生年月日を収集します。すべての項目が必須入力です。</p>
+      <ul class="flist">
+        <li>問1：氏名・フリガナ（テキスト入力）</li>
+        <li>問2：性別（男・女・その他 から選択）</li>
+        <li>問3：生年月日（日付選択・未来日付バリデーション付き）</li>
+        <li>問4：部署（設定済みの部署リストから選択）</li>
+        <li>問5：雇用形態（正社員・パート・派遣・その他 から選択）</li>
+        <li>全項目入力まで「次へ」ボタン無効化</li>
+      </ul>
+    </div>
+    <div class="mk-wrap">
+      <div class="mk">
+        <div class="mk-bar"><div class="dot" style="background:#FDA4AF"></div><div class="dot" style="background:#FDE68A"></div><div class="dot" style="background:#86EFAC"></div><div class="url-pill">example.vercel.app/survey</div></div>
+        <div class="app-nav"><div class="app-logo"><svg width="14" height="14" fill="none" stroke="#fff" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div><span class="app-brand">従業員健康診断アンケート</span></div>
+        <div class="p12">
+          <div class="pg-bar"><div class="pg-pill">ステップ 1 / 5</div><div class="pg-dots"><div class="pg-dot f"></div><div class="pg-dot"></div><div class="pg-dot"></div><div class="pg-dot"></div><div class="pg-dot"></div></div></div>
+          <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:12px;">
+            <div style="font-size:13px;font-weight:700;color:#0F172A;margin-bottom:10px;">基本情報を入力してください</div>
+            <div class="q-lbl">問1. お名前 <span class="req">必須</span></div>
+            <input class="inp" value="山田 太郎" readonly>
+            <div class="q-lbl">フリガナ <span class="req">必須</span></div>
+            <input class="inp" value="ヤマダ タロウ" readonly>
+            <div class="q-lbl">問2. 性別 <span class="req">必須</span></div>
+            <div class="grid2" style="margin-bottom:8px;">
+              <div class="ch-btn sel">男性</div>
+              <div class="ch-btn">女性</div>
+              <div class="ch-btn">その他</div>
+            </div>
+            <div class="q-lbl">問4. 部署 <span class="req">必須</span></div>
+            <select style="width:100%;border:1px solid #E2E8F0;border-radius:7px;padding:6px 10px;font-size:11px;background:#fff;margin-bottom:8px;"><option>営業部</option></select>
+            <div class="q-lbl">問5. 雇用形態 <span class="req">必須</span></div>
+            <div class="grid2">
+              <div class="ch-btn sel">正社員</div>
+              <div class="ch-btn">パート・アルバイト</div>
+            </div>
+          </div>
+          <div class="nav-row"><span class="prev-btn">戻る</span><div class="next-btn">次へ</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 8. Step2 Symptoms -->
+<div class="sc">
+  <div class="sc-head">
+    <div class="sc-num">8</div>
+    <div>
+      <h2>アンケート ステップ2：症状選択</h2>
+      <p class="sc-path">/survey — 問6〜7</p>
+    </div>
+  </div>
+  <div class="sc-body">
+    <div class="sc-desc">
+      <p>この1か月間の体の不調を選択するステップです。複数選択可能な16の選択肢から症状を選び、複数ある場合は最も仕事に影響しているものを1つ特定します。</p>
+      <ul class="flist">
+        <li>問6：症状の複数選択（腰痛・肩こり・膝の痛みなど16選択肢）</li>
+        <li>「不調はない」は排他制御（他の選択肢と同時選択不可）</li>
+        <li>問7：仕事に最も影響している不調の特定（問6で複数選択時のみ表示）</li>
+        <li>症状1つのみ選択時は問7をスキップして自動設定</li>
+        <li>「不調はない」選択時はQQメソッドのステップをスキップ</li>
+        <li>性別が男性の場合は「女性特有の不調」を自動非表示</li>
+      </ul>
+    </div>
+    <div class="mk-wrap">
+      <div class="mk">
+        <div class="mk-bar"><div class="dot" style="background:#FDA4AF"></div><div class="dot" style="background:#FDE68A"></div><div class="dot" style="background:#86EFAC"></div><div class="url-pill">example.vercel.app/survey</div></div>
+        <div class="app-nav"><div class="app-logo"><svg width="14" height="14" fill="none" stroke="#fff" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div><span class="app-brand">従業員健康診断アンケート</span></div>
+        <div class="p12">
+          <div class="pg-bar"><div class="pg-pill">ステップ 2 / 5</div><div class="pg-dots"><div class="pg-dot f"></div><div class="pg-dot f"></div><div class="pg-dot"></div><div class="pg-dot"></div><div class="pg-dot"></div></div></div>
+          <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:12px;">
+            <div style="font-size:13px;font-weight:700;color:#0F172A;margin-bottom:6px;">この1か月の体の不調について</div>
+            <div class="q-lbl" style="margin-bottom:4px;">問6</div>
+            <div style="font-size:10px;color:#64748B;margin-bottom:8px;">当てはまる症状すべてに答えてください（いくつでも選べます）。</div>
+            <div style="display:flex;flex-direction:column;gap:3px;max-height:160px;overflow:hidden;">
+              <div class="ch-btn sel">腰痛・腰のだるさ</div>
+              <div class="ch-btn sel">肩こり・肩の痛み</div>
+              <div class="ch-btn">首の痛み・こわばり</div>
+              <div class="ch-btn">膝の痛み</div>
+              <div class="ch-btn">頭痛</div>
+              <div style="font-size:10px;color:#94A3B8;text-align:center;padding:4px 0;">…他11項目…</div>
+            </div>
+          </div>
+          <div class="nav-row"><span class="prev-btn">戻る</span><div class="next-btn">次へ</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 9. Step3 QQ Method -->
+<div class="sc">
+  <div class="sc-head">
+    <div class="sc-num">9</div>
+    <div>
+      <h2>アンケート ステップ3：QQメソッド</h2>
+      <p class="sc-path">/survey — 問8〜11（症状ありの場合のみ表示）</p>
+    </div>
+  </div>
+  <div class="sc-body">
+    <div class="sc-desc">
+      <p>産業医科大学が開発したQQメソッドに基づき、プレゼンティーイズム（業務効率低下）の指標を収集するステップです。症状を選択した場合のみ表示されます。</p>
+      <ul class="flist">
+        <li>問8：直近30日間の有症状日数（ドロップダウン 0〜30日）</li>
+        <li>問9：直近1年間の欠勤日数（ドロップダウン 0〜365日）</li>
+        <li>問10：症状がある日の仕事量（0〜10のスケール選択）</li>
+        <li>問11：症状がある日の仕事の質（0〜10のスケール選択）</li>
+        <li>問10・11は未選択の場合に警告メッセージを表示</li>
+      </ul>
+    </div>
+    <div class="mk-wrap">
+      <div class="mk">
+        <div class="mk-bar"><div class="dot" style="background:#FDA4AF"></div><div class="dot" style="background:#FDE68A"></div><div class="dot" style="background:#86EFAC"></div><div class="url-pill">example.vercel.app/survey</div></div>
+        <div class="app-nav"><div class="app-logo"><svg width="14" height="14" fill="none" stroke="#fff" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div><span class="app-brand">従業員健康診断アンケート</span></div>
+        <div class="p12">
+          <div class="pg-bar"><div class="pg-pill">ステップ 3 / 5</div><div class="pg-dots"><div class="pg-dot f"></div><div class="pg-dot f"></div><div class="pg-dot f"></div><div class="pg-dot"></div><div class="pg-dot"></div></div></div>
+          <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:12px;">
+            <div style="font-size:13px;font-weight:700;color:#0F172A;margin-bottom:10px;">症状の状況を教えてください</div>
+            <div class="q-lbl" style="margin-bottom:3px;">問8. 症状があった日数</div>
+            <div style="font-size:10px;color:#64748B;margin-bottom:5px;">直近30日間で何日ありましたか。</div>
+            <select style="border:1px solid #E2E8F0;border-radius:7px;padding:5px 10px;font-size:11px;background:#fff;margin-bottom:10px;"><option>10日</option></select>
+            <div class="q-lbl" style="margin-bottom:3px;">問9. 欠勤した日数</div>
+            <div style="font-size:10px;color:#64748B;margin-bottom:5px;">直近1年間で何日休みましたか。</div>
+            <select style="border:1px solid #E2E8F0;border-radius:7px;padding:5px 10px;font-size:11px;background:#fff;margin-bottom:10px;"><option>3日</option></select>
+            <div class="q-lbl" style="margin-bottom:3px;">問10. 症状があるときの仕事量</div>
+            <div style="font-size:10px;color:#64748B;margin-bottom:5px;">0＝全くできない 〜 10＝いつも通り</div>
+            <div style="display:flex;flex-wrap:wrap;gap:3px;">
+              <div class="ch-btn" style="min-width:24px;padding:4px;text-align:center;font-size:10px;">0</div><div class="ch-btn" style="min-width:24px;padding:4px;text-align:center;font-size:10px;">1</div><div class="ch-btn" style="min-width:24px;padding:4px;text-align:center;font-size:10px;">2</div><div class="ch-btn" style="min-width:24px;padding:4px;text-align:center;font-size:10px;">3</div><div class="ch-btn" style="min-width:24px;padding:4px;text-align:center;font-size:10px;">4</div><div class="ch-btn" style="min-width:24px;padding:4px;text-align:center;font-size:10px;">5</div><div class="ch-btn" style="min-width:24px;padding:4px;text-align:center;font-size:10px;">6</div><div class="ch-btn sel" style="min-width:24px;padding:4px;text-align:center;font-size:10px;">7</div><div class="ch-btn" style="min-width:24px;padding:4px;text-align:center;font-size:10px;">8</div><div class="ch-btn" style="min-width:24px;padding:4px;text-align:center;font-size:10px;">9</div><div class="ch-btn" style="min-width:24px;padding:4px;text-align:center;font-size:10px;">10</div>
+            </div>
+          </div>
+          <div class="nav-row"><span class="prev-btn">戻る</span><div class="next-btn">次へ</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 10. Step4 Pain Care -->
+<div class="sc">
+  <div class="sc-head">
+    <div class="sc-num">10</div>
+    <div>
+      <h2>アンケート ステップ4：不調への対処</h2>
+      <p class="sc-path">/survey — 問12〜14（全員表示）</p>
+    </div>
+  </div>
+  <div class="sc-body">
+    <div class="sc-desc">
+      <p>不調に対してどのような対処をしているかを確認するステップです。問6の結果に関わらず全員に表示されます。</p>
+      <ul class="flist">
+        <li>問12：利用した場所（病院・整骨院・利用していない等 複数選択）</li>
+        <li>問13：月あたり合計利用回数（問12で施設利用ありの場合のみ表示）</li>
+        <li>問14：日常的に使っているもの（湿布・飲み薬・コルセット等 複数選択）</li>
+        <li>「利用していない」「使っていない」は排他制御</li>
+        <li>「その他」選択時は自由記述欄が追加表示</li>
+      </ul>
+    </div>
+    <div class="mk-wrap">
+      <div class="mk">
+        <div class="mk-bar"><div class="dot" style="background:#FDA4AF"></div><div class="dot" style="background:#FDE68A"></div><div class="dot" style="background:#86EFAC"></div><div class="url-pill">example.vercel.app/survey</div></div>
+        <div class="app-nav"><div class="app-logo"><svg width="14" height="14" fill="none" stroke="#fff" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div><span class="app-brand">従業員健康診断アンケート</span></div>
+        <div class="p12">
+          <div class="pg-bar"><div class="pg-pill">ステップ 4 / 5</div><div class="pg-dots"><div class="pg-dot f"></div><div class="pg-dot f"></div><div class="pg-dot f"></div><div class="pg-dot f"></div><div class="pg-dot"></div></div></div>
+          <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:12px;">
+            <div style="font-size:13px;font-weight:700;color:#0F172A;margin-bottom:10px;">不調への対処について</div>
+            <div class="q-lbl" style="margin-bottom:3px;">問12. この1か月で利用した場所</div>
+            <div style="display:flex;flex-direction:column;gap:3px;margin-bottom:10px;">
+              <div class="ch-btn sel">病院・クリニック</div>
+              <div class="ch-btn">整骨院・鍼灸・マッサージなどの施術</div>
+              <div class="ch-btn">その他</div>
+              <div class="ch-btn">利用していない</div>
+            </div>
+            <div class="q-lbl" style="margin-bottom:3px;">問14. 日常的に使っているもの</div>
+            <div style="display:flex;flex-direction:column;gap:3px;">
+              <div class="ch-btn sel">湿布</div>
+              <div class="ch-btn sel">飲み薬（痛み止めなど）</div>
+              <div class="ch-btn">コルセット・サポーター</div>
+              <div class="ch-btn">使っていない</div>
+            </div>
+          </div>
+          <div class="nav-row"><span class="prev-btn">戻る</span><div class="next-btn">次へ</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 11. Step5 Consultation -->
+<div class="sc">
+  <div class="sc-head">
+    <div class="sc-num">11</div>
+    <div>
+      <h2>アンケート ステップ5：相談について</h2>
+      <p class="sc-path">/survey — 問15〜16（全員表示）</p>
+    </div>
+  </div>
+  <div class="sc-body">
+    <div class="sc-desc">
+      <p>不調に関する相談先・専門家サポートへの意向を確認するステップです。健康課題の解決支援策の立案に活用されます。</p>
+      <ul class="flist">
+        <li>問15：相談できる人がいるか（健康・仕事・家族・精神的な面の4軸でそれぞれ選択）</li>
+        <li>問16：専門家によるサポートを受けたいか（はい・いいえ・わからない）</li>
+        <li>全問必須入力で未選択時は次へ進めない</li>
+      </ul>
+    </div>
+    <div class="mk-wrap">
+      <div class="mk">
+        <div class="mk-bar"><div class="dot" style="background:#FDA4AF"></div><div class="dot" style="background:#FDE68A"></div><div class="dot" style="background:#86EFAC"></div><div class="url-pill">example.vercel.app/survey</div></div>
+        <div class="app-nav"><div class="app-logo"><svg width="14" height="14" fill="none" stroke="#fff" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div><span class="app-brand">従業員健康診断アンケート</span></div>
+        <div class="p12">
+          <div class="pg-bar"><div class="pg-pill">ステップ 5 / 5</div><div class="pg-dots"><div class="pg-dot f"></div><div class="pg-dot f"></div><div class="pg-dot f"></div><div class="pg-dot f"></div><div class="pg-dot f"></div></div></div>
+          <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:12px;">
+            <div style="font-size:13px;font-weight:700;color:#0F172A;margin-bottom:10px;">相談について</div>
+            <div class="q-lbl" style="margin-bottom:6px;">問15. 相談できる人はいますか</div>
+            <div style="display:grid;gap:5px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid #F1F5F9;"><span style="font-size:11px;color:#334155;">健康面について</span><div style="display:flex;gap:3px;"><div class="ch-btn sel" style="padding:4px 8px;font-size:10px;">いる</div><div class="ch-btn" style="padding:4px 8px;font-size:10px;">いない</div></div></div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid #F1F5F9;"><span style="font-size:11px;color:#334155;">仕事の悩みについて</span><div style="display:flex;gap:3px;"><div class="ch-btn" style="padding:4px 8px;font-size:10px;">いる</div><div class="ch-btn sel" style="padding:4px 8px;font-size:10px;">いない</div></div></div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;"><span style="font-size:11px;color:#334155;">精神的な悩みについて</span><div style="display:flex;gap:3px;"><div class="ch-btn sel" style="padding:4px 8px;font-size:10px;">いる</div><div class="ch-btn" style="padding:4px 8px;font-size:10px;">いない</div></div></div>
+            </div>
+            <div style="height:10px;"></div>
+            <div class="q-lbl" style="margin-bottom:5px;">問16. 専門家のサポートを受けたいですか</div>
+            <div style="display:flex;gap:3px;">
+              <div class="ch-btn sel" style="flex:1;text-align:center;font-size:10px;">はい</div>
+              <div class="ch-btn" style="flex:1;text-align:center;font-size:10px;">いいえ</div>
+              <div class="ch-btn" style="flex:1;text-align:center;font-size:10px;">わからない</div>
+            </div>
+          </div>
+          <div class="nav-row"><span class="prev-btn">戻る</span><div class="next-btn" style="background:#0D9488;">回答を送信</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 12. Step optional Part 2 -->
+<div class="sc">
+  <div class="sc-head">
+    <div class="sc-num">12</div>
+    <div>
+      <h2>アンケート 第二部：オプションモジュール</h2>
+      <p class="sc-path">/survey — 問17〜22（クライアント設定で有効化）</p>
+    </div>
+  </div>
+  <div class="sc-body">
+    <div class="sc-desc">
+      <p>クライアント企業ごとに有効化できる4つの追加モジュールです。設定画面でONにしたモジュールのみ第一部の後に表示されます。</p>
+      <ul class="flist">
+        <li>問17：心の健康（K6スコア）— 過去30日の気分・感情について6問</li>
+        <li>問18：会社のサポート（SPOS-J）— 職場サポートの認知について4問</li>
+        <li>問19〜20：仕事以外の負担 — 役割の影響と支援希望</li>
+        <li>問21〜22：運動の習慣 — 運動習慣の有無・週あたり日数</li>
+        <li>各モジュールは独立して有効化可能（全組み合わせ対応）</li>
+      </ul>
+    </div>
+    <div class="mk-wrap">
+      <div class="mk">
+        <div class="mk-bar"><div class="dot" style="background:#FDA4AF"></div><div class="dot" style="background:#FDE68A"></div><div class="dot" style="background:#86EFAC"></div><div class="url-pill">example.vercel.app/survey</div></div>
+        <div class="app-nav"><div class="app-logo"><svg width="14" height="14" fill="none" stroke="#fff" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div><span class="app-brand">従業員健康診断アンケート</span></div>
+        <div class="p12">
+          <div class="pg-bar"><div class="pg-pill">ステップ 1 / 4（第二部）</div><div class="pg-dots"><div class="pg-dot f"></div><div class="pg-dot"></div><div class="pg-dot"></div><div class="pg-dot"></div></div></div>
+          <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:12px;">
+            <div style="font-size:13px;font-weight:700;color:#0F172A;margin-bottom:4px;">心の健康について（K6）</div>
+            <div style="font-size:10px;color:#64748B;margin-bottom:8px;">過去30日間にどのくらいの頻度でこのようなことがありましたか。</div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <div style="border-bottom:1px solid #F1F5F9;padding-bottom:6px;">
+                <div style="font-size:11px;color:#334155;margin-bottom:4px;">神経過敏に感じましたか</div>
+                <div style="display:flex;gap:2px;">
+                  <div class="ch-btn" style="flex:1;text-align:center;font-size:9px;padding:4px 2px;">全くない</div>
+                  <div class="ch-btn" style="flex:1;text-align:center;font-size:9px;padding:4px 2px;">少しだけ</div>
+                  <div class="ch-btn sel" style="flex:1;text-align:center;font-size:9px;padding:4px 2px;">ときどき</div>
+                  <div class="ch-btn" style="flex:1;text-align:center;font-size:9px;padding:4px 2px;">たいてい</div>
+                  <div class="ch-btn" style="flex:1;text-align:center;font-size:9px;padding:4px 2px;">いつも</div>
+                </div>
+              </div>
+              <div>
+                <div style="font-size:11px;color:#334155;margin-bottom:4px;">絶望的だと感じましたか</div>
+                <div style="display:flex;gap:2px;">
+                  <div class="ch-btn sel" style="flex:1;text-align:center;font-size:9px;padding:4px 2px;">全くない</div>
+                  <div class="ch-btn" style="flex:1;text-align:center;font-size:9px;padding:4px 2px;">少しだけ</div>
+                  <div class="ch-btn" style="flex:1;text-align:center;font-size:9px;padding:4px 2px;">ときどき</div>
+                  <div class="ch-btn" style="flex:1;text-align:center;font-size:9px;padding:4px 2px;">たいてい</div>
+                  <div class="ch-btn" style="flex:1;text-align:center;font-size:9px;padding:4px 2px;">いつも</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="nav-row"><span class="prev-btn">戻る</span><div class="next-btn">次へ</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 13. Complete -->
+<div class="sc">
+  <div class="sc-head">
+    <div class="sc-num">13</div>
+    <div>
+      <h2>アンケート完了画面</h2>
+      <p class="sc-path">/survey/complete</p>
+    </div>
+  </div>
+  <div class="sc-body">
+    <div class="sc-desc">
+      <p>すべての設問に回答し「回答を送信」ボタンを押した後に表示される完了画面です。回答データがリアルタイムでデータベースに保存されます。</p>
+      <ul class="flist">
+        <li>送信完了メッセージの表示</li>
+        <li>回答データはSupabase PostgreSQLにリアルタイム保存</li>
+        <li>送信エラー時は詳細メッセージを表示し再試行を促す</li>
+        <li>完了後はURLを閉じるよう案内</li>
+      </ul>
+    </div>
+    <div class="mk-wrap">
+      <div class="mk">
+        <div class="mk-bar"><div class="dot" style="background:#FDA4AF"></div><div class="dot" style="background:#FDE68A"></div><div class="dot" style="background:#86EFAC"></div><div class="url-pill">example.vercel.app/survey/complete</div></div>
+        <div class="app-nav"><div class="app-logo"><svg width="14" height="14" fill="none" stroke="#fff" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div><span class="app-brand">従業員健康診断アンケート</span></div>
+        <div class="p16 bg-white" style="text-align:center;padding:32px 20px;">
+          <div style="width:52px;height:52px;background:#F0FDF4;border:2px solid #86EFAC;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:24px;">✓</div>
+          <div style="font-size:15px;font-weight:700;color:#0F172A;margin-bottom:8px;">回答ありがとうございました</div>
+          <div style="font-size:11px;color:#64748B;line-height:1.7;">ご回答を受け付けました。<br>ご協力いただきありがとうございます。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== RESULTS DASHBOARD ===== -->
+<p class="sec-label">分析結果表示画面</p>
+
+<!-- 14. Dashboard -->
+<div class="sc">
+  <div class="sc-head">
+    <div class="sc-num">14</div>
+    <div>
+      <h2>分析結果ダッシュボード</h2>
+      <p class="sc-path">/results</p>
+    </div>
+  </div>
+  <div class="sc-body">
+    <div class="sc-desc">
+      <p>収集したアンケートデータを集計・可視化するダッシュボードです。職業病による労働損失額をQQメソッドで算出し、部署別・年代別・性別など多軸での分析が可能です。</p>
+      <ul class="flist">
+        <li>プレゼンティーイズム率・アブセンティーイズム率の表示</li>
+        <li>職業病起因の労働損失額（生産性低下＋欠勤）を万円単位で算出・表示</li>
+        <li>痛みの部位をボディマップで視覚化（ホットスポット表示）</li>
+        <li>部署ごとの労働損失額を積み上げ棒グラフで比較</li>
+        <li>問6〜22の設問ごとの集計結果を表示</li>
+        <li>2実施回の比較モード（前回→今回の変化量・差分バッジ表示）</li>
+        <li>軸切り替え：部署ごと / 年代ごと / 性別ごと</li>
+        <li>CSVダウンロード機能（system_admin・単一実施回表示時）</li>
+        <li>system_admin は複数クライアントをドロップダウンで切り替え可能</li>
+      </ul>
+    </div>
+    <div class="mk-wrap">
+      <div class="mk" style="max-width:360px;">
+        <div class="mk-bar"><div class="dot" style="background:#FDA4AF"></div><div class="dot" style="background:#FDE68A"></div><div class="dot" style="background:#86EFAC"></div><div class="url-pill">example.vercel.app/results</div></div>
+        <div class="app-nav"><div class="app-logo"><svg width="14" height="14" fill="none" stroke="#fff" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div><span class="app-brand">健康管理システム</span><div class="nav-r"><span>ダッシュボード</span><span>設定</span></div></div>
+        <div class="dash-bg">
+          <!-- Filter row -->
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;align-items:center;">
+            <select style="background:#fff;border:1px solid #E2E8F0;border-radius:6px;padding:4px 7px;font-size:10px;color:#334155;"><option>第2回 2026年9月</option></select>
+            <select style="background:#fff;border:1px solid #E2E8F0;border-radius:6px;padding:4px 7px;font-size:10px;color:#334155;"><option>比較なし</option></select>
+            <div style="margin-left:auto;background:#fff;border:1px solid #0D9488;border-radius:6px;padding:4px 8px;font-size:10px;font-weight:600;color:#0D9488;">CSVダウンロード</div>
+          </div>
+          <!-- Axis tabs -->
+          <div style="display:flex;gap:4px;margin-bottom:8px;overflow-x:auto;">
+            <div style="background:#fff;color:#0D9488;font-size:10px;font-weight:700;padding:5px 10px;border-radius:8px;box-shadow:0 1px 3px rgba(15,23,42,.06);border:1px solid rgba(13,144,136,.2);white-space:nowrap;">全体</div>
+            <div style="color:#64748B;font-size:10px;font-weight:600;padding:5px 10px;border-radius:8px;white-space:nowrap;">営業部</div>
+            <div style="color:#64748B;font-size:10px;font-weight:600;padding:5px 10px;border-radius:8px;white-space:nowrap;">製造部</div>
+            <div style="color:#64748B;font-size:10px;font-weight:600;padding:5px 10px;border-radius:8px;white-space:nowrap;">総務部</div>
+          </div>
+          <!-- Cards row -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;">
+            <div class="dash-card">
+              <div class="dash-card-title">損失額がある従業員</div>
+              <div style="margin-bottom:8px;">
+                <div style="font-size:9px;color:#F59E0B;font-weight:600;margin-bottom:2px;">Presenteeism</div>
+                <div style="display:flex;align-items:baseline;gap:3px;"><span style="font-size:22px;font-weight:700;color:#0F172A;">68</span><span style="font-size:11px;color:#475569;">%</span></div>
+                <div style="font-size:9px;color:#94A3B8;">34/50人</div>
+              </div>
+              <div style="border-top:1px solid #F1F5F9;padding-top:6px;">
+                <div style="font-size:9px;color:#EF4444;font-weight:600;margin-bottom:2px;">Absenteeism</div>
+                <div style="display:flex;align-items:baseline;gap:3px;"><span style="font-size:22px;font-weight:700;color:#0F172A;">29</span><span style="font-size:11px;color:#475569;">%</span></div>
+                <div style="font-size:9px;color:#94A3B8;">10/34人</div>
+              </div>
+            </div>
+            <div class="dash-card">
+              <div class="dash-card-title">職業病起因の労働損失額</div>
+              <div style="margin-bottom:4px;">
+                <div style="font-size:24px;font-weight:700;color:#0F172A;line-height:1;">142.3</div>
+                <div style="font-size:11px;font-weight:700;color:#475569;">万円</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:#64748B;margin-top:4px;">
+                <div style="width:8px;height:8px;border-radius:2px;background:#F59E0B;"></div>生産性低下 98.1万
+              </div>
+              <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:#64748B;margin-top:2px;">
+                <div style="width:8px;height:8px;border-radius:2px;background:#EF4444;"></div>欠勤 44.2万
+              </div>
+            </div>
+          </div>
+          <!-- Pain body map card -->
+          <div class="dash-card" style="margin-bottom:6px;">
+            <div class="dash-card-title">痛みの部位</div>
+            <div style="display:flex;justify-content:center;gap:16px;align-items:center;">
+              <div style="text-align:center;">
+                <svg viewBox="0 0 60 120" width="52" height="104">
+                  <ellipse cx="30" cy="12" rx="10" ry="10" fill="#E2E8F0"/>
+                  <rect x="20" y="24" width="20" height="32" rx="4" fill="#E2E8F0"/>
+                  <rect x="22" y="28" width="16" height="10" rx="2" fill="rgba(239,68,68,0.6)"/>
+                  <rect x="8" y="26" width="10" height="24" rx="4" fill="#E2E8F0"/>
+                  <rect x="42" y="26" width="10" height="24" rx="4" fill="#E2E8F0"/>
+                  <rect x="20" y="58" width="9" height="30" rx="4" fill="#E2E8F0"/>
+                  <rect x="31" y="58" width="9" height="30" rx="4" fill="#E2E8F0"/>
+                  <rect x="20" y="60" width="18" height="14" rx="2" fill="rgba(245,158,11,0.45)"/>
+                  <rect x="20" y="90" width="9" height="22" rx="4" fill="#E2E8F0"/>
+                  <rect x="31" y="90" width="9" height="22" rx="4" fill="#E2E8F0"/>
+                  <text x="30" y="36" text-anchor="middle" font-size="6" fill="#DC2626" font-weight="bold">肩</text>
+                  <text x="30" y="70" text-anchor="middle" font-size="6" fill="#B45309" font-weight="bold">腰</text>
+                </svg>
+                <div style="font-size:9px;color:#64748B;margin-top:2px;">前面</div>
+              </div>
+              <div style="flex:1;">
+                <div class="bar-row"><span class="bar-lbl">腰痛</span><div class="bar-track"><div class="bar-fill" style="width:80%;background:#F59E0B;"></div></div><span style="font-size:9px;color:#64748B;margin-left:3px;">40人</span></div>
+                <div class="bar-row"><span class="bar-lbl">肩こり</span><div class="bar-track"><div class="bar-fill" style="width:68%;background:#F59E0B;"></div></div><span style="font-size:9px;color:#64748B;margin-left:3px;">34人</span></div>
+                <div class="bar-row"><span class="bar-lbl">首の痛み</span><div class="bar-track"><div class="bar-fill" style="width:40%;background:#FDE68A;"></div></div><span style="font-size:9px;color:#64748B;margin-left:3px;">20人</span></div>
+                <div class="bar-row"><span class="bar-lbl">膝の痛み</span><div class="bar-track"><div class="bar-fill" style="width:24%;background:#FDE68A;"></div></div><span style="font-size:9px;color:#64748B;margin-left:3px;">12人</span></div>
+              </div>
+            </div>
+          </div>
+          <!-- Dept loss chart -->
+          <div class="dash-card">
+            <div class="dash-card-title">部署ごとの労働損失額</div>
+            <div style="display:flex;flex-direction:column;gap:5px;">
+              <div class="bar-row"><span class="bar-lbl">製造部</span><div class="bar-track" style="height:12px;"><div class="bar-fill" style="width:85%;background:linear-gradient(90deg,#F59E0B 70%,#EF4444 100%);"></div></div><span style="font-size:9px;color:#64748B;margin-left:3px;">61.2万</span></div>
+              <div class="bar-row"><span class="bar-lbl">営業部</span><div class="bar-track" style="height:12px;"><div class="bar-fill" style="width:62%;background:linear-gradient(90deg,#F59E0B 75%,#EF4444 100%);"></div></div><span style="font-size:9px;color:#64748B;margin-left:3px;">44.8万</span></div>
+              <div class="bar-row"><span class="bar-lbl">総務部</span><div class="bar-track" style="height:12px;"><div class="bar-fill" style="width:50%;background:linear-gradient(90deg,#F59E0B 80%,#EF4444 100%);"></div></div><span style="font-size:9px;color:#64748B;margin-left:3px;">36.3万</span></div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:7px;font-size:9px;color:#64748B;">
+              <div style="display:flex;align-items:center;gap:3px;"><div style="width:8px;height:8px;border-radius:2px;background:#F59E0B;"></div>生産性低下</div>
+              <div style="display:flex;align-items:center;gap:3px;"><div style="width:8px;height:8px;border-radius:2px;background:#EF4444;"></div>欠勤</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<div style="text-align:center;padding:16px 0;font-size:12px;color:var(--text3);">
+  職業病健康管理システム 機能説明資料 — 2026年9月
+</div>
+
+</div>
