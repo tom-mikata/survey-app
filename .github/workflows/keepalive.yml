@@ -2,7 +2,7 @@ name: Supabase Keepalive
 
 on:
   schedule:
-    - cron: "0 0 * * *"  # 毎日 0:00 UTC (日本時間 9:00)
+    - cron: "0 */6 * * *"  # 6時間ごと（1日4回）
   workflow_dispatch:
 
 jobs:
