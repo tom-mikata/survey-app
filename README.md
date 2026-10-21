@@ -108,7 +108,7 @@ survey-app/
 
 | | ローカル | テスト (develop) | 本番 (main) |
 |---|---|---|---|
-| URL | `http://localhost:3000` | `https://survey-app-git-develop-...vercel.app` | `https://tom-survey-app.vercel.app` |
+| URL | `http://localhost:3000` | `https://survey-app-git-develop-...vercel.app` | `https://survey.so-tsuyama.co.jp` |
 | Supabase | 開発プロジェクト | 開発プロジェクト | **本番プロジェクト** |
 | 環境変数 | `.env.local` | Vercel Preview 環境変数 | Vercel Production 環境変数 |
 

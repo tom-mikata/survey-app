@@ -11,8 +11,8 @@ jobs:
     strategy:
       matrix:
         url:
-          - https://tom-survey-app.vercel.app/api/keepalive
-          - https://survey-app-git-develop-tom-5990s-projects.vercel.app/api/keepalive
+          - "${{ vars.APP_URL_PRODUCTION }}/api/keepalive"
+          - "${{ vars.APP_URL_STAGING }}/api/keepalive"
     steps:
       - name: Ping ${{ matrix.url }}
         run: |
