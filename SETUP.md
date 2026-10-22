@@ -18,7 +18,7 @@
 
 | 環境 | ブランチ | URL |
 |---|---|---|
-| 本番 | main | https://tom-survey-app.vercel.app |
+| 本番 | main | https://survey.so-tsuyama.co.jp |
 | テスト | develop | https://survey-app-git-develop-tom-5990s-projects.vercel.app |
 
 ---
@@ -89,8 +89,8 @@ npx supabase db push
 
 | 項目 | 値 |
 |---|---|
-| Site URL | 本番: `https://tom-survey-app.vercel.app` / テスト: `https://survey-app-git-develop-tom-5990s-projects.vercel.app` |
-| Redirect URLs | `https://tom-survey-app.vercel.app/**` および `https://*.vercel.app/**` |
+| Site URL | 本番: `https://survey.so-tsuyama.co.jp` / テスト: `https://survey-app-git-develop-tom-5990s-projects.vercel.app` |
+| Redirect URLs | `https://survey.so-tsuyama.co.jp/**` および `https://*.vercel.app/**` |
 
 ### 3-4. メールテンプレート
 
@@ -137,9 +137,22 @@ npx supabase db push
 | `NEXT_PUBLIC_SUPABASE_URL` | Production / Preview | SupabaseダッシュボードのProject Settings → API |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Production / Preview | 同上 |
 | `SUPABASE_SERVICE_ROLE_KEY` | Production / Preview | 同上（Evernote参照） |
-| `NEXT_PUBLIC_APP_URL` | Production のみ | `https://tom-survey-app.vercel.app` |
+| `NEXT_PUBLIC_APP_URL` | Production のみ | `https://survey.so-tsuyama.co.jp` |
 
 > **注意**: PreviewとProductionで異なるSupabaseプロジェクトのURLを設定する。
+
+### GitHub Actions 変数
+
+**GitHub → Repository → Settings → Secrets and variables → Actions → Variables タブ**
+
+Keepalive ワークフローが参照する変数（URLは機密情報ではないため Variables に設定する）。
+
+| 変数名 | 値 |
+|---|---|
+| `APP_URL_PRODUCTION` | `https://survey.so-tsuyama.co.jp` |
+| `APP_URL_STAGING` | `https://survey-app-git-develop-tom-5990s-projects.vercel.app` |
+
+> **注意**: `CRON_SECRET` は Secrets タブに設定済み。
 
 ---
 

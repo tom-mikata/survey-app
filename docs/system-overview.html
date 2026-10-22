@@ -135,6 +135,32 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 .modal{background:#fff;border-radius:12px;padding:20px 16px;width:100%;max-width:240px;text-align:center;}
 .modal-icon{width:36px;height:36px;border-radius:50%;border:1px solid #E2E8F0;display:flex;align-items:center;justify-content:center;font-size:18px;margin:0 auto 10px;}
 .chart-body{padding:8px 0;}
+
+/* ===== PRINT STYLES ===== */
+@media print {
+  @page { size: A4 portrait; margin: 15mm 15mm 20mm 15mm; }
+
+  /* 背景色・グラデーションを印刷出力に含める */
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  body { background: #fff; padding: 0; }
+
+  .doc { max-width: 100%; gap: 16px; }
+
+  /* カバーと概要は同一ページ、概要の後で改ページ */
+  .ov { break-after: page; }
+
+  /* セクションラベルは新ページ開始、直後の画面カードと同ページに */
+  .sec-label { break-before: page; break-after: avoid; }
+  .sec-label + .sc { break-before: avoid; }
+
+  /* 各画面カードは必ず新ページから開始し、カード内での分割を防ぐ */
+  .sc { break-before: page; break-inside: avoid; }
+
+  /* モックアップ列の背景も印刷 */
+  .mk-wrap { background: #F1F5F9 !important; }
+  .mk { box-shadow: none; }
+}
 </style>
 
 <div class="doc">
