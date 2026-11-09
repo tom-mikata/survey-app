@@ -183,7 +183,7 @@ function HistogramBars({ labels, baseCounts, currentCounts, baseTotal, currentTo
 /** セクション見出し */
 function SecHead({ children }: { children: ReactNode }) {
   return (
-    <div className="flex items-center gap-2 mt-8 mb-3 text-[15px] font-semibold text-slate-700">
+    <div className="flex items-center gap-2 mt-8 mb-3 text-[15px] font-semibold text-slate-700 print:break-after-avoid">
       <span className="inline-block w-1 h-[18px] rounded-sm" style={{ background: C.brand }} />
       {children}
     </div>
