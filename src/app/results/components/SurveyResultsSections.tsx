@@ -193,7 +193,7 @@ function SecHead({ children }: { children: ReactNode }) {
 /** 設問カード */
 function QCard({ qno, title, children }: { qno: string; title: string; children: ReactNode }) {
   return (
-    <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-100 mb-3.5">
+    <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-100 mb-3.5 print:break-inside-avoid">
       <p className="mb-3 text-[15.5px] font-semibold text-slate-800">
         <span className="mr-2 font-semibold" style={{ color: C.brand }}>{qno}</span>{title}
       </p>

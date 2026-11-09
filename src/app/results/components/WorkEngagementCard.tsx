@@ -74,7 +74,7 @@ export function WeScoreCard({
       ? "bg-rose-50 text-rose-700 ring-rose-200"
       : "bg-amber-50 text-amber-700 ring-amber-200";
   return (
-    <div className="rounded-2xl border border-slate-200/70 bg-[#f8fbfb] p-5 text-center">
+    <div className="rounded-2xl border border-slate-200/70 bg-[#f8fbfb] p-5 text-center print:break-inside-avoid">
       <p className="text-xs font-semibold text-slate-600">{title}</p>
       <div className="mt-3 flex justify-center">
         <ScoreFace tone={tone} />
@@ -114,7 +114,7 @@ export function WeCompareColumn({
   const avgLeft = (companyAvg / max) * 100;
 
   return (
-    <div className="rounded-2xl border border-slate-200/70 bg-[#f8fbfb] p-4">
+    <div className="rounded-2xl border border-slate-200/70 bg-[#f8fbfb] p-4 print:break-inside-avoid">
       <div className="flex items-center justify-between gap-2 pb-3">
         <p className="text-sm font-bold text-slate-700">{label}</p>
         <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-400">
