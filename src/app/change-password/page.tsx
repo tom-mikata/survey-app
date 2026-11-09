@@ -19,7 +19,20 @@ export default function ChangePasswordPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    // ログイン済み（リセットリンク経由含む）ならパスワード入力モードに
+    // 招待・パスワードリセットリンク経由（ハッシュフラグメントにトークンが含まれる場合）
+    const hash = typeof window !== "undefined" ? window.location.hash : "";
+    if (hash.includes("access_token")) {
+      const params = new URLSearchParams(hash.substring(1));
+      const accessToken = params.get("access_token");
+      const refreshToken = params.get("refresh_token");
+      if (accessToken && refreshToken) {
+        supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
+          .then(({ error }) => { if (!error) setMode("reset"); });
+        return;
+      }
+    }
+
+    // ログイン済み（すでにセッションがある場合）
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) setMode("reset");
     });
