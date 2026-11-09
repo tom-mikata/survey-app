@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 export function Card({ children }: { children: ReactNode }) {
   return (
-    <section className="rounded-2xl border border-slate-200/70 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_6px_18px_rgba(15,23,42,0.04)]">
+    <section className="rounded-2xl border border-slate-200/70 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_6px_18px_rgba(15,23,42,0.04)] print:break-inside-avoid">
       {children}
     </section>
   );
