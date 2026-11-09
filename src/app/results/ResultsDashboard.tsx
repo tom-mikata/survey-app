@@ -594,8 +594,8 @@ export default function ResultsDashboard() {
             )}
           </Card>
 
-          {/* ---------------- 部署ごとの労働損失額 ---------------- */}
-          <Card>
+          {/* ---------------- 部署ごとの労働損失額（クライアント選択時のみ） ---------------- */}
+          {selectedClientCode !== null && <Card>
             <CardHeader title="部署ごとの労働損失額" />
             <p className="mt-2 text-xs text-slate-500">
               現在の表示：
@@ -621,7 +621,7 @@ export default function ResultsDashboard() {
                 ))}
               </div>
             </div>
-          </Card>
+          </Card>}
 
           {/* ---------------- アンケート設問別結果（問6-22） ---------------- */}
           <SurveyResultsSections
