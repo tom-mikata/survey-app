@@ -58,7 +58,7 @@ export async function POST(request: Request) {
   const admin = createAdminClient();
 
   const { data: invited, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/change-password`,
   });
   if (inviteError) {
     return NextResponse.json({ error: inviteError.message }, { status: 500 });
