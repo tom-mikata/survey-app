@@ -80,6 +80,7 @@ export interface ClientModules {
 export interface SurveyRound {
   id: number;
   clientCode: string;
+  roundNumber: number;
   title: string;
   startedAt: string | null;
   endedAt: string | null;

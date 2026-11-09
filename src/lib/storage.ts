@@ -279,13 +279,14 @@ export async function clearResponses(clientCode: string): Promise<void> {
 export async function getSurveyRounds(clientCode: string): Promise<SurveyRound[]> {
   const { data, error } = await supabase
     .from("survey_rounds")
-    .select("id, client_code, title, started_at, ended_at, created_at")
+    .select("id, client_code, round_number, title, started_at, ended_at, created_at")
     .eq("client_code", clientCode)
     .order("ended_at", { ascending: false, nullsFirst: false });
   if (error || !data) return [];
   return data.map((r: {
     id: number;
     client_code: string;
+    round_number: number;
     title: string;
     started_at: string | null;
     ended_at: string | null;
@@ -293,11 +294,26 @@ export async function getSurveyRounds(clientCode: string): Promise<SurveyRound[]
   }) => ({
     id: r.id,
     clientCode: r.client_code,
+    roundNumber: r.round_number,
     title: r.title,
     startedAt: r.started_at,
     endedAt: r.ended_at,
     createdAt: r.created_at,
   }));
+}
+
+export async function getSurveyRoundIdByClientAndNumber(
+  clientCode: string,
+  roundNumber: number,
+): Promise<number | null> {
+  const { data, error } = await supabase
+    .from("survey_rounds")
+    .select("id")
+    .eq("client_code", clientCode)
+    .eq("round_number", roundNumber)
+    .single();
+  if (error || !data) return null;
+  return (data as { id: number }).id;
 }
 
 export async function createSurveyRound(

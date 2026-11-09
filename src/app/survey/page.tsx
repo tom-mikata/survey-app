@@ -13,6 +13,7 @@ import {
   clientExists,
   getClientModules,
   getDepartments,
+  getSurveyRoundIdByClientAndNumber,
 } from "@/lib/storage";
 import { QQ_CONDITIONS } from "@/lib/constants";
 import {
@@ -46,10 +47,10 @@ export default function SurveyPage({
   searchParams: Promise<{ client?: string; round?: string }>;
 }) {
   const { client: clientCode = "", round } = use(searchParams);
-  // TODO(#20): surveyRoundId が null の場合はエラー表示 or バリデーション (#18 連携)
-  const surveyRoundId = round ? Number(round) : null;
+  const roundNumber = round ? Number(round) : null;
   const router = useRouter();
 
+  const [surveyRoundId, setSurveyRoundId] = useState<number | null>(null);
   const [departments, setDepartments] = useState<string[]>([]);
   const [modules, setModules] = useState<ClientModules>(DEFAULT_MODULES);
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
@@ -59,15 +60,19 @@ export default function SurveyPage({
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!clientCode || !surveyRoundId) {
+    if (!clientCode || !roundNumber) {
       setClientStatus("invalid");
       return;
     }
-    const valid = await clientExists(clientCode);
-    if (!valid) {
+    const [valid, resolvedId] = await Promise.all([
+      clientExists(clientCode),
+      getSurveyRoundIdByClientAndNumber(clientCode, roundNumber),
+    ]);
+    if (!valid || !resolvedId) {
       setClientStatus("invalid");
       return;
     }
+    setSurveyRoundId(resolvedId);
     setClientStatus("valid");
     const [depts, clientModules] = await Promise.all([
       getDepartments(clientCode),
@@ -75,7 +80,7 @@ export default function SurveyPage({
     ]);
     setDepartments(depts);
     setModules(clientModules);
-  }, [clientCode]);
+  }, [clientCode, roundNumber]);
 
   useEffect(() => { queueMicrotask(() => load()); }, [load]);
 

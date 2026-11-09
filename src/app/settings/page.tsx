@@ -284,9 +284,9 @@ export default function SettingsPage() {
     setRounds(await getSurveyRounds(selectedClientCode));
   };
 
-  const surveyUrl = (roundId: number) => {
+  const surveyUrl = (roundNumber: number) => {
     const base = process.env.NEXT_PUBLIC_APP_URL ?? (typeof window !== "undefined" ? window.location.origin : "");
-    return `${base}/survey?client=${selectedClientCode}&round=${roundId}`;
+    return `${base}/survey?client=${selectedClientCode}&round=${roundNumber}`;
   };
 
   // ---- 管理者アカウントの操作 ----
@@ -607,12 +607,12 @@ export default function SettingsPage() {
                   <div className="flex items-center gap-2">
                     <input
                       readOnly
-                      value={surveyUrl(r.id)}
+                      value={surveyUrl(r.roundNumber)}
                       className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-mono text-slate-600 outline-none"
                     />
                     <button
                       type="button"
-                      onClick={() => navigator.clipboard.writeText(surveyUrl(r.id))}
+                      onClick={() => navigator.clipboard.writeText(surveyUrl(r.roundNumber))}
                       className="shrink-0 text-xs text-sky-600 hover:text-sky-700 font-semibold px-2 py-1.5 rounded-md hover:bg-sky-50"
                     >
                       コピー
@@ -686,12 +686,12 @@ export default function SettingsPage() {
                       <div className="flex items-center gap-2">
                         <input
                           readOnly
-                          value={surveyUrl(r.id)}
+                          value={surveyUrl(r.roundNumber)}
                           className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-mono text-slate-600 outline-none"
                         />
                         <button
                           type="button"
-                          onClick={() => navigator.clipboard.writeText(surveyUrl(r.id))}
+                          onClick={() => navigator.clipboard.writeText(surveyUrl(r.roundNumber))}
                           className="shrink-0 text-xs text-sky-600 hover:text-sky-700 font-semibold px-2 py-1.5 rounded-md hover:bg-sky-50"
                         >
                           コピー
