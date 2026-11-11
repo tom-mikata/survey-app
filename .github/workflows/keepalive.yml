@@ -12,7 +12,6 @@ jobs:
       matrix:
         url:
           - "${{ vars.APP_URL_PRODUCTION }}/api/keepalive"
-          - "${{ vars.APP_URL_STAGING }}/api/keepalive"
     steps:
       - name: Ping ${{ matrix.url }}
         run: |
