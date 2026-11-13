@@ -69,6 +69,8 @@ npx supabase link --project-ref [PROJECT_REF]
 npx supabase db push
 ```
 
+> **警告**: `--include-seed` オプションは使用しないこと。`supabase/seed.sql` はローカル `db reset` 専用のデモデータを含んでいるため、リモートに適用すると意図しないデータが投入される。
+
 ### 3-2. SMTP設定
 
 **Authentication → Email → SMTP Settings**
@@ -90,16 +92,27 @@ npx supabase db push
 | 項目 | 値 |
 |---|---|
 | Site URL | 本番: `https://survey.so-tsuyama.co.jp` / テスト: `https://survey-app-git-develop-tom-5990s-projects.vercel.app` |
-| Redirect URLs | `https://survey.so-tsuyama.co.jp/**` および `https://*.vercel.app/**` |
+| Redirect URLs | `https://survey.so-tsuyama.co.jp/**` および `https://*-{チームスラッグ}.vercel.app/**` |
+
+> **チームスラッグの確認**: Vercel → Team Settings → General → Team Slug で実際の値を確認し、`supabase/config.toml` の `additional_redirect_urls` と一致させること。`https://*.vercel.app/**`（全Vercelテナント許可）は使用しないこと。
 
 ### 3-4. メールテンプレート
 
-**Authentication → Email → Templates → Recovery**
+**Authentication → Email → Templates**
+
+#### Recovery（パスワードリセット）
 
 | 項目 | 値 |
 |---|---|
 | Subject | `パスワードリセットを受け付けました` |
 | Body | `supabase/templates/recovery.html` の内容を貼り付けて保存 |
+
+#### Invite（招待）
+
+| 項目 | 値 |
+|---|---|
+| Subject | `健康管理システムへのご招待` |
+| Body | `supabase/templates/invite.html` の内容を貼り付けて保存 |
 
 ### 3-5. ユーザー作成
 
@@ -137,7 +150,9 @@ npx supabase db push
 | `NEXT_PUBLIC_SUPABASE_URL` | Production / Preview | SupabaseダッシュボードのProject Settings → API |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Production / Preview | 同上 |
 | `SUPABASE_SERVICE_ROLE_KEY` | Production / Preview | 同上（Evernote参照） |
-| `NEXT_PUBLIC_APP_URL` | Production のみ | `https://survey.so-tsuyama.co.jp` |
+| `NEXT_PUBLIC_APP_URL` | Production | `https://survey.so-tsuyama.co.jp` |
+| `NEXT_PUBLIC_APP_URL` | Preview | テスト環境の URL（Vercel ダッシュボードのデプロイ後に確認） |
+| `CRON_SECRET` | Production / Preview | 任意の強いランダム文字列（Evernote 参照） |
 
 > **注意**: PreviewとProductionで異なるSupabaseプロジェクトのURLを設定する。
 

@@ -2,7 +2,8 @@
 site_url = "https://tom-survey-app.vercel.app"
 additional_redirect_urls = [
   "https://tom-survey-app.vercel.app/**",
-  "https://*.vercel.app/**",
+  # チームスラッグは Vercel → Team Settings → General → Team Slug で確認し、実際の値に更新すること
+  "https://*-tom-5990s-projects.vercel.app/**",
   "http://localhost:3000/**"
 ]
 enable_signup = true
@@ -20,3 +21,11 @@ user = "resend"
 pass = "env(SUPABASE_AUTH_SMTP_PASS)"
 admin_email = "noreply@c-mikata.co.jp"
 sender_name = "健康管理システム"
+
+[auth.email.template.invite]
+subject = "健康管理システムへのご招待"
+content_path = "./supabase/templates/invite.html"
+
+[auth.email.template.recovery]
+subject = "パスワードリセットを受け付けました"
+content_path = "./supabase/templates/recovery.html"
